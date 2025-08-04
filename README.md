@@ -57,16 +57,18 @@ Create a root view file `inertia.view.php` in your `app` directory:
     <x-vite-tags entrypoint="app/inertia.entrypoint.ts"/>
 </head>
 <body>
-    <?= $this->inertia() ?>
+<?= $this->inertia() ?>
 </body>
 </html>
 ```
 
 The adapter will automatically look for `inertia.view.php` as the root view template. You can change this in three ways:
 
-1. Globally, by setting the `$rootView` property in your `HandleInertiaRequests` middleware for an application-wide change.
+1. Globally, by setting the `$rootView` property in your `HandleInertiaRequests` middleware for an application-wide
+   change.
 2. On a per-response basis, by calling `Inertia::setRootView()` from within a controller.
-3. Dynamically, by overriding the `rootView()` method in your `HandleInertiaRequests` middleware and implementing custom logic based on the request context.
+3. Dynamically, by overriding the `rootView()` method in your `HandleInertiaRequests` middleware and implementing custom
+   logic based on the request context.
 
 Next, create your main `inertia.entrypoint.ts` (or `.js`) file to launch your Inertia app.
 
@@ -89,6 +91,29 @@ createInertiaApp({
 
 With your root view and entrypoint set up, Inertia.js is now fully integrated with Tempest. You’re ready to start
 building reactive, single-page experiences with the elegance of server-side routing.
+
+## Validation Errors
+
+To handle validation errors, flash them to the session using Tempest's `Session::VALIDATION_ERRORS` key. When validation
+fails, redirect back using `Back()`:
+
+```php
+#[Post('/login')]
+public function login(Request $request, Validator $validator, Session $session): Response|Back
+{
+    $failures = $validator->validateValuesForClass(Login::class, $request->body);
+
+    if ($failures !== []) {
+        $session->flash(Session::VALIDATION_ERRORS, $failures);
+
+        return new Back();
+    }
+
+    // ... handle successful login
+}
+```
+
+The adapter will automatically expose these errors under the errors prop on the client side.
 
 ## Shared Data
 
@@ -186,7 +211,8 @@ conditionally change the configuration.
 
 ### 2. Create an SSR Entry Point
 
-Create a new file, `app/inertia.ssr.ts` (or `.js`), that will serve as the entry point for your Node.js server. This file is
+Create a new file, `app/inertia.ssr.ts` (or `.js`), that will serve as the entry point for your Node.js server. This
+file is
 responsible for creating the SSR server. Unlike client-side entrypoints, this file should not include `.entrypoint.` in
 its name. Tempest automatically discovers those for the browser, and this file is meant to stay server-side.
 
@@ -248,7 +274,8 @@ content.
 
 ### 5. Enable SSR
 
-Finally, enable SSR in your `inertia.config.php` file. The package will automatically discover the `ssr/inertia.ssr.mjs` or
+Finally, enable SSR in your `inertia.config.php` file. The package will automatically discover the `ssr/inertia.ssr.mjs`
+or
 `ssr/inertia.ssr.js` bundle. If your bundle is located elsewhere, you must specify the path.
 
 ```php

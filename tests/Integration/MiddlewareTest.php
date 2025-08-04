@@ -15,6 +15,7 @@ use Tempest\Http\ContentType;
 use Tempest\Http\Request;
 use Tempest\Http\Session\Session;
 use Tempest\Http\Status;
+use Tempest\Validation\Rules\Email;
 
 use function Tempest\root_path;
 use function Tempest\uri;
@@ -189,8 +190,7 @@ class MiddlewareTest extends TestCase
         $session = $this->container->get(Session::class);
 
         $validationErrors = [
-            'name' => ['The name field is required.'],
-            'email' => ['Not a valid email address.'],
+            'email' => [new Email()],
         ];
         $this->assertInstanceOf(Session::class, $session);
         $session->set(Session::VALIDATION_ERRORS, $validationErrors);
@@ -203,8 +203,7 @@ class MiddlewareTest extends TestCase
         $errors = $sharedData['errors']();
 
         $this->assertIsObject($errors);
-        $this->assertSame('The name field is required.', $errors->name);
-        $this->assertSame('Not a valid email address.', $errors->email);
+        $this->assertSame('Value should be a valid email address', $errors->email);
     }
 
     public function test_default_validation_errors_can_be_overwritten(): void
@@ -231,28 +230,23 @@ class MiddlewareTest extends TestCase
     public function test_validation_errors_are_scoped_to_error_bag_header(): void
     {
         $session = $this->container->get(Session::class);
+
         $validationErrors = [
-            'name' => ['The name field is required.'],
-            'email' => ['Not a valid email address.'],
+            'email' => [new Email()],
         ];
         $this->assertInstanceOf(Session::class, $session);
         $session->set(Session::VALIDATION_ERRORS, $validationErrors);
 
-        $response = $this->http->get(
-            uri: uri([TestController::class, 'basicRenderWithMiddleware']),
-            headers: [
-                Header::INERTIA => 'true',
-                Header::ERROR_BAG => 'example',
-            ],
-        );
+        $middleware = $this->container->get(Middleware::class);
+        $request = $this->makeRequest(headers: [Header::ERROR_BAG => 'example']);
+        $this->assertInstanceOf(Middleware::class, $middleware);
 
-        $page = $response->body;
-        $errors = $page['props']['errors'];
+        $sharedData = $middleware->share($request);
+        $errors = $sharedData['errors']();
 
         $this->assertIsObject($errors);
         $this->assertObjectHasProperty('example', $errors);
-        $this->assertSame('The name field is required.', $errors->example->name);
-        $this->assertSame('Not a valid email address.', $errors->example->email);
+        $this->assertSame('Value should be a valid email address', $errors->example->email);
     }
 
     public function test_middleware_can_change_the_root_view_via_a_property(): void

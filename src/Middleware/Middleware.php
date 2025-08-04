@@ -19,7 +19,7 @@ use Tempest\Http\Status;
 use Tempest\Router\Exceptions\ControllerActionHadNoReturn;
 use Tempest\Router\HttpMiddleware;
 use Tempest\Router\HttpMiddlewareCallable;
-use Tempest\Support\Arr;
+use Tempest\Validation\Rule;
 
 use function Tempest\env;
 use function Tempest\get;
@@ -175,13 +175,27 @@ class Middleware implements HttpMiddleware
      */
     public function resolveValidationErrors(Request $request): object
     {
-        $allErrors = $this->session?->get(Session::VALIDATION_ERRORS) ?? [];
+        $allErrors = $this->session->get(Session::VALIDATION_ERRORS) ?? [];
 
         if ($allErrors === []) {
             return new \stdClass();
         }
 
-        $processedErrors = Arr\map_iterable($allErrors, fn(array $errors) => $errors[0] ?? null);
+        $processedErrors = [];
+        foreach ($allErrors as $field => $rules) {
+            if (is_array($rules) && $rules !== [] && $rules[0] instanceof Rule) {
+                $message = $rules[0]->message();
+
+                if (is_array($message)) {
+                    $message = $message[0] ?? null;
+                }
+
+                if ($message) {
+                    $processedErrors[$field] = $message;
+                }
+            }
+        }
+
         $errorBag = $request->headers->get(Header::ERROR_BAG);
 
         if ($errorBag) {
