@@ -71,16 +71,18 @@ The adapter will automatically look for `inertia.view.php` as the root view temp
 Next, create your main `inertia.entrypoint.ts` (or `.js`) file to launch your Inertia app.
 
 ```ts
-import {createApp, h} from 'vue'
-import {createInertiaApp} from '@inertiajs/vue3'
+import '../app/main.entrypoint.css'
 
-createInertiaApp({
-    resolve: name => {
-        const pages = import.meta.glob('./Pages/**/*.vue', {eager: true})
-        return pages[`./Pages/${name}.vue`]
+import { createInertiaApp } from '@inertiajs/vue3'
+import { createApp, DefineComponent, h } from 'vue'
+
+void createInertiaApp({
+    resolve: (name) => {
+        const pages = import.meta.glob<DefineComponent>('/app/**/*.vue')
+        return pages[`/app/${name}.vue`]()
     },
-    setup({el, App, props, plugin}) {
-        createApp({render: () => h(App, props)})
+    setup({ el, App, props, plugin }) {
+        createApp({ render: () => h(App, props) })
             .use(plugin)
             .mount(el)
     },
