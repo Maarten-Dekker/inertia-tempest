@@ -31,6 +31,7 @@
   },
   "require": {
     "php": "^8.4",
+    "ext-json": "*",
     "tempest/framework": "^1.5"
   },
   "require-dev": {
@@ -38,6 +39,9 @@
     "rector/rector": "^2.1.2",
     "carthage-software/mago": "^0.26.1",
     "mockery/mockery": "^1.6.12"
+  },
+  "suggest": {
+    "ext-pcntl": "Recommended when running the Inertia SSR server via the `inertia:start-ssr` tempest command."
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
