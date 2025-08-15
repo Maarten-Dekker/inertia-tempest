@@ -1,4 +1,9 @@
-.tempest
-vendor/
-.cache
-.idea/
+/.tempest
+/vendor
+/.cache
+
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
