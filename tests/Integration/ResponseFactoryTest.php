@@ -309,6 +309,84 @@ class ResponseFactoryTest extends TestCase
         $this->assertSame('bar', $page['props']['foo']);
     }
 
+    public function test_will_accept_instances_of_provides_inertia_props(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'renderWithProvider']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $page = $response->body;
+        $props = $page['props'];
+
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertArrayHasKey('errors', $props);
+        $this->assertArrayHasKey('foo', $props);
+        $this->assertSame('bar', $props['foo']);
+        $this->assertCount(2, $props);
+    }
+
+    public function test_will_accept_arrays_containing_provides_inertia_props_in_render(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'renderWithMixedProps']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $page = $response->body;
+        $props = $page['props'];
+
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertArrayHasKey('errors', $props);
+        $this->assertArrayHasKey('regular', $props);
+        $this->assertArrayHasKey('from_object', $props);
+        $this->assertArrayHasKey('another', $props);
+        $this->assertSame('prop', $props['regular']);
+        $this->assertSame('value', $props['from_object']);
+        $this->assertSame('normal_prop', $props['another']);
+        $this->assertCount(4, $props);
+    }
+
+    public function test_can_share_instances_of_provides_inertia_props(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'shareWithProvider']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $page = $response->body;
+        $props = $page['props'];
+
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertArrayHasKey('errors', $props);
+        $this->assertArrayHasKey('shared', $props);
+        $this->assertArrayHasKey('regular', $props);
+        $this->assertSame('data', $props['shared']);
+        $this->assertSame('prop', $props['regular']);
+        $this->assertCount(3, $props);
+    }
+
+    public function test_can_share_arrays_containing_provides_inertia_props(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'shareWithMixedProps']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $page = $response->body;
+        $props = $page['props'];
+
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertArrayHasKey('errors', $props);
+        $this->assertArrayHasKey('regular', $props);
+        $this->assertArrayHasKey('from_object', $props);
+        $this->assertArrayHasKey('component', $props);
+        $this->assertSame('shared_prop', $props['regular']);
+        $this->assertSame('shared_value', $props['from_object']);
+        $this->assertSame('prop', $props['component']);
+        $this->assertCount(4, $props);
+    }
+
     public function test_will_throw_exception_if_component_does_not_exist_when_ensuring_is_enabled(): void
     {
         $config = $this->container->get(InertiaConfig::class);

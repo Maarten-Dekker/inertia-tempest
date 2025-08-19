@@ -21,6 +21,11 @@ final readonly class HttpGateway implements Gateway, HasHealthCheck
         private BundleDetector $bundleDetector,
     ) {}
 
+    /**
+     * Dispatch the Inertia page to the SSR engine via HTTP.
+     *
+     * @param  array<string, mixed>  $page
+     */
     #[Override]
     public function dispatch(array $page): ?Response
     {
@@ -51,6 +56,9 @@ final readonly class HttpGateway implements Gateway, HasHealthCheck
         }
     }
 
+    /**
+     * Determine if the SSR server is healthy.
+     */
     #[Override]
     public function isHealthy(): bool
     {
@@ -63,6 +71,9 @@ final readonly class HttpGateway implements Gateway, HasHealthCheck
         }
     }
 
+    /**
+     * Determine if the page should be dispatched to the SSR engine.
+     */
     private function shouldDispatch(): bool
     {
         if (!$this->config->ssr->enabled) {
@@ -76,6 +87,33 @@ final readonly class HttpGateway implements Gateway, HasHealthCheck
         return $this->bundleDetector->detect() !== null;
     }
 
+    /**
+     * Determine if the SSR feature is enabled.
+     */
+    private function ssrIsEnabled(): bool
+    {
+        return $this->config->ssr->enabled;
+    }
+
+    /**
+     * Determine if dispatch should proceed without bundle detection.
+     */
+    private function shouldDispatchWithoutBundle(): bool
+    {
+        return !$this->config->ssr->ensure_bundle_exists;
+    }
+
+    /**
+     * Check if an SSR bundle exists.
+     */
+    private function bundleExists(): bool
+    {
+        return new BundleDetector()->detect() !== null;
+    }
+
+    /**
+     * Get the complete SSR URL by combining the base URL with the given path.
+     */
     private function getUrl(string $path): string
     {
         $parts = parse_url($this->config->ssr->url);

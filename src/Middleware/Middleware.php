@@ -93,7 +93,7 @@ class Middleware implements HttpMiddleware
     }
 
     /**
-     * Defines a callback that returns the relative URL.
+     * Define a callback that returns the relative URL.
      */
     public function urlResolver(): ?Closure
     {
@@ -152,7 +152,7 @@ class Middleware implements HttpMiddleware
     }
 
     /**
-     * Determines what to do when an Inertia action returned with no response.
+     * Handle empty responses.
      */
     protected function onEmptyResponse(): Response
     {
@@ -160,8 +160,7 @@ class Middleware implements HttpMiddleware
     }
 
     /**
-     * Determines what to do when the Inertia asset version has changed.
-     * By default, we'll initiate a client-side location visit to force an update.
+     * Handle version changes.
      */
     public function onVersionChange(Request $request): Response
     {
@@ -171,7 +170,7 @@ class Middleware implements HttpMiddleware
     }
 
     /**
-     * Resolves and prepares validation errors in such a way that they are easier to use client-side.
+     * Resolve validation errors for client-side use.
      */
     public function resolveValidationErrors(Request $request): object
     {

@@ -18,6 +18,9 @@ final readonly class CheckSsr
         private Gateway $gateway,
     ) {}
 
+    /**
+     * Check the Inertia SSR server health status.
+     */
     #[ConsoleCommand(name: 'inertia:check-ssr', description: 'Check the Inertia SSR server health status')]
     public function __invoke(bool $silent = false): ExitCode|int
     {

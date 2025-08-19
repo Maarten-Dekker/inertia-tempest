@@ -21,6 +21,9 @@ final readonly class StopSsr
         private CheckSsr $checkSsrCommand,
     ) {}
 
+    /**
+     * Stop the Inertia SSR server.
+     */
     #[ConsoleCommand(name: 'inertia:stop-ssr', description: 'Stop the Inertia SSR server')]
     public function __invoke(bool $silent = false): ExitCode|int
     {

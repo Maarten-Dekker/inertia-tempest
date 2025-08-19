@@ -7,7 +7,7 @@ namespace Inertia\Ssr;
 final readonly class Response
 {
     /**
-     * Prepare the Inertia Server Side Rendering (SSR) response.
+     * Create a new SSR response instance.
      */
     public function __construct(
         public string $head,

@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Inertia\Props;
 
-use Inertia\Contracts\IgnoreFirstLoad;
+use Inertia\Contracts\IgnoreFirstLoadInterface;
+use Inertia\Contracts\InvokablePropInterface;
 
 use function Tempest\invoke;
 
-final class LazyProp implements IgnoreFirstLoad
+/**
+ * @deprecated Use OptionalProp instead for clearer semantics.
+ */
+final class LazyProp implements IgnoreFirstLoadInterface, InvokablePropInterface
 {
     public function __construct(
         /**
@@ -18,6 +22,10 @@ final class LazyProp implements IgnoreFirstLoad
         private $callback,
     ) {}
 
+    /**
+     * Resolve the property value.
+     */
+    #[\Override]
     public function __invoke(): mixed
     {
         return invoke($this->callback);

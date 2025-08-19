@@ -22,6 +22,9 @@ final readonly class StartSsr
         private StopSsr $stopSsrCommand,
     ) {}
 
+    /**
+     * Start the Inertia SSR server.
+     */
     #[ConsoleCommand(name: 'inertia:start-ssr', description: 'Start the Inertia SSR server')]
     public function __invoke(string $runtime = 'node'): ExitCode|int
     {

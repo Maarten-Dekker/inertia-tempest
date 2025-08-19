@@ -19,7 +19,7 @@ use Tempest\Router\HttpMiddlewareCallable;
 use Tempest\Support\Str;
 
 #[Priority(Priority::HIGH)]
-final readonly class SetCsrfCookie implements HttpMiddleware
+final readonly class SetCsrfCookieMiddleware implements HttpMiddleware
 {
     private const string COOKIE_NAME = 'XSRF-TOKEN';
 

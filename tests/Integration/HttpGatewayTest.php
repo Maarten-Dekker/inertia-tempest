@@ -7,7 +7,6 @@ use Inertia\Ssr\HttpGateway;
 use Inertia\Ssr\Response as SsrResponse;
 use Inertia\Tests\Fixtures\FakeClientResponse;
 use Inertia\Tests\TestCase;
-use Tempest\Http\Response;
 use Tempest\HttpClient\HttpClient;
 
 use function Tempest\root_path;

@@ -19,6 +19,11 @@ readonly class EncryptHistoryMiddleware implements HttpMiddleware
         private ResponseFactory $inertia,
     ) {}
 
+    /**
+     * Handle the incoming request and enable history encryption. This middleware
+     * enables encryption of the browser history state, providing additional
+     * security for sensitive data in Inertia responses.
+     */
     #[Override]
     public function __invoke(Request $request, HttpMiddlewareCallable $next): Response
     {

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Inertia\Tests\TestCase;
@@ -23,7 +22,7 @@ class HelperTest extends TestCase
 
     public function test_the_instance_is_the_same_as_the_facade_instance(): void
     {
-        Inertia::share('key', 'value');
+        inertia()->share('key', 'value');
 
         $this->assertSame('value', inertia()->getShared('key'));
     }

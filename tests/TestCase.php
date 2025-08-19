@@ -48,9 +48,9 @@ abstract class TestCase extends IntegrationTest
     #[Override]
     protected function tearDown(): void
     {
-        parent::tearDown();
-
         Mockery::close();
+
+        parent::tearDown();
     }
 
     protected function actAsHttpApplication(): HttpApplication

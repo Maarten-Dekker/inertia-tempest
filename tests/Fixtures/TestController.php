@@ -184,4 +184,79 @@ final class TestController
     {
         return inertia()->render('User/Edit');
     }
+
+    #[Get('/prop-provider-render')]
+    public function renderWithProvider(): Response
+    {
+        return inertia()->render(
+            'User/Edit',
+            new ExampleInertiaPropsProvider([
+                'foo' => 'bar',
+            ]),
+        );
+    }
+
+    #[Get('/prop-provider-mixed-render')]
+    public function renderWithMixedProps(): Response
+    {
+        return inertia()->render('User/Edit', [
+            'regular' => 'prop',
+            new ExampleInertiaPropsProvider(['from_object' => 'value']),
+            'another' => 'normal_prop',
+        ]);
+    }
+
+    #[Get('/prop-provider-share')]
+    public function shareWithProvider(): Response
+    {
+        inertia()->share(new ExampleInertiaPropsProvider(['shared' => 'data']));
+        return inertia()->render('User/Edit', ['regular' => 'prop']);
+    }
+
+    #[Get('/prop-provider-mixed-share')]
+    public function shareWithMixedProps(): Response
+    {
+        inertia()->share([
+            'regular' => 'shared_prop',
+            new ExampleInertiaPropsProvider(['from_object' => 'shared_value']),
+        ]);
+        return inertia()->render('User/Edit', ['component' => 'prop']);
+    }
+
+    #[Get('/prop-provider-responsable-test')]
+    public function responsableProps(): Response
+    {
+        return inertia()->render('User/Edit', [
+            'foo' => 'bar',
+            new ExampleInertiaPropsProvider(['baz' => 'qux']),
+            'quux' => 'corge',
+        ]);
+    }
+
+    #[Get('/merge-with-shared-test')]
+    public function mergeWithShared(): Response
+    {
+        inertia()->share('items', ['foo']);
+        inertia()->share('deep.foo.bar', ['foo']);
+
+        return inertia()->render('User/Edit', [
+            'items' => new MergeWithSharedProp(['bar']),
+            'deep' => [
+                'foo' => [
+                    'bar' => new MergeWithSharedProp(['baz']),
+                ],
+            ],
+        ]);
+    }
+
+    #[Get('/with-method-test')]
+    public function withMethod(): Response
+    {
+        $response = inertia()->render('User/Edit');
+
+        return $response
+            ->with(['foo' => 'bar', 'baz' => 'qux'])
+            ->with(['quux' => 'corge'])
+            ->with(new ExampleInertiaPropsProvider(['grault' => 'garply']));
+    }
 }

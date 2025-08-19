@@ -3,19 +3,23 @@
 declare(strict_types=1);
 
 use GuzzleHttp\Promise\PromiseInterface;
-use Inertia\Contracts\Arrayable;
+use Inertia\Contracts\ArrayableInterface;
+use Inertia\LazyBody;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
 use Inertia\Props\LazyProp;
 use Inertia\Props\MergeProp;
 use Inertia\Support\Header;
 use Inertia\Tests\Fixtures\FakeResource;
+use Inertia\Tests\Fixtures\TestController;
 use Inertia\Tests\TestCase;
 use Inertia\Views\InertiaView;
 use Tempest\Http\ContentType;
 use Tempest\Http\Response;
 use Tempest\Support\Paginator\Paginator;
 use Tempest\View\ViewRenderer;
+
+use function Tempest\uri;
 
 class ResponseTest extends TestCase
 {
@@ -29,11 +33,15 @@ class ResponseTest extends TestCase
             'user' => $user,
         ]);
 
-        $renderer = $this->container->get(ViewRenderer::class);
-        $page = $response->body->inertia['page'];
+        $this->assertInstanceOf(LazyBody::class, $response->body);
+
+        $resolvedBody = $response->body->jsonSerialize();
 
         $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $response->body);
+        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
+
+        $renderer = $this->container->get(ViewRenderer::class);
+        $page = $response->body->inertia['page'];
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -46,7 +54,7 @@ class ResponseTest extends TestCase
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
         $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
+        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
     public function test_server_response_with_deferred_prop(): void
@@ -60,11 +68,15 @@ class ResponseTest extends TestCase
             'foo' => new DeferProp(fn() => 'bar'),
         ]);
 
-        $renderer = $this->container->get(ViewRenderer::class);
-        $page = $response->body->inertia['page'];
+        $this->assertInstanceOf(LazyBody::class, $response->body);
+
+        $resolvedBody = $response->body->jsonSerialize();
 
         $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $response->body);
+        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
+
+        $renderer = $this->container->get(ViewRenderer::class);
+        $page = $response->body->inertia['page'];
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -80,7 +92,7 @@ class ResponseTest extends TestCase
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
         $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
+        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
     public function test_server_response_with_deferred_prop_and_multiple_groups(): void
@@ -98,9 +110,11 @@ class ResponseTest extends TestCase
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
+        $resolvedBody = $response->body->jsonSerialize();
 
+        $this->assertInstanceOf(LazyBody::class, $response->body);
         $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $response->body);
+        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -121,7 +135,7 @@ class ResponseTest extends TestCase
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
         $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
+        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
     public function test_server_response_with_merge_props(): void
@@ -138,9 +152,11 @@ class ResponseTest extends TestCase
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
+        $resolvedBody = $response->body->jsonSerialize();
 
+        $this->assertInstanceOf(LazyBody::class, $response->body);
         $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $response->body);
+        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -157,7 +173,7 @@ class ResponseTest extends TestCase
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
         $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
+        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
     public function test_server_response_with_deep_merge_props(): void
@@ -174,9 +190,11 @@ class ResponseTest extends TestCase
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
+        $resolvedBody = $response->body->jsonSerialize();
 
+        $this->assertInstanceOf(LazyBody::class, $response->body);
         $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $response->body);
+        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -193,7 +211,7 @@ class ResponseTest extends TestCase
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
         $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
+        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
     public function test_server_response_with_merge_strategies(): void
@@ -214,9 +232,11 @@ class ResponseTest extends TestCase
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
+        $resolvedBody = $response->body->jsonSerialize();
 
+        $this->assertInstanceOf(LazyBody::class, $response->body);
         $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $response->body);
+        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -234,7 +254,7 @@ class ResponseTest extends TestCase
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
         $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
+        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
     public function test_server_response_with_defer_and_merge_props(): void
@@ -251,9 +271,11 @@ class ResponseTest extends TestCase
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
+        $resolvedBody = $response->body->jsonSerialize();
 
+        $this->assertInstanceOf(LazyBody::class, $response->body);
         $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $response->body);
+        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -271,7 +293,7 @@ class ResponseTest extends TestCase
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
         $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
+        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
     public function test_server_response_with_defer_and_deep_merge_props(): void
@@ -288,9 +310,11 @@ class ResponseTest extends TestCase
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
+        $resolvedBody = $response->body->jsonSerialize();
 
+        $this->assertInstanceOf(LazyBody::class, $response->body);
         $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $response->body);
+        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -308,7 +332,7 @@ class ResponseTest extends TestCase
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
         $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
+        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
     public function test_exclude_merge_props_from_partial_only_response(): void
@@ -327,7 +351,7 @@ class ResponseTest extends TestCase
             'bar' => new MergeProp('bar value'),
         ]);
 
-        $page = $response->body;
+        $page = $response->body->jsonSerialize();
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
 
@@ -355,7 +379,7 @@ class ResponseTest extends TestCase
             'bar' => new MergeProp('bar value'),
         ]);
 
-        $page = $response->body;
+        $page = $response->body->jsonSerialize();
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
 
@@ -379,7 +403,7 @@ class ResponseTest extends TestCase
             'user' => $user,
         ]);
 
-        $page = $response->body;
+        $page = $response->body->jsonSerialize();
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
 
@@ -399,7 +423,7 @@ class ResponseTest extends TestCase
         $resource = new FakeResource(['name' => 'Jonathan']);
         $response = $this->factory->render('User/Edit', ['user' => $resource]);
 
-        $page = $response->body;
+        $page = $response->body->jsonSerialize();
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
 
@@ -422,7 +446,7 @@ class ResponseTest extends TestCase
             'organizations' => fn() => [['name' => 'Inertia']],
         ]);
 
-        $page = $response->body;
+        $page = $response->body->jsonSerialize();
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
         $this->assertSame('User/Index', $page['component']);
@@ -449,7 +473,7 @@ class ResponseTest extends TestCase
             'organizations' => fn() => [['name' => 'Inertia']],
         ]);
 
-        $page = $response->body;
+        $page = $response->body->jsonSerialize();
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
         $this->assertSame('User/Index', $page['component']);
@@ -535,7 +559,7 @@ class ResponseTest extends TestCase
         $this->factory->version('123');
         $response = $this->factory->render('User/Index', ['something' => $callable]);
 
-        $page = $response->body;
+        $page = $response->body->jsonSerialize();
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
         $this->assertSame('User/Index', $page['component']);
@@ -562,7 +586,7 @@ class ResponseTest extends TestCase
         $resource = new FakeResource(['name' => 'Jonathan']);
         $response = $this->factory->render('User/Edit', ['user' => $resource]);
 
-        $page = $response->body;
+        $page = $response->body->jsonSerialize();
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
         $this->assertSame('User/Edit', $page['component']);
@@ -586,7 +610,7 @@ class ResponseTest extends TestCase
         $this->factory->version('123');
         $response = $this->factory->render('User/Edit', ['user' => $promise]);
 
-        $page = $response->body;
+        $page = $response->body->jsonSerialize();
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
         $this->assertSame('User/Edit', $page['component']);
@@ -609,7 +633,7 @@ class ResponseTest extends TestCase
             'partial' => 'partial-data',
         ]);
 
-        $page = $response->body;
+        $page = $response->body->jsonSerialize();
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
         $this->assertSame('User/Edit', $page['component']);
@@ -636,7 +660,7 @@ class ResponseTest extends TestCase
             'partial' => 'partial-data',
         ]);
 
-        $page = $response->body;
+        $page = $response->body->jsonSerialize();
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
         $this->assertSame('User/Edit', $page['component']);
@@ -771,7 +795,7 @@ class ResponseTest extends TestCase
         );
 
         $deferProp = new DeferProp(function () {
-            return new class implements Arrayable {
+            return new class implements ArrayableInterface {
                 #[Override]
                 public function toArray(): array
                 {
@@ -818,6 +842,36 @@ class ResponseTest extends TestCase
         $this->assertSame('The email field is required.', $page['props']['errors']['name']);
         $this->assertSame('Taylor Otwell', $page['props']['data']['name']);
         $this->assertArrayNotHasKey('user', $page['props']);
+    }
+
+    public function test_inertia_responsable_objects(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'responsableProps']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $page = $response->body;
+        $props = $page['props'];
+
+        $this->assertSame('bar', $props['foo']);
+        $this->assertSame('qux', $props['baz']);
+        $this->assertSame('corge', $props['quux']);
+    }
+
+    public function test_props_can_be_merged_with_shared_data(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'mergeWithShared']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $page = $response->body;
+
+        $props = $page['props'];
+
+        $this->assertSame(['foo', 'bar'], $props['items']);
+        $this->assertSame(['foo', 'baz'], $props['deep']['foo']['bar']);
     }
 
     public function test_top_level_dot_props_get_unpacked(): void
@@ -876,6 +930,22 @@ class ResponseTest extends TestCase
         $this->assertArrayNotHasKey('can', $auth);
     }
 
+    public function test_props_can_be_added_using_the_with_method(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'withMethod']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $page = $response->body;
+        $props = $page['props'];
+
+        $this->assertSame('bar', $props['foo']);
+        $this->assertSame('qux', $props['baz']);
+        $this->assertSame('corge', $props['quux']);
+        $this->assertSame('garply', $props['grault']);
+    }
+
     public function test_responsable_with_invalid_key(): void
     {
         $this->makeRequest(headers: [Header::INERTIA => 'true']);
@@ -898,9 +968,11 @@ class ResponseTest extends TestCase
         ]);
 
         $page = $response->body->inertia['page'];
+        $resolvedBody = $response->body->jsonSerialize();
 
+        $this->assertInstanceOf(LazyBody::class, $response->body);
         $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $response->body);
+        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
         $this->assertSame('/sub/directory/user/123', $page['url']);
     }
 

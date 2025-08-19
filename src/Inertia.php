@@ -34,6 +34,9 @@ class Inertia extends Facade
         static::instance()->setRootView($name);
     }
 
+    /**
+     * @param array<array-key, mixed>|\Tempest\Support\Arr\ArrayInterface<array-key, mixed>|\Inertia\Contracts\ProvidesInertiaPropertiesInterface $key
+     */
     public static function share(string|array|ArrayInterface $key, mixed $value = null): void
     {
         static::instance()->share($key, $value);
@@ -105,6 +108,9 @@ class Inertia extends Facade
         return static::instance()->deepMerge($value);
     }
 
+    /**
+     * @param array<array-key, mixed>|\Tempest\Support\Arr\ArrayInterface<array-key, mixed>|\Inertia\Contracts\ProvidesInertiaPropertiesInterface $props
+     */
     public static function render(string $component, array|ArrayInterface $props = []): Response
     {
         return static::instance()->render($component, $props);

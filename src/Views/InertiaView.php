@@ -21,7 +21,7 @@ final class InertiaView implements View
     ) {}
 
     /**
-     * Renders the Inertia root div.
+     * Renders the Inertia root element.
      *
      * @throws JsonException if the page data cannot be encoded to JSON.
      */
@@ -35,7 +35,7 @@ final class InertiaView implements View
     }
 
     /**
-     * Renders the Inertia head elements from SSR.
+     * Renders the content for SSR responses.
      */
     public function inertiaHead(): HtmlString
     {

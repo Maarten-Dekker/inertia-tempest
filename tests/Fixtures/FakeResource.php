@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Inertia\Tests\Fixtures;
 
-use Inertia\Contracts\Arrayable;
+use Inertia\Contracts\ArrayableInterface;
 use Override;
 
-final readonly class FakeResource implements Arrayable
+final readonly class FakeResource implements ArrayableInterface
 {
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public function __construct(
         private array $data,
     ) {}

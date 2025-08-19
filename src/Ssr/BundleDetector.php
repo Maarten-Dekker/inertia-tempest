@@ -6,14 +6,18 @@ namespace Inertia\Ssr;
 
 use Inertia\Configs\InertiaConfig;
 
+use function Tempest\get;
 use function Tempest\root_path;
 
-final readonly class BundleDetector
+final class BundleDetector
 {
-    public function __construct(
-        private InertiaConfig $config,
-    ) {}
+    private InertiaConfig $config {
+        get => get(InertiaConfig::class);
+    }
 
+    /**
+     * Detect and return the path to the SSR bundle file.
+     */
     public function detect(): ?string
     {
         $potentialPaths = [

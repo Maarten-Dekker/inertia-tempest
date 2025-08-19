@@ -7,6 +7,7 @@ namespace Inertia;
 use Closure;
 use Deprecated;
 use Inertia\Configs\InertiaConfig;
+use Inertia\Contracts\ProvidesInertiaPropertiesInterface;
 use Inertia\Exceptions\ComponentNotFoundException;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
@@ -29,16 +30,41 @@ use function Tempest\invoke;
 #[Singleton]
 final class ResponseFactory
 {
+    /**
+     * @var array<string, bool>
+     */
+    private array $componentCache = [];
+
+    /**
+     * The name of the root view.
+     */
     private string $rootView = 'inertia.view.php';
 
+    /**
+     * The shared properties.
+     *
+     * @var array<string, mixed>
+     */
     private array $sharedProps = [];
 
+    /**
+     * The asset version.
+     */
     private Closure|string|int|float|null $version = null;
 
+    /**
+     * Indicates if the browser history should be cleared.
+     */
     private bool $clearHistory = false;
 
+    /**
+     * Indicates if the browser history should be encrypted.
+     */
     private ?bool $encryptHistory = null;
 
+    /**
+     * The URL resolver callback.
+     */
     private ?Closure $urlResolver = null;
 
     private Session $session {
@@ -54,7 +80,9 @@ final class ResponseFactory
     }
 
     /**
-     * Sets the root view that all Inertia responses will use.
+     * Set the root view template for Inertia responses. This template
+     * serves as the HTML wrapper that contains the Inertia root element
+     * where the frontend application will be mounted.
      */
     public function setRootView(string $name): void
     {
@@ -62,33 +90,49 @@ final class ResponseFactory
     }
 
     /**
-     * Add shared data to the response.
+     * Share data across all Inertia responses. This data is automatically
+     * included with every response, making it ideal for user authentication
+     * state, flash messages, etc.
+     *
+     * @param  string|array<array-key, mixed>|\Tempest\Support\Arr\ArrayInterface<array-key, mixed>  $key
      */
-    public function share(string|array|ArrayInterface $key, mixed $value = null): void
-    {
-        if ($key instanceof ArrayInterface) {
-            $this->sharedProps = Arr\merge($this->sharedProps, $key->toArray());
-        } elseif (is_array($key)) {
+    public function share(
+        string|array|ArrayInterface|ProvidesInertiaPropertiesInterface $key,
+        mixed $value = null,
+    ): void {
+        if (is_array($key)) {
             $this->sharedProps = array_merge($this->sharedProps, $key);
+        } elseif ($key instanceof ArrayInterface) {
+            $this->sharedProps = Arr\merge($this->sharedProps, $key->toArray());
+        } elseif ($key instanceof ProvidesInertiaPropertiesInterface) {
+            $this->sharedProps = array_merge($this->sharedProps, [$key]);
         } else {
             $this->sharedProps = Arr\set_by_key($this->sharedProps, $key, $value);
         }
     }
 
     /**
-     * Get the shared data.
+     * Get the shared data for a given key. Returns all shared data if
+     * no key is provided, or the value for a specific key with an
+     * optional default fallback.
      */
     public function getShared(?string $key = null, mixed $default = null): mixed
     {
         if ($key) {
-            return Arr\get_by_key($this->sharedProps, $key, $default);
+            $value = Arr\get_by_key($this->sharedProps, $key, $default);
+
+            if ($value instanceof ArrayInterface) {
+                return $value->toArray();
+            }
+
+            return $value;
         }
 
         return $this->sharedProps;
     }
 
     /**
-     * Flush the shared data.
+     * Flush all shared data.
      */
     public function flushShared(): void
     {
@@ -96,7 +140,7 @@ final class ResponseFactory
     }
 
     /**
-     * Sets the asset version.
+     * Set the asset version.
      */
     public function version(Closure|string|int|float|null $version): void
     {
@@ -104,7 +148,7 @@ final class ResponseFactory
     }
 
     /**
-     * Gets the asset version.
+     * Get the asset version.
      */
     public function getVersion(): string
     {
@@ -114,7 +158,7 @@ final class ResponseFactory
     }
 
     /**
-     * Sets the URL resolver.
+     * Set the URL resolver.
      */
     public function resolveUrlUsing(?Closure $urlResolver = null): void
     {
@@ -122,7 +166,7 @@ final class ResponseFactory
     }
 
     /**
-     * Clears the history.
+     * Clear the browser history on the next visit.
      */
     public function clearHistory(): void
     {
@@ -130,13 +174,16 @@ final class ResponseFactory
     }
 
     /**
-     * Encrypts the history.
+     * Encrypt the browser history.
      */
     public function encryptHistory(bool $encrypt = true): void
     {
         $this->encryptHistory = $encrypt;
     }
 
+    /**
+     * Create a lazy property.
+     */
     #[Deprecated(message: 'Use `optional` instead.')]
     public function lazy(callable $callback): LazyProp
     {
@@ -144,7 +191,7 @@ final class ResponseFactory
     }
 
     /**
-     * Create a new optional property.
+     * Create an optional property.
      */
     public function optional(callable $callback): OptionalProp
     {
@@ -152,7 +199,7 @@ final class ResponseFactory
     }
 
     /**
-     * Create a new deferred property.
+     * Create a deferred property.
      */
     public function defer(callable $callback, string $group = 'default'): DeferProp
     {
@@ -160,7 +207,7 @@ final class ResponseFactory
     }
 
     /**
-     * Create a new mergeable property.
+     * Create a merge property.
      */
     public function merge(mixed $value): MergeProp
     {
@@ -168,7 +215,7 @@ final class ResponseFactory
     }
 
     /**
-     * Create a new deep mergeable property.
+     * Create a deep merge property.
      */
     public function deepMerge(mixed $value): MergeProp
     {
@@ -176,7 +223,7 @@ final class ResponseFactory
     }
 
     /**
-     * Create a new always property.
+     * Create an always property.
      */
     public function always(mixed $value): AlwaysProp
     {
@@ -184,21 +231,29 @@ final class ResponseFactory
     }
 
     /**
-     * Create a new Inertia response.
+     * Create an Inertia response.
+     *
+     * @param  array<array-key, mixed>|\Tempest\Support\Arr\ArrayInterface<array-key, mixed>  $props
      */
-    public function render(string $component, array|ArrayInterface $props = []): Response
-    {
+    public function render(
+        string $component,
+        array|ArrayInterface|ProvidesInertiaPropertiesInterface $props = [],
+    ): Response {
         if ($this->config->pages->ensure_pages_exists) {
             $this->findComponentOrFail($component);
         }
 
         if ($props instanceof ArrayInterface) {
             $props = $props->toArray();
+        } elseif ($props instanceof ProvidesInertiaPropertiesInterface) {
+            $props = [$props];
         }
+
+        $combinedProps = array_merge($this->sharedProps, $props);
 
         return new Response(
             $component,
-            array_merge($this->sharedProps, $props),
+            $combinedProps,
             $this->rootView,
             $this->getVersion(),
             $this->clearHistory,
@@ -208,7 +263,7 @@ final class ResponseFactory
     }
 
     /**
-     * Redirect to a new location.
+     * Create an Inertia location response.
      */
     public function location(string|Redirect $url): GenericResponse|Redirect
     {
@@ -226,10 +281,22 @@ final class ResponseFactory
         return ($url instanceof Redirect) ? $url : new Redirect($url);
     }
 
+    /**
+     * Find the component or fail.
+     *
+     * @throws \Inertia\Exceptions\ComponentNotFoundException
+     */
     private function findComponentOrFail(string $component): void
     {
-        $componentPath = str_replace('/', DIRECTORY_SEPARATOR, $component);
+        if (isset($this->componentCache[$component])) {
+            if ($this->componentCache[$component] === false) {
+                throw new ComponentNotFoundException($component, $this->config->pages->page_paths);
+            }
 
+            return;
+        }
+
+        $componentPath = str_replace('/', DIRECTORY_SEPARATOR, $component);
         $paths = $this->config->pages->page_paths;
         $extensions = $this->config->pages->page_extensions;
 
@@ -238,11 +305,13 @@ final class ResponseFactory
                 $ext = str_starts_with((string) $extension, '.') ? $extension : ('.' . $extension);
 
                 if (file_exists($path . DIRECTORY_SEPARATOR . $componentPath . $ext)) {
+                    $this->componentCache[$component] = true;
                     return;
                 }
             }
         }
 
+        $this->componentCache[$component] = false;
         throw new ComponentNotFoundException($component, $paths);
     }
 }
