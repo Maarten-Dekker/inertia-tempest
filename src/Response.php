@@ -252,7 +252,7 @@ final class Response implements HttpResponse
             return $prop instanceof AlwaysProp;
         });
 
-        return array_merge($props, $always);
+        return array_merge($always, $props);
     }
 
     /**
