@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use GuzzleHttp\Promise\PromiseInterface;
-use Inertia\Contracts\ArrayableInterface;
+use Inertia\Contracts\Arrayable;
 use Inertia\LazyBody;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
@@ -16,6 +16,7 @@ use Inertia\Tests\TestCase;
 use Inertia\Views\InertiaView;
 use Tempest\Http\ContentType;
 use Tempest\Http\Response;
+use Tempest\Support\Paginator\PaginatedData;
 use Tempest\Support\Paginator\Paginator;
 use Tempest\View\ViewRenderer;
 
@@ -126,10 +127,13 @@ class ResponseTest extends TestCase
         $this->assertArrayNotHasKey('foo', $page['props']);
         $this->assertArrayNotHasKey('bar', $page['props']);
         $this->assertArrayNotHasKey('baz', $page['props']);
-        $this->assertSame([
-            'default' => ['foo', 'bar'],
-            'custom' => ['baz'],
-        ], $page['deferredProps']);
+        $this->assertSame(
+            [
+                'default' => ['foo', 'bar'],
+                'custom' => ['baz'],
+            ],
+            $page['deferredProps'],
+        );
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deferredProps":{"default":["foo","bar"],"custom":["baz"]}}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
@@ -494,18 +498,19 @@ class ResponseTest extends TestCase
             ],
         );
 
-        $users = [
-            ['name' => 'Jonathan'],
-            ['name' => 'Taylor'],
-            ['name' => 'Jeffrey'],
-        ];
+        $callable = static function (): PaginatedData {
+            $users = [
+                ['name' => 'Jonathan'],
+                ['name' => 'Taylor'],
+                ['name' => 'Jeffrey'],
+            ];
 
-        $callable = static function () use ($users) {
             $paginator = new Paginator(
                 totalItems: count($users),
                 itemsPerPage: 2,
                 currentPage: 1,
             );
+
             return $paginator->paginate(array_slice($users, 0, 2));
         };
 
@@ -539,18 +544,19 @@ class ResponseTest extends TestCase
             ],
         );
 
-        $users = [
-            ['name' => 'Jonathan'],
-            ['name' => 'Taylor'],
-            ['name' => 'Jeffrey'],
-        ];
+        $callable = static function (): array {
+            $users = [
+                ['name' => 'Jonathan'],
+                ['name' => 'Taylor'],
+                ['name' => 'Jeffrey'],
+            ];
 
-        $callable = static function () use ($users) {
             $paginator = new Paginator(
                 totalItems: count($users),
                 itemsPerPage: 2,
                 currentPage: 1,
             );
+
             return [
                 'users' => $paginator->paginate(array_slice($users, 0, 2)),
             ];
@@ -794,14 +800,12 @@ class ResponseTest extends TestCase
             ],
         );
 
-        $deferProp = new DeferProp(function () {
-            return new class implements ArrayableInterface {
-                #[Override]
-                public function toArray(): array
-                {
-                    return ['foo' => 'bar'];
-                }
-            };
+        $deferProp = new DeferProp(fn(): Arrayable => new class implements Arrayable {
+            #[Override]
+            public function toArray(): array
+            {
+                return ['foo' => 'bar'];
+            }
         });
 
         $response = $this->factory->render('Users', [

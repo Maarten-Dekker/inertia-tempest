@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Inertia\Contracts;
 
-interface ArrayableInterface
+interface Arrayable
 {
     /**
      * @return array<string, mixed>

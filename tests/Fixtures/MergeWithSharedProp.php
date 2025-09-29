@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Inertia\Tests\Fixtures;
 
-use Inertia\Contracts\ProvidesInertiaPropertyInterface;
+use Inertia\Contracts\ProvidesInertiaProperty;
 use Inertia\Support\PropertyContext;
 use Override;
 use Tempest\Discovery\SkipDiscovery;
 
 #[SkipDiscovery]
-final readonly class MergeWithSharedProp implements ProvidesInertiaPropertyInterface
+final readonly class MergeWithSharedProp implements ProvidesInertiaProperty
 {
     /**
      * @param  array<int, mixed>  $items

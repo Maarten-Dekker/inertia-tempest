@@ -4,6 +4,6 @@ declare(strict_types=1);
 
 namespace Inertia\Contracts;
 
-interface IgnoreFirstLoadInterface
+interface IgnoreFirstLoad
 {
 }

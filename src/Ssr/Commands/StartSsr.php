@@ -12,6 +12,8 @@ use Tempest\Console\ConsoleCommand;
 use Tempest\Console\ExitCode;
 use Tempest\Console\HasConsole;
 
+use function Tempest\report;
+
 final readonly class StartSsr
 {
     use HasConsole;
@@ -40,7 +42,7 @@ final readonly class StartSsr
         if ($bundle === null) {
             $this->console->error(
                 $configuredBundle
-                    ? ('Inertia SSR bundle not found at the configured path: "' . $configuredBundle . '"')
+                    ? 'Inertia SSR bundle not found at the configured path: "' . $configuredBundle . '"'
                     : 'Inertia SSR bundle not found. Set the correct Inertia SSR bundle path in your `inertia.ssr.bundle` config.',
             );
 
@@ -77,10 +79,11 @@ final readonly class StartSsr
         foreach ($process as $type => $data) {
             if ($process::OUT === $type) {
                 $this->console->info(trim($data));
-            } else {
-                $this->console->error(trim($data));
-                new SsrException($data);
+                continue;
             }
+
+            $this->console->error(trim($data));
+            report(new SsrException($data));
         }
 
         return ExitCode::SUCCESS;

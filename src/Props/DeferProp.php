@@ -4,16 +4,22 @@ declare(strict_types=1);
 
 namespace Inertia\Props;
 
-use Inertia\Contracts\IgnoreFirstLoadInterface;
-use Inertia\Contracts\InvokablePropInterface;
-use Inertia\Contracts\MergeableInterface;
+use Inertia\Contracts\IgnoreFirstLoad;
+use Inertia\Contracts\InvokableProp;
+use Inertia\Contracts\Mergeable;
 use Inertia\Traits\MergesProps;
 
 use function Tempest\invoke;
 
-final class DeferProp implements IgnoreFirstLoadInterface, MergeableInterface, InvokablePropInterface
+final class DeferProp implements IgnoreFirstLoad, Mergeable, InvokableProp
 {
     use MergesProps;
+
+    /**
+     * @mago-expect lint:property-type
+     * @var callable
+     */
+    private $callback;
 
     /**
      * Create a new deferred property instance. Deferred properties are excluded
@@ -22,12 +28,13 @@ final class DeferProp implements IgnoreFirstLoadInterface, MergeableInterface, I
      */
     public function __construct(
         /**
-         * @mago-expect strictness/require-parameter-type
          * @var callable
          */
-        private $callback,
+        callable $callback,
         private readonly string $group = 'default',
-    ) {}
+    ) {
+        $this->callback = $callback;
+    }
 
     /**
      * Get the defer group for this property. Properties with the same group

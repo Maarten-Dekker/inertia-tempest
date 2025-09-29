@@ -282,7 +282,7 @@ class MiddlewareTest extends TestCase
             $this->assertInstanceOf(InertiaView::class, $response->body);
             $this->assertSame(hash('xxh128', $url), $page['version']);
         } finally {
-            if ($originalEnv === false) {
+            if (!$originalEnv) {
                 putenv('VITE_ASSET_URL');
             } else {
                 putenv("VITE_ASSET_URL={$originalEnv}");
@@ -337,7 +337,7 @@ class MiddlewareTest extends TestCase
             $this->assertSame(hash_file('xxh128', $manifestPath), $page['version']);
         } finally {
             unlink($manifestPath);
-            if ($originalEnv === false) {
+            if (!$originalEnv) {
                 putenv('TEMPEST_PLUGIN_CONFIGURATION_PATH');
             } else {
                 putenv("TEMPEST_PLUGIN_CONFIGURATION_PATH={$originalEnv}");

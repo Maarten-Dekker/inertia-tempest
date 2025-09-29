@@ -4,23 +4,26 @@ declare(strict_types=1);
 
 namespace Inertia\Props;
 
-use Inertia\Contracts\IgnoreFirstLoadInterface;
-use Inertia\Contracts\InvokablePropInterface;
+use Inertia\Contracts\IgnoreFirstLoad;
+use Inertia\Contracts\InvokableProp;
 
 use function Tempest\invoke;
 
 /**
  * @deprecated Use OptionalProp instead for clearer semantics.
  */
-final class LazyProp implements IgnoreFirstLoadInterface, InvokablePropInterface
+final class LazyProp implements IgnoreFirstLoad, InvokableProp
 {
-    public function __construct(
-        /**
-         * @mago-expect strictness/require-parameter-type
-         * @var callable
-         */
-        private $callback,
-    ) {}
+    /**
+     * @mago-expect lint:property-type
+     * @var callable
+     */
+    private $callback;
+
+    public function __construct(callable $callback)
+    {
+        $this->callback = $callback;
+    }
 
     /**
      * Resolve the property value.

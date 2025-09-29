@@ -24,7 +24,7 @@ final readonly class CheckSsr
     #[ConsoleCommand(name: 'inertia:check-ssr', description: 'Check the Inertia SSR server health status')]
     public function __invoke(bool $silent = false): ExitCode|int
     {
-        if (!($this->gateway instanceof HasHealthCheck)) {
+        if (!$this->gateway instanceof HasHealthCheck) {
             if (!$silent) {
                 $this->console->error('The SSR gateway does not support health checks.');
             }

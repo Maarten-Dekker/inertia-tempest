@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Inertia\Tests\Fixtures;
 
-use Inertia\Contracts\ProvidesInertiaPropertiesInterface;
+use Inertia\Contracts\ProvidesInertiaProperties;
 use Inertia\Support\RenderContext;
 use Override;
 
-final readonly class ExampleInertiaPropsProvider implements ProvidesInertiaPropertiesInterface
+final readonly class ExampleInertiaPropsProvider implements ProvidesInertiaProperties
 {
     /**
      * @param  array<string, mixed>  $props

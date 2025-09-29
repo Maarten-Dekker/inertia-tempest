@@ -1,96 +1,33 @@
-php_version = "8.4.0"
+php-version = "8.4.0"
 
 [source]
 paths = ["src", "tests"]
 includes = ["vendor"]
-excludes = [
-    "./vendor/symfony/cache/Traits/ValueWrapper.php",
-    "./vendor/composer",
-    "./tests/Fixtures/inertia.view.php"
-]
+excludes = []
 
-[format]
-print_width = 120
-null_type_hint = "question"
+[formatter]
+print-width = 120
+null-type-hint = "question"
 
 [linter]
-default_plugins = true
-plugins = ["php-unit"]
+integrations = ["tempest", "phpunit"]
 
-# MAINTENABILITY
-[[linter.rules]]
-name = "maintainability/too-many-enum-cases"
-level = "off"
+[linter.rules]
+literal-named-argument = { enabled = false }
+parameter-type = { ignore-closure = true, ignore-arrow-function = true }
+return-type = { ignore-arrow-function = true }
+no-boolean-flag-parameter = { enabled = false }
+assertion-style = { style = "$this"}
+class-name = { enabled = false}
+interface-name = { enabled = false}
+trait-name = { enabled = false}
+too-many-methods = { enabled = false }
+no-else-clause = { enabled = false }
+excessive-parameter-list = { enabled = false }
+halstead = { enabled = false }
+kan-defect = { enabled = false }
+cyclomatic-complexity = { enabled = false }
+yoda-conditions = { enabled = false }
+no-redundant-file = { enabled = false }
 
-[[linter.rules]]
-name = "maintainability/excessive-parameter-list"
-level = "off"
-
-[[linter.rules]]
-name = "maintainability/too-many-methods"
-level = "off"
-
-[[linter.rules]]
-name = "maintainability/kan-defect"
-level = "off"
-
-[[linter.rules]]
-name = "maintainability/halstead"
-level = "off"
-
-[[linter.rules]]
-name = "maintainability/cyclomatic-complexity"
-level = "off"
-
-# NAMING
-[[linter.rules]]
-name = "naming/interface"
-psr = false
-
-[[linter.rules]]
-name = "naming/trait"
-psr = false
-
-[[linter.rules]]
-name = "naming/class"
-psr = false
-
-# STRICTNESS
-[[linter.rules]]
-name = "strictness/require-return-type"
-ignore_arrow_function = true
-ignore_closure = true
-
-# https://github.com/carthage-software/mago/issues/206
-[[linter.rules]]
-name = "best-practices/literal-named-argument"
-level = "off"
-
-# https://github.com/carthage-software/mago/issues/146
-[[linter.rules]]
-name = "strictness/require-strict-types"
-level = "off"
-
-[[linter.rules]]
-name = "strictness/require-parameter-type"
-ignore_arrow_function = true
-ignore_closure = true
-
-# BEST PRACTICES
-[[linter.rules]]
-name = "best-practices/no-else-clause"
-level = "off"
-
-[[linter.rules]]
-name = "best-practices/no-boolean-flag-parameter"
-level = "off"
-
-# COMMENT
-[[linter.rules]]
-name = "comment/no-untagged-todo"
-level = "off"
-
-# PHPUNIT
-[[linter.rules]]
-name = "php-unit/assertions-style"
-level = "off"
+[analyzer]

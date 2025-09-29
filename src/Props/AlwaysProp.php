@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Inertia\Props;
 
 use Closure;
-use Inertia\Contracts\InvokablePropInterface;
+use Inertia\Contracts\InvokableProp;
 
 use function Tempest\invoke;
 
-final readonly class AlwaysProp implements InvokablePropInterface
+final readonly class AlwaysProp implements InvokableProp
 {
     /**
      * Create a new always property instance. Always properties are included

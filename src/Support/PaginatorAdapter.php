@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Inertia\Support;
 
-use Inertia\Contracts\ArrayableInterface;
+use Inertia\Contracts\Arrayable;
 use Override;
 use Tempest\Http\Request;
 use Tempest\Support\Paginator\PaginatedData;
 
 use function Tempest\get;
 
-class PaginatorAdapter implements ArrayableInterface
+class PaginatorAdapter implements Arrayable
 {
     protected Request $request;
 

@@ -6,7 +6,7 @@ namespace Inertia\Contracts;
 
 use Inertia\Support\RenderContext;
 
-interface ProvidesInertiaPropertiesInterface
+interface ProvidesInertiaProperties
 {
     /**
      * Get the properties to be provided to Inertia. This method allows objects

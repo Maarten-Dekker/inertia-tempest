@@ -35,7 +35,7 @@ class Inertia extends Facade
     }
 
     /**
-     * @param array<array-key, mixed>|\Tempest\Support\Arr\ArrayInterface<array-key, mixed>|\Inertia\Contracts\ProvidesInertiaPropertiesInterface $key
+     * @param array<array-key, mixed>|\Tempest\Support\Arr\ArrayInterface<array-key, mixed>|\Inertia\Contracts\ProvidesInertiaProperties $key
      */
     public static function share(string|array|ArrayInterface $key, mixed $value = null): void
     {
@@ -109,7 +109,7 @@ class Inertia extends Facade
     }
 
     /**
-     * @param array<array-key, mixed>|\Tempest\Support\Arr\ArrayInterface<array-key, mixed>|\Inertia\Contracts\ProvidesInertiaPropertiesInterface $props
+     * @param array<array-key, mixed>|\Tempest\Support\Arr\ArrayInterface<array-key, mixed>|\Inertia\Contracts\ProvidesInertiaProperties $props
      */
     public static function render(string $component, array|ArrayInterface $props = []): Response
     {

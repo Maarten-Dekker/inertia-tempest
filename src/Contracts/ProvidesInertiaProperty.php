@@ -6,7 +6,7 @@ namespace Inertia\Contracts;
 
 use Inertia\Support\PropertyContext;
 
-interface ProvidesInertiaPropertyInterface
+interface ProvidesInertiaProperty
 {
     /**
      * Convert the instance to an Inertia property value. This method is called

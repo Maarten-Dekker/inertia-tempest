@@ -7,7 +7,7 @@ namespace Inertia;
 use Closure;
 use Deprecated;
 use Inertia\Configs\InertiaConfig;
-use Inertia\Contracts\ProvidesInertiaPropertiesInterface;
+use Inertia\Contracts\ProvidesInertiaProperties;
 use Inertia\Exceptions\ComponentNotFoundException;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
@@ -96,15 +96,13 @@ final class ResponseFactory
      *
      * @param  string|array<array-key, mixed>|\Tempest\Support\Arr\ArrayInterface<array-key, mixed>  $key
      */
-    public function share(
-        string|array|ArrayInterface|ProvidesInertiaPropertiesInterface $key,
-        mixed $value = null,
-    ): void {
+    public function share(string|array|ArrayInterface|ProvidesInertiaProperties $key, mixed $value = null): void
+    {
         if (is_array($key)) {
             $this->sharedProps = array_merge($this->sharedProps, $key);
         } elseif ($key instanceof ArrayInterface) {
             $this->sharedProps = Arr\merge($this->sharedProps, $key->toArray());
-        } elseif ($key instanceof ProvidesInertiaPropertiesInterface) {
+        } elseif ($key instanceof ProvidesInertiaProperties) {
             $this->sharedProps = array_merge($this->sharedProps, [$key]);
         } else {
             $this->sharedProps = Arr\set_by_key($this->sharedProps, $key, $value);
@@ -152,7 +150,7 @@ final class ResponseFactory
      */
     public function getVersion(): string
     {
-        $version = ($this->version instanceof Closure) ? invoke($this->version) : $this->version;
+        $version = $this->version instanceof Closure ? invoke($this->version) : $this->version;
 
         return (string) $version;
     }
@@ -235,17 +233,15 @@ final class ResponseFactory
      *
      * @param  array<array-key, mixed>|\Tempest\Support\Arr\ArrayInterface<array-key, mixed>  $props
      */
-    public function render(
-        string $component,
-        array|ArrayInterface|ProvidesInertiaPropertiesInterface $props = [],
-    ): Response {
+    public function render(string $component, array|ArrayInterface|ProvidesInertiaProperties $props = []): Response
+    {
         if ($this->config->pages->ensure_pages_exists) {
             $this->findComponentOrFail($component);
         }
 
         if ($props instanceof ArrayInterface) {
             $props = $props->toArray();
-        } elseif ($props instanceof ProvidesInertiaPropertiesInterface) {
+        } elseif ($props instanceof ProvidesInertiaProperties) {
             $props = [$props];
         }
 
@@ -278,7 +274,7 @@ final class ResponseFactory
             );
         }
 
-        return ($url instanceof Redirect) ? $url : new Redirect($url);
+        return $url instanceof Redirect ? $url : new Redirect($url);
     }
 
     /**
@@ -289,7 +285,7 @@ final class ResponseFactory
     private function findComponentOrFail(string $component): void
     {
         if (isset($this->componentCache[$component])) {
-            if ($this->componentCache[$component] === false) {
+            if (!$this->componentCache[$component]) {
                 throw new ComponentNotFoundException($component, $this->config->pages->page_paths);
             }
 
@@ -302,7 +298,7 @@ final class ResponseFactory
 
         foreach ($paths as $path) {
             foreach ($extensions as $extension) {
-                $ext = str_starts_with((string) $extension, '.') ? $extension : ('.' . $extension);
+                $ext = str_starts_with((string) $extension, '.') ? $extension : '.' . $extension;
 
                 if (file_exists($path . DIRECTORY_SEPARATOR . $componentPath . $ext)) {
                     $this->componentCache[$component] = true;

@@ -12,9 +12,7 @@ final class AlwaysPropTest extends TestCase
 {
     public function test_can_invoke(): void
     {
-        $alwaysProp = new AlwaysProp(function () {
-            return 'An always value';
-        });
+        $alwaysProp = new AlwaysProp(fn(): string => 'An always value');
 
         $this->assertSame('An always value', $alwaysProp());
     }
@@ -42,9 +40,7 @@ final class AlwaysPropTest extends TestCase
 
     public function test_can_resolve_bindings_when_invoked(): void
     {
-        $alwaysProp = new AlwaysProp(function (Request $request) {
-            return $request;
-        });
+        $alwaysProp = new AlwaysProp(fn(Request $request): Request => $request);
 
         $this->assertInstanceOf(Request::class, $alwaysProp());
     }

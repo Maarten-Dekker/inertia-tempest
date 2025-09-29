@@ -37,9 +37,7 @@ final readonly class StopSsr
 
         $url = rtrim($this->config->ssr->url, '/') . '/shutdown';
 
-        /**
-         * @mago-expect best-practices/no-empty-catch-clause
-         */
+        // @mago-ignore lint:no-empty-catch-clause
         try {
             $this->client->post($url);
         } catch (Throwable) {

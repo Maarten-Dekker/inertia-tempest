@@ -9,12 +9,12 @@ use DateInterval;
 use DateTimeImmutable;
 use GuzzleHttp\Promise\PromiseInterface;
 use Inertia\Configs\InertiaConfig;
-use Inertia\Contracts\ArrayableInterface;
-use Inertia\Contracts\IgnoreFirstLoadInterface;
-use Inertia\Contracts\InvokablePropInterface;
-use Inertia\Contracts\MergeableInterface;
-use Inertia\Contracts\ProvidesInertiaPropertiesInterface;
-use Inertia\Contracts\ProvidesInertiaPropertyInterface;
+use Inertia\Contracts\Arrayable;
+use Inertia\Contracts\IgnoreFirstLoad;
+use Inertia\Contracts\InvokableProp;
+use Inertia\Contracts\Mergeable;
+use Inertia\Contracts\ProvidesInertiaProperties;
+use Inertia\Contracts\ProvidesInertiaProperty;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
 use Inertia\Ssr\Contracts\Gateway;
@@ -71,7 +71,7 @@ final class Response implements HttpResponse
     /**
      * Create a new Inertia response instance.
      *
-     * @param  array<array-key, mixed|\Inertia\Contracts\ProvidesInertiaPropertiesInterface>  $props
+     * @param  array<array-key, mixed|\Inertia\Contracts\ProvidesInertiaProperties>  $props
      */
     public function __construct(
         private readonly string $component,
@@ -82,7 +82,7 @@ final class Response implements HttpResponse
         private readonly bool $encryptHistory = false,
         private readonly ?Closure $urlResolver = null,
     ) {
-        $this->body = new LazyBody(function () {
+        $this->body = new LazyBody(function (): array|null|InertiaView {
             $this->props = $this->normalizeProps($this->props);
             $resolvedProps = $this->resolveProperties($this->props);
 
@@ -107,17 +107,17 @@ final class Response implements HttpResponse
     /**
      * Add additional properties to the page.
      *
-     * @param  string|array<string, mixed>|\Inertia\Contracts\ProvidesInertiaPropertiesInterface  $key
+     * @param  string|array<string, mixed>|\Inertia\Contracts\ProvidesInertiaProperties  $key
      */
-    public function with(string|array|ProvidesInertiaPropertiesInterface $key, mixed $value = null): self
+    public function with(string|array|ProvidesInertiaProperties $key, mixed $value = null): self
     {
-        if ($key instanceof ProvidesInertiaPropertiesInterface) {
+        if ($key instanceof ProvidesInertiaProperties) {
             $this->props[] = $key;
-        } elseif (is_array($key)) {
-            $this->props = array_merge($this->props, $key);
-        } else {
-            $this->props[$key] = $value;
+            return $this;
         }
+
+        $data = is_array($key) ? $key : [$key => $value];
+        $this->props = array_merge($this->props, $data);
 
         return $this;
     }
@@ -127,11 +127,9 @@ final class Response implements HttpResponse
      */
     public function withViewData(string|array $key, mixed $value = null): self
     {
-        if (is_array($key)) {
-            $this->viewData = array_merge($this->viewData, $key);
-        } else {
-            $this->viewData[$key] = $value;
-        }
+        $data = is_array($key) ? $key : [$key => $value];
+
+        $this->viewData = array_merge($this->viewData, $data);
 
         return $this;
     }
@@ -174,7 +172,7 @@ final class Response implements HttpResponse
     }
 
     /**
-     * Resolve the ProvidesInertiaPropertiesInterface props.
+     * Resolve the ProvidesInertiaProperties props.
      *
      * @param  array<array-key, mixed>  $props
      * @return array<string, mixed>
@@ -186,13 +184,14 @@ final class Response implements HttpResponse
         $renderContext = new RenderContext($this->component);
 
         foreach ($props as $key => $value) {
-            if (is_numeric($key) && $value instanceof ProvidesInertiaPropertiesInterface) {
+            if (is_numeric($key) && $value instanceof ProvidesInertiaProperties) {
                 /** @var array<string, mixed> $inertiaProps */
                 $inertiaProps = to_array($value->toInertiaProperties($renderContext));
                 $newProps = array_merge($newProps, $inertiaProps);
-            } else {
-                $newProps[$key] = $value;
+                continue;
             }
+
+            $newProps[$key] = $value;
         }
 
         return $newProps;
@@ -209,9 +208,7 @@ final class Response implements HttpResponse
     public function resolvePartialProperties(array $props): array
     {
         if (!$this->isPartial()) {
-            return array_filter($props, static function ($prop) {
-                return !($prop instanceof IgnoreFirstLoadInterface);
-            });
+            return array_filter($props, static fn($prop) => !$prop instanceof IgnoreFirstLoad);
         }
 
         $only = $this->parsePartialHeader(Header::PARTIAL_ONLY);
@@ -248,9 +245,7 @@ final class Response implements HttpResponse
      */
     public function resolveAlways(array $props): array
     {
-        $always = array_filter($this->props, static function ($prop) {
-            return $prop instanceof AlwaysProp;
-        });
+        $always = array_filter($this->props, static fn($prop) => $prop instanceof AlwaysProp);
 
         return array_merge($always, $props);
     }
@@ -271,7 +266,7 @@ final class Response implements HttpResponse
         foreach ($props as $key => $value) {
             if ($value instanceof Closure) {
                 $value = invoke($value);
-            } elseif ($value instanceof InvokablePropInterface) {
+            } elseif ($value instanceof InvokableProp) {
                 $value = $value();
             }
 
@@ -279,13 +274,13 @@ final class Response implements HttpResponse
                 $value = new PaginatorAdapter($value);
             }
 
-            $currentKey = $parentKey ? ($parentKey . '.' . $key) : $key;
+            $currentKey = $parentKey ? $parentKey . '.' . $key : $key;
 
-            if ($value instanceof ProvidesInertiaPropertyInterface) {
+            if ($value instanceof ProvidesInertiaProperty) {
                 $value = $value->toInertiaProperty(new PropertyContext($currentKey, $props));
             }
 
-            if ($value instanceof ArrayableInterface || $value instanceof ArrayInterface) {
+            if ($value instanceof Arrayable || $value instanceof ArrayInterface) {
                 $value = $value->toArray();
             }
 
@@ -323,11 +318,9 @@ final class Response implements HttpResponse
         }
 
         return [
-            'cache' => array_map(function ($value) {
+            'cache' => array_map(function ($value): int {
                 if ($value instanceof DateInterval) {
-                    return new DateTimeImmutable('@0')
-                        ->add($value)
-                        ->getTimestamp();
+                    return new DateTimeImmutable('@0')->add($value)->getTimestamp();
                 }
 
                 return intval($value);
@@ -349,17 +342,17 @@ final class Response implements HttpResponse
         $mergeProps = Arr\filter(
             $this->props,
             fn($prop, $key) => (
-                $prop instanceof MergeableInterface &&
-                $prop->shouldMerge() &&
-                !in_array($key, $resetProps, true) &&
-                ($onlyProps === [] || in_array($key, $onlyProps, true)) &&
-                !in_array($key, $exceptProps, true)
+                $prop instanceof Mergeable
+                && $prop->shouldMerge()
+                && !in_array($key, $resetProps, true)
+                && ($onlyProps === [] || in_array($key, $onlyProps, true))
+                && !in_array($key, $exceptProps, true)
             ),
         );
 
         $deepMergeProps = Arr\keys(Arr\filter($mergeProps, fn($prop) => $prop->shouldDeepMerge()));
 
-        $matchPropsOn = Arr\values(Arr\flat_map($mergeProps, fn(MergeableInterface $prop, $key) => Arr\map_iterable(
+        $matchPropsOn = Arr\values(Arr\flat_map($mergeProps, fn(Mergeable $prop, $key) => Arr\map_iterable(
             $prop->matchesOn(),
             fn($strategy) => $key . '.' . $strategy,
         )));
@@ -372,7 +365,7 @@ final class Response implements HttpResponse
                 'deepMergeProps' => $deepMergeProps,
                 'matchPropsOn' => $matchPropsOn,
             ],
-            fn($prop) => $prop !== [],
+            fn(array $prop) => $prop !== [],
         );
     }
 
@@ -388,13 +381,13 @@ final class Response implements HttpResponse
         }
 
         $deferredProps = Arr\map_iterable(
-            Arr\group_by(
-                Arr\map_iterable(Arr\filter($this->props, fn($prop) => $prop instanceof DeferProp), fn($prop, $key) => [
-                    'key' => $key,
-                    'group' => $prop->group(),
-                ]),
-                fn($item) => $item['group'],
-            ),
+            Arr\group_by(Arr\map_iterable(Arr\filter($this->props, fn($prop) => $prop instanceof DeferProp), fn(
+                $prop,
+                $key,
+            ) => [
+                'key' => $key,
+                'group' => $prop->group(),
+            ]), fn($item) => $item['group']),
             fn($group) => Arr\pluck($group, 'key'),
         );
 
@@ -416,7 +409,7 @@ final class Response implements HttpResponse
      */
     private function normalizeProps(array|ArrayInterface $props): array
     {
-        return ($props instanceof ArrayInterface) ? $props->toArray() : $props;
+        return $props instanceof ArrayInterface ? $props->toArray() : $props;
     }
 
     /**

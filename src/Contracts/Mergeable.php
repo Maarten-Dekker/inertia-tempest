@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Inertia\Contracts;
 
-interface MergeableInterface
+interface Mergeable
 {
     /**
      * Mark the property for merging.

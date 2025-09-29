@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Inertia\Props;
 
-use Inertia\Contracts\InvokablePropInterface;
-use Inertia\Contracts\MergeableInterface;
+use Inertia\Contracts\InvokableProp;
+use Inertia\Contracts\Mergeable;
 use Inertia\Traits\MergesProps;
 
 use function Tempest\invoke;
 
-class MergeProp implements MergeableInterface, InvokablePropInterface
+class MergeProp implements Mergeable, InvokableProp
 {
     use MergesProps;
 

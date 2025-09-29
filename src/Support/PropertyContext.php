@@ -9,7 +9,7 @@ class PropertyContext
     /**
      * Create a new property context instance. The property context provides
      * information about the current property being resolved to objects
-     * implementing ProvidesInertiaPropertyInterface.
+     * implementing ProvidesInertiaProperty.
      *
      * @param  array<string, mixed>  $props
      */
