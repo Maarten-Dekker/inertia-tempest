@@ -77,7 +77,7 @@ final readonly class StartSsr
         }
 
         foreach ($process as $type => $data) {
-            if ($process::OUT === $type) {
+            if (Process::OUT === $type) {
                 $this->console->info(trim($data));
                 continue;
             }
