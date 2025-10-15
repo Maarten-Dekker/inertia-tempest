@@ -85,9 +85,7 @@ final readonly class InertiaConfig
          * | standard in the Laravel ecosystem and expected by most Inertia.js
          * | front-end pagination components.
          * |
-         * | Set to false to receive the raw PaginatedData object in your props.
-         * |
          */
-        public bool $transform_pagination = true,
+        public bool $transform_pagination = false,
     ) {}
 }
