@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use GuzzleHttp\Promise\PromiseInterface;
+use Inertia\Configs\InertiaConfig;
 use Inertia\Contracts\Arrayable;
 use Inertia\LazyBody;
 use Inertia\Props\AlwaysProp;
@@ -491,6 +492,8 @@ class ResponseTest extends TestCase
 
     public function test_lazy_resource_response(): void
     {
+        $this->container->singleton(InertiaConfig::class, fn() => new InertiaConfig(transform_pagination: true));
+
         $this->makeRequest(
             uri: '/users?page=1',
             headers: [
@@ -537,6 +540,8 @@ class ResponseTest extends TestCase
 
     public function test_nested_lazy_resource_response(): void
     {
+        $this->container->singleton(InertiaConfig::class, fn() => new InertiaConfig(transform_pagination: true));
+
         $this->makeRequest(
             uri: '/users?page=1',
             headers: [
