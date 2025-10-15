@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Inertia\Configs\InertiaConfig;
+use Inertia\Configs\PageConfig;
 use Inertia\Exceptions\ComponentNotFoundException;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
@@ -371,19 +372,15 @@ class ResponseFactoryTest extends TestCase
 
     public function test_will_throw_exception_if_component_does_not_exist_when_ensuring_is_enabled(): void
     {
-        $config = $this->container->get(InertiaConfig::class);
+        $this->container->singleton(
+            InertiaConfig::class,
+            fn() => new InertiaConfig(pages: new PageConfig(ensure_pages_exists: true)),
+        );
 
-        $originalValue = $config->pages->ensure_pages_exists;
-        $config->pages->ensure_pages_exists = true;
+        $this->expectException(ComponentNotFoundException::class);
+        $this->expectExceptionMessage('Inertia page component [foo] not found.');
 
-        try {
-            $this->expectException(ComponentNotFoundException::class);
-            $this->expectExceptionMessage('Inertia page component [foo] not found.');
-
-            $this->factory->render('foo');
-        } finally {
-            $config->pages->ensure_pages_exists = $originalValue;
-        }
+        $this->factory->render('foo');
     }
 
     public function test_will_not_throw_exception_if_component_does_not_exist_when_ensuring_is_disabled(): void

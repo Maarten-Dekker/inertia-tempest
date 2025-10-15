@@ -188,12 +188,9 @@ final class TestController
     #[Get('/prop-provider-render')]
     public function renderWithProvider(): Response
     {
-        return inertia()->render(
-            'User/Edit',
-            new ExampleInertiaPropsProvider([
-                'foo' => 'bar',
-            ]),
-        );
+        return inertia()->render('User/Edit', new ExampleInertiaPropsProvider([
+            'foo' => 'bar',
+        ]));
     }
 
     #[Get('/prop-provider-mixed-render')]
