@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Inertia\Configs\HistoryConfig;
 use Inertia\Configs\InertiaConfig;
 use Inertia\Support\Header;
 use Inertia\Tests\Fixtures\TestController;
@@ -59,49 +60,42 @@ class HistoryTest extends TestCase
 
     public function test_the_history_can_be_encrypted_globally(): void
     {
-        $config = $this->container->get(InertiaConfig::class);
+        $this->container->singleton(
+            InertiaConfig::class,
+            fn() => new InertiaConfig(history: new HistoryConfig(encrypt: true)),
+        );
 
-        $originalValue = $config->history->encrypt;
-        $config->history->encrypt = true;
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'basicRenderWithMiddleware']),
+            headers: [
+                Header::INERTIA => 'true',
+            ],
+        );
 
-        try {
-            $response = $this->http->get(
-                uri: uri([TestController::class, 'basicRenderWithMiddleware']),
-                headers: [
-                    Header::INERTIA => 'true',
-                ],
-            );
+        $page = $response->body;
 
-            $page = $response->body;
-
-            $this->assertSame('User/Edit', $page['component']);
-            $this->assertTrue($page['encryptHistory']);
-        } finally {
-            $config->history->encrypt = $originalValue;
-        }
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertTrue($page['encryptHistory']);
     }
 
     public function test_the_history_can_be_encrypted_globally_and_overridden(): void
     {
-        $config = $this->container->get(InertiaConfig::class);
-        $originalValue = $config->history->encrypt;
-        $config->history->encrypt = true;
+        $this->container->singleton(
+            InertiaConfig::class,
+            fn() => new InertiaConfig(history: new HistoryConfig(encrypt: true)),
+        );
 
-        try {
-            $response = $this->http->get(
-                uri: uri([TestController::class, 'encryptHistoryOverride']),
-                headers: [
-                    Header::INERTIA => 'true',
-                ],
-            );
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'encryptHistoryOverride']),
+            headers: [
+                Header::INERTIA => 'true',
+            ],
+        );
 
-            $page = $response->body;
+        $page = $response->body;
 
-            $this->assertSame('User/Edit', $page['component']);
-            $this->assertFalse($page['encryptHistory']);
-        } finally {
-            $config->history->encrypt = $originalValue;
-        }
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertFalse($page['encryptHistory']);
     }
 
     public function test_the_history_can_be_cleared(): void
