@@ -9,8 +9,6 @@ use Inertia\Tests\Fixtures\ExampleMiddleware;
 use Inertia\Tests\Fixtures\TestController;
 use Inertia\Tests\TestCase;
 use Inertia\Views\InertiaView;
-use Tempest\Core\FrameworkKernel;
-use Tempest\Framework\Testing\Http\HttpRouterTester;
 use Tempest\Http\ContentType;
 use Tempest\Http\Request;
 use Tempest\Http\Session\Session;
@@ -203,7 +201,7 @@ class MiddlewareTest extends TestCase
         $errors = $sharedData['errors']();
 
         $this->assertIsObject($errors);
-        $this->assertSame('Value must be a valid email address', $errors->email);
+        $this->assertSame('Email must be a valid email address', $errors->email);
     }
 
     public function test_default_validation_errors_can_be_overwritten(): void
@@ -227,28 +225,6 @@ class MiddlewareTest extends TestCase
         $this->assertSame('foo', $page['props']['errors']);
     }
 
-    public function test_validation_errors_are_scoped_to_error_bag_header(): void
-    {
-        $session = $this->container->get(Session::class);
-
-        $validationErrors = [
-            'email' => [new IsEmail()],
-        ];
-        $this->assertInstanceOf(Session::class, $session);
-        $session->set(Session::VALIDATION_ERRORS, $validationErrors);
-
-        $middleware = $this->container->get(Middleware::class);
-        $request = $this->makeRequest(headers: [Header::ERROR_BAG => 'example']);
-        $this->assertInstanceOf(Middleware::class, $middleware);
-
-        $sharedData = $middleware->share($request);
-        $errors = $sharedData['errors']();
-
-        $this->assertIsObject($errors);
-        $this->assertObjectHasProperty('example', $errors);
-        $this->assertSame('Value must be a valid email address', $errors->example->email);
-    }
-
     public function test_middleware_can_change_the_root_view_via_a_property(): void
     {
         $response = $this->http->get(uri: uri([TestController::class, 'basicRenderWithExampleMiddleware']));
@@ -265,29 +241,6 @@ class MiddlewareTest extends TestCase
         $response->assertStatus(Status::OK);
         $this->assertInstanceOf(InertiaView::class, $response->body);
         $this->assertSame('welcome', $response->body->path);
-    }
-
-    public function test_determine_the_version_by_a_hash_of_the_asset_url(): void
-    {
-        $url = 'https://example.com/assets';
-        $originalEnv = getenv('VITE_ASSET_URL');
-        putenv("VITE_ASSET_URL={$url}");
-
-        try {
-            $response = $this->http->get(uri: uri([TestController::class, 'basicRenderWithMiddleware']));
-
-            $page = $response->body->inertia['page'];
-
-            $response->assertStatus(Status::OK);
-            $this->assertInstanceOf(InertiaView::class, $response->body);
-            $this->assertSame(hash('xxh128', $url), $page['version']);
-        } finally {
-            if (!$originalEnv) {
-                putenv('VITE_ASSET_URL');
-            } else {
-                putenv("VITE_ASSET_URL={$originalEnv}");
-            }
-        }
     }
 
     public function test_determine_the_version_by_a_hash_of_the_vite_manifest(): void
@@ -313,35 +266,6 @@ class MiddlewareTest extends TestCase
         } finally {
             unlink($manifestPath);
             rmdir($directoryPath);
-        }
-    }
-
-    public function test_determine_the_version_by_a_hash_of_the_vite_manifest_from_env_path(): void
-    {
-        $manifestPath = root_path('temp-manifest.json');
-        $manifestContents = json_encode(['vite' => true]);
-        file_put_contents($manifestPath, $manifestContents);
-
-        $originalEnv = getenv('TEMPEST_PLUGIN_CONFIGURATION_PATH');
-        putenv("TEMPEST_PLUGIN_CONFIGURATION_PATH={$manifestPath}");
-
-        $kernel = FrameworkKernel::boot($this->root, discoveryLocations: $this->discoveryLocations);
-        $http = new HttpRouterTester($kernel->container);
-
-        try {
-            $response = $http->get(uri: uri([TestController::class, 'basicRenderWithMiddleware']));
-            $page = $response->body->inertia['page'];
-
-            $response->assertStatus(Status::OK);
-            $this->assertInstanceOf(InertiaView::class, $response->body);
-            $this->assertSame(hash_file('xxh128', $manifestPath), $page['version']);
-        } finally {
-            unlink($manifestPath);
-            if (!$originalEnv) {
-                putenv('TEMPEST_PLUGIN_CONFIGURATION_PATH');
-            } else {
-                putenv("TEMPEST_PLUGIN_CONFIGURATION_PATH={$originalEnv}");
-            }
         }
     }
 

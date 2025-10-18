@@ -38,7 +38,7 @@ final class ExampleMiddleware extends Middleware
     }
 
     #[Override]
-    public function rootView(Request $request): string
+    public function rootView(): string
     {
         return 'welcome';
     }
