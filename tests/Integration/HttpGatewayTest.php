@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Inertia\Configs\InertiaConfig;
+use Inertia\Configs\SsrConfig;
 use Inertia\Ssr\HttpGateway;
 use Inertia\Ssr\Response as SsrResponse;
 use Inertia\Tests\Fixtures\FakeClientResponse;
@@ -15,35 +16,31 @@ class HttpGatewayTest extends TestCase
 {
     public function test_it_returns_null_when_ssr_is_disabled(): void
     {
-        $config = $this->container->get(InertiaConfig::class);
-        $originalValue = $config->ssr->enabled;
-        $config->ssr->enabled = false;
+        $this->container->singleton(
+            InertiaConfig::class,
+            fn() => new InertiaConfig(ssr: new SsrConfig(enabled: false)),
+        );
 
         $gateway = $this->container->get(HttpGateway::class);
+        $this->assertInstanceOf(HttpGateway::class, $gateway);
 
-        try {
-            $this->assertNotInstanceOf(\Inertia\Ssr\Response::class, $gateway->dispatch(self::EXAMPLE_PAGE_OBJECT));
-        } finally {
-            $config->ssr->enabled = $originalValue;
-        }
+        $this->assertNotInstanceOf(SsrResponse::class, $gateway->dispatch(self::EXAMPLE_PAGE_OBJECT));
     }
 
     public function test_it_returns_null_when_no_bundle_file_is_detected(): void
     {
-        $config = $this->container->get(InertiaConfig::class);
-        $originalSsrEnabled = $config->ssr->enabled;
-        $originalSsrBundle = $config->ssr->bundle;
-        $config->ssr->enabled = true;
-        $config->ssr->bundle = null;
+        $this->container->singleton(
+            InertiaConfig::class,
+            fn() => new InertiaConfig(ssr: new SsrConfig(
+                enabled: true,
+                bundle: null,
+            )),
+        );
 
         $gateway = $this->container->get(HttpGateway::class);
+        $this->assertInstanceOf(HttpGateway::class, $gateway);
 
-        try {
-            $this->assertNotInstanceOf(\Inertia\Ssr\Response::class, $gateway->dispatch(self::EXAMPLE_PAGE_OBJECT));
-        } finally {
-            $config->ssr->enabled = $originalSsrEnabled;
-            $config->ssr->bundle = $originalSsrBundle;
-        }
+        $this->assertNotInstanceOf(SsrResponse::class, $gateway->dispatch(self::EXAMPLE_PAGE_OBJECT));
     }
 
     public function test_it_dispatches_the_page_when_bundle_is_detected(): void
@@ -51,11 +48,13 @@ class HttpGatewayTest extends TestCase
         $bundlePath = root_path('temp-ssr-bundle.js');
         touch($bundlePath);
 
-        $config = $this->container->get(InertiaConfig::class);
-        $originalSsrEnabled = $config->ssr->enabled;
-        $originalSsrBundle = $config->ssr->bundle;
-        $config->ssr->enabled = true;
-        $config->ssr->bundle = $bundlePath;
+        $this->container->singleton(
+            InertiaConfig::class,
+            fn() => new InertiaConfig(ssr: new SsrConfig(
+                enabled: true,
+                bundle: $bundlePath,
+            )),
+        );
 
         $fakeResponse = new FakeClientResponse(
             body: json_encode([
@@ -82,8 +81,6 @@ class HttpGatewayTest extends TestCase
             $this->assertSame('<div id="app">SSR Response</div>', $response->body);
         } finally {
             unlink($bundlePath);
-            $config->ssr->enabled = $originalSsrEnabled;
-            $config->ssr->bundle = $originalSsrBundle;
         }
     }
 
@@ -92,11 +89,13 @@ class HttpGatewayTest extends TestCase
         $bundlePath = root_path('temp-ssr-bundle.js');
         touch($bundlePath);
 
-        $config = $this->container->get(InertiaConfig::class);
-        $originalSsrEnabled = $config->ssr->enabled;
-        $originalSsrBundle = $config->ssr->bundle;
-        $config->ssr->enabled = true;
-        $config->ssr->bundle = $bundlePath;
+        $this->container->singleton(
+            InertiaConfig::class,
+            fn() => new InertiaConfig(ssr: new SsrConfig(
+                enabled: true,
+                bundle: $bundlePath,
+            )),
+        );
 
         $fakeResponse = new FakeClientResponse(
             body: '',
@@ -115,11 +114,9 @@ class HttpGatewayTest extends TestCase
             $gateway = $this->container->get(HttpGateway::class);
             $response = $gateway->dispatch(self::EXAMPLE_PAGE_OBJECT);
 
-            $this->assertNotInstanceOf(\Inertia\Ssr\Response::class, $response);
+            $this->assertNotInstanceOf(SsrResponse::class, $response);
         } finally {
             unlink($bundlePath);
-            $config->ssr->enabled = $originalSsrEnabled;
-            $config->ssr->bundle = $originalSsrBundle;
         }
     }
 
@@ -128,11 +125,13 @@ class HttpGatewayTest extends TestCase
         $bundlePath = root_path('temp-ssr-bundle.js');
         touch($bundlePath);
 
-        $config = $this->container->get(InertiaConfig::class);
-        $originalSsrEnabled = $config->ssr->enabled;
-        $originalSsrBundle = $config->ssr->bundle;
-        $config->ssr->enabled = true;
-        $config->ssr->bundle = $bundlePath;
+        $this->container->singleton(
+            InertiaConfig::class,
+            fn() => new InertiaConfig(ssr: new SsrConfig(
+                enabled: true,
+                bundle: $bundlePath,
+            )),
+        );
 
         $fakeResponse = new FakeClientResponse(
             body: 'invalid json',
@@ -151,11 +150,9 @@ class HttpGatewayTest extends TestCase
             $gateway = $this->container->get(HttpGateway::class);
             $response = $gateway->dispatch(self::EXAMPLE_PAGE_OBJECT);
 
-            $this->assertNotInstanceOf(\Inertia\Ssr\Response::class, $response);
+            $this->assertNotInstanceOf(SsrResponse::class, $response);
         } finally {
             unlink($bundlePath);
-            $config->ssr->enabled = $originalSsrEnabled;
-            $config->ssr->bundle = $originalSsrBundle;
         }
     }
 
@@ -179,7 +176,7 @@ class HttpGatewayTest extends TestCase
         $this->container->singleton(HttpClient::class, fn() => $mockClient);
 
         $gateway = $this->container->get(HttpGateway::class);
-        $this->assertInstanceOf(\Inertia\Ssr\HttpGateway::class, $gateway);
+        $this->assertInstanceOf(HttpGateway::class, $gateway);
 
         $this->assertTrue($gateway->isHealthy());
         $this->assertFalse($gateway->isHealthy());
