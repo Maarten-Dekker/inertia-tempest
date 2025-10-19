@@ -17,6 +17,7 @@ use Inertia\Contracts\ProvidesInertiaProperties;
 use Inertia\Contracts\ProvidesInertiaProperty;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
+use Inertia\Props\ScrollProp;
 use Inertia\Ssr\Contracts\Gateway;
 use Inertia\Ssr\Response as SsrResponse;
 use Inertia\Support\Header;
@@ -36,7 +37,6 @@ use Tempest\Support\Paginator\PaginatedData;
 
 use function Tempest\get;
 use function Tempest\invoke;
-use function Tempest\Support\Arr\to_array;
 
 final class Response implements HttpResponse
 {
@@ -98,6 +98,7 @@ final class Response implements HttpResponse
                 $this->resolveMergeProps(),
                 $this->resolveDeferredProps(),
                 $this->resolveCacheDirections(),
+                $this->resolveScrollProps(),
             );
 
             return $this->resolveBody($page);
@@ -186,7 +187,7 @@ final class Response implements HttpResponse
         foreach ($props as $key => $value) {
             if (is_numeric($key) && $value instanceof ProvidesInertiaProperties) {
                 /** @var array<string, mixed> $inertiaProps */
-                $inertiaProps = to_array($value->toInertiaProperties($renderContext));
+                $inertiaProps = Arr\to_array($value->toInertiaProperties($renderContext));
                 $newProps = array_merge($newProps, $inertiaProps);
                 continue;
             }
@@ -264,6 +265,10 @@ final class Response implements HttpResponse
         $result = [];
 
         foreach ($props as $key => $value) {
+            if ($value instanceof ScrollProp) {
+                $value->configureMergeIntent();
+            }
+
             if ($value instanceof Closure) {
                 $value = invoke($value);
             } elseif ($value instanceof InvokableProp) {
@@ -271,7 +276,10 @@ final class Response implements HttpResponse
             }
 
             if ($this->config->transform_pagination && $value instanceof PaginatedData) {
-                $value = new PaginatorAdapter($value);
+                $value = new PaginatorAdapter(
+                    paginator: $value,
+                    request: $this->request,
+                );
             }
 
             $currentKey = $parentKey ? $parentKey . '.' . $key : $key;
@@ -329,17 +337,27 @@ final class Response implements HttpResponse
     }
 
     /**
+     * Get the props that should be reset based on the request headers.
+     *
+     * @return array<int, string>
+     */
+    public function getResetProps(): array
+    {
+        return array_filter(explode(',', $this->request->headers->get(Header::RESET) ?? ''));
+    }
+
+    /**
      * Resolve merge props configuration for client-side prop merging.
      *
      * @return array<string, mixed>
      */
-    public function resolveMergeProps(): array
+    public function getMergePropsForRequest(bool $rejectResetProps = true): array
     {
-        $resetProps = $this->parsePartialHeader(Header::RESET);
+        $resetProps = $rejectResetProps ? $this->getResetProps() : [];
         $onlyProps = $this->parsePartialHeader(Header::PARTIAL_ONLY);
         $exceptProps = $this->parsePartialHeader(Header::PARTIAL_EXCEPT);
 
-        $mergeProps = Arr\filter(
+        return Arr\filter(
             $this->props,
             fn($prop, $key) => (
                 $prop instanceof Mergeable
@@ -349,24 +367,101 @@ final class Response implements HttpResponse
                 && !in_array($key, $exceptProps, true)
             ),
         );
+    }
 
-        $deepMergeProps = Arr\keys(Arr\filter($mergeProps, fn($prop) => $prop->shouldDeepMerge()));
-
-        $matchPropsOn = Arr\values(Arr\flat_map($mergeProps, fn(Mergeable $prop, $key) => Arr\map_iterable(
-            $prop->matchesOn(),
-            fn($strategy) => $key . '.' . $strategy,
-        )));
-
-        $mergeProps = Arr\keys(Arr\filter($mergeProps, fn($prop) => !$prop->shouldDeepMerge()));
+    /**
+     * Resolve merge props configuration for client-side prop merging.
+     *
+     * @return array<string, mixed>
+     */
+    public function resolveMergeProps(): array
+    {
+        $mergeProps = $this->getMergePropsForRequest();
 
         return array_filter(
             [
-                'mergeProps' => $mergeProps,
-                'deepMergeProps' => $deepMergeProps,
-                'matchPropsOn' => $matchPropsOn,
+                'mergeProps' => $this->resolveAppendMergeProps($mergeProps),
+                'prependProps' => $this->resolvePrependMergeProps($mergeProps),
+                'deepMergeProps' => $this->resolveDeepMergeProps($mergeProps),
+                'matchPropsOn' => $this->resolveMergeMatchingKeys($mergeProps),
             ],
             fn(array $prop) => $prop !== [],
         );
+    }
+
+    /**
+     * Resolve props that should be appended during merging.
+     *
+     * @param  array<string, Mergeable>  $mergeProps
+     * @return array<int, string>
+     */
+    private function resolveAppendMergeProps(array $mergeProps): array
+    {
+        $propsToConsider = Arr\filter($mergeProps, fn(Mergeable $prop) => !$prop->shouldDeepMerge());
+
+        $rootAppendProps = Arr\filter($propsToConsider, fn(Mergeable $prop) => $prop->appendsAtRoot());
+        $nestedAppendProps = Arr\filter($propsToConsider, fn(Mergeable $prop) => !$prop->appendsAtRoot());
+
+        $nestedPaths = Arr\flat_map($nestedAppendProps, fn(Mergeable $prop, string $key) => Arr\map_iterable(
+            $prop->appendsAtPaths(),
+            fn($path) => "{$key}.{$path}",
+        ));
+
+        $allPaths = Arr\merge($nestedPaths, Arr\keys($rootAppendProps));
+
+        return Arr\values(Arr\unique($allPaths));
+    }
+
+    /**
+     * Resolve props that should be prepended during merging.
+     *
+     * @param  array<string, Mergeable>  $mergeProps
+     * @return array<int, string>
+     */
+    private function resolvePrependMergeProps(array $mergeProps): array
+    {
+        $propsToConsider = Arr\filter($mergeProps, fn(Mergeable $prop) => !$prop->shouldDeepMerge());
+
+        $rootPrependProps = Arr\filter($propsToConsider, fn(Mergeable $prop) => $prop->prependsAtRoot());
+        $nestedPrependProps = Arr\filter($propsToConsider, fn(Mergeable $prop) => !$prop->prependsAtRoot());
+
+        $nestedPaths = Arr\flat_map($nestedPrependProps, fn(Mergeable $prop, string $key) => Arr\map_iterable(
+            $prop->prependsAtPaths(),
+            fn($path) => "{$key}.{$path}",
+        ));
+
+        $allPaths = Arr\merge($nestedPaths, Arr\keys($rootPrependProps));
+
+        return Arr\values(Arr\unique($allPaths));
+    }
+
+    /**
+     * Resolve props that should be deep merged.
+     *
+     * @param  array<string, Mergeable>  $mergeProps
+     * @return array<int, string>
+     */
+    private function resolveDeepMergeProps(array $mergeProps): array
+    {
+        $deepMergeProps = Arr\filter($mergeProps, fn(Mergeable $prop) => $prop->shouldDeepMerge());
+
+        return Arr\keys($deepMergeProps);
+    }
+
+    /**
+     * Resolve the matching keys for merge props.
+     *
+     * @param  array<string, Mergeable>  $mergeProps
+     * @return array<int, string>
+     */
+    private function resolveMergeMatchingKeys(array $mergeProps): array
+    {
+        $allPaths = Arr\flat_map($mergeProps, fn(Mergeable $prop, string $key) => Arr\map_iterable(
+            $prop->matchesOn(),
+            fn($strategy) => "{$key}.{$strategy}",
+        ));
+
+        return Arr\values($allPaths);
     }
 
     /**
@@ -392,6 +487,28 @@ final class Response implements HttpResponse
         );
 
         return Arr\is_empty($deferredProps) ? [] : ['deferredProps' => $deferredProps];
+    }
+
+    /**
+     * Resolve scroll props configuration for client-side infinite scrolling.
+     *
+     * @return array<string, mixed>
+     */
+    public function resolveScrollProps(): array
+    {
+        $resetProps = $this->getResetProps();
+
+        $filteredProps = Arr\filter(
+            $this->getMergePropsForRequest(false),
+            fn(Mergeable $prop) => $prop instanceof ScrollProp,
+        );
+
+        $scrollProps = Arr\map_iterable($filteredProps, fn(ScrollProp $prop, string $key): array => [
+            ...$prop->metadata(),
+            'reset' => in_array($key, $resetProps, true),
+        ]);
+
+        return Arr\is_empty($scrollProps) ? [] : ['scrollProps' => $scrollProps];
     }
 
     /**

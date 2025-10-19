@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Inertia\Tests\Integration;
+
 use Inertia\Configs\HistoryConfig;
 use Inertia\Configs\InertiaConfig;
 use Inertia\Support\Header;

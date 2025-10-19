@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Inertia\Tests\Integration;
+
 use Inertia\Configs\InertiaConfig;
 use Inertia\Configs\SsrConfig;
 use Inertia\Ssr\Contracts\Gateway;
@@ -9,6 +11,7 @@ use Inertia\Ssr\Response;
 use Inertia\Tests\Fixtures\FakeGateway;
 use Inertia\Tests\TestCase;
 use Inertia\Views\InertiaView;
+use Mockery;
 
 class DirectiveTest extends TestCase
 {

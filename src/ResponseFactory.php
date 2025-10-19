@@ -8,12 +8,14 @@ use Closure;
 use Deprecated;
 use Inertia\Configs\InertiaConfig;
 use Inertia\Contracts\ProvidesInertiaProperties;
+use Inertia\Contracts\ProvidesScrollMetadata;
 use Inertia\Exceptions\ComponentNotFoundException;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
 use Inertia\Props\LazyProp;
 use Inertia\Props\MergeProp;
 use Inertia\Props\OptionalProp;
+use Inertia\Props\ScrollProp;
 use Inertia\Support\Header;
 use Tempest\Container\Singleton;
 use Tempest\Http\GenericResponse;
@@ -229,9 +231,25 @@ final class ResponseFactory
     }
 
     /**
+     * Create a scroll property.
+     */
+    public function scroll(
+        mixed $value,
+        string $wrapper = 'data',
+        ProvidesScrollMetadata|callable|null $metadata = null,
+    ): ScrollProp {
+        return new ScrollProp(
+            value: $value,
+            wrapper: $wrapper,
+            metadata: $metadata,
+        );
+    }
+
+    /**
      * Create an Inertia response.
      *
-     * @param  array<array-key, mixed>|\Tempest\Support\Arr\ArrayInterface<array-key, mixed>  $props
+     * @param array<array-key, mixed>|\Tempest\Support\Arr\ArrayInterface<array-key, mixed> $props
+     * @throws ComponentNotFoundException
      */
     public function render(string $component, array|ArrayInterface|ProvidesInertiaProperties $props = []): Response
     {

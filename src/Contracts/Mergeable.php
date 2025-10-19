@@ -27,4 +27,28 @@ interface Mergeable
      * @return array<int, string>
      */
     public function matchesOn(): array;
+
+    /**
+     * Determine if the property should be appended at the root level.
+     */
+    public function appendsAtRoot(): bool;
+
+    /**
+     * Determine if the property should be prepended at the root level.
+     */
+    public function prependsAtRoot(): bool;
+
+    /**
+     * Get the paths to append when merging.
+     *
+     * @return array<int, string>
+     */
+    public function appendsAtPaths(): array;
+
+    /**
+     * Get the paths to prepend when merging.
+     *
+     * @return array<int, string>
+     */
+    public function prependsAtPaths(): array;
 }
