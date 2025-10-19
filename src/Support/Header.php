@@ -50,4 +50,9 @@ final readonly class Header
      * Header for forwarded prefix.
      */
     public const string FORWARDED_PREFIX = 'x-forwarded-prefix';
+
+    /**
+     * Header for specifying the merge intent when paginating on infinite scroll.
+     */
+    public const string INFINITE_SCROLL_MERGE_INTENT = 'X-Inertia-Infinite-Scroll-Merge-Intent';
 }

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Inertia\Tests\Integration;
+
 use Inertia\Configs\InertiaConfig;
 use Inertia\Configs\PageConfig;
 use Inertia\Exceptions\ComponentNotFoundException;
@@ -10,8 +12,10 @@ use Inertia\Props\DeferProp;
 use Inertia\Props\LazyProp;
 use Inertia\Props\MergeProp;
 use Inertia\Props\OptionalProp;
+use Inertia\Props\ScrollProp;
 use Inertia\ResponseFactory;
 use Inertia\Support\Header;
+use Inertia\Support\ScrollMetadata;
 use Inertia\Tests\Fixtures\TestController;
 use Inertia\Tests\TestCase;
 use Tempest\Http\ContentType;
@@ -267,6 +271,36 @@ class ResponseFactoryTest extends TestCase
         $optionalProp = $this->factory->optional(fn(): string => 'An optional value');
 
         $this->assertInstanceOf(OptionalProp::class, $optionalProp);
+    }
+
+    public function test_can_create_scroll_prop(): void
+    {
+        $data = ['item1', 'item2'];
+
+        $scrollProp = $this->factory->scroll($data);
+
+        $this->assertInstanceOf(ScrollProp::class, $scrollProp);
+        $this->assertSame($data, $scrollProp());
+    }
+
+    public function test_can_create_scroll_prop_with_metadata_provider(): void
+    {
+        $data = ['item1', 'item2'];
+        $metadataProvider = new ScrollMetadata('custom', 1, 3, 2);
+
+        $scrollProp = $this->factory->scroll($data, 'data', $metadataProvider);
+
+        $this->assertInstanceOf(ScrollProp::class, $scrollProp);
+        $this->assertSame($data, $scrollProp());
+        $this->assertSame(
+            [
+                'pageName' => 'custom',
+                'previousPage' => 1,
+                'nextPage' => 3,
+                'currentPage' => 2,
+            ],
+            $scrollProp->metadata(),
+        );
     }
 
     public function test_can_create_always_prop(): void

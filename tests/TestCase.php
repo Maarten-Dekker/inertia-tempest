@@ -8,6 +8,7 @@ use Inertia\ResponseFactory;
 use Mockery;
 use Override;
 use Tempest\Core\Application;
+use Tempest\Database\Config\DatabaseConfig;
 use Tempest\Discovery\DiscoveryLocation;
 use Tempest\Framework\Testing\IntegrationTest;
 use Tempest\Http\GenericRequest;

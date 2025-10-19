@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Inertia\Tests\Integration;
+
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Inertia\Tests\TestCase;

@@ -18,7 +18,7 @@ final readonly class ExampleInertiaPropsProvider implements ProvidesInertiaPrope
     ) {}
 
     /**
-     * @return array<string, mixed>
+     * @return iterable<string, mixed>
      */
     #[Override]
     public function toInertiaProperties(RenderContext $context): iterable

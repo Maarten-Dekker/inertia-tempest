@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
+namespace Inertia\Tests\Integration;
+
 use Inertia\Configs\InertiaConfig;
 use Inertia\Configs\SsrConfig;
 use Inertia\Ssr\HttpGateway;
 use Inertia\Ssr\Response as SsrResponse;
 use Inertia\Tests\Fixtures\FakeClientResponse;
 use Inertia\Tests\TestCase;
+use Mockery;
 use Tempest\HttpClient\HttpClient;
 
 use function Tempest\root_path;

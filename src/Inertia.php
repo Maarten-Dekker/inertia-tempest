@@ -6,6 +6,9 @@ namespace Inertia;
 
 use Closure;
 use Deprecated;
+use Inertia\Contracts\ProvidesInertiaProperties;
+use Inertia\Contracts\ProvidesScrollMetadata;
+use Inertia\Exceptions\ComponentNotFoundException;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
 use Inertia\Props\LazyProp;
@@ -25,8 +28,7 @@ class Inertia extends Facade
     protected static function instance(): ResponseFactory
     {
         /** @var ResponseFactory $instance */
-        $instance = static::getFacadeRoot();
-        return $instance;
+        return static::getFacadeRoot();
     }
 
     public static function setRootView(string $name): void
@@ -35,7 +37,7 @@ class Inertia extends Facade
     }
 
     /**
-     * @param array<array-key, mixed>|\Tempest\Support\Arr\ArrayInterface<array-key, mixed>|\Inertia\Contracts\ProvidesInertiaProperties $key
+     * @param array<array-key, mixed>|ArrayInterface<array-key, mixed>|ProvidesInertiaProperties $key
      */
     public static function share(string|array|ArrayInterface $key, mixed $value = null): void
     {
@@ -77,6 +79,14 @@ class Inertia extends Facade
         static::instance()->resolveUrlUsing($urlResolver);
     }
 
+    public static function scroll(
+        mixed $value,
+        string $wrapper = 'data',
+        ProvidesScrollMetadata|callable|null $metadata = null,
+    ): void {
+        static::instance()->scroll($value, $wrapper, $metadata);
+    }
+
     public static function optional(callable $callback): OptionalProp
     {
         return static::instance()->optional($callback);
@@ -109,7 +119,8 @@ class Inertia extends Facade
     }
 
     /**
-     * @param array<array-key, mixed>|\Tempest\Support\Arr\ArrayInterface<array-key, mixed>|\Inertia\Contracts\ProvidesInertiaProperties $props
+     * @param array<array-key, mixed>|ArrayInterface<array-key, mixed>|ProvidesInertiaProperties $props
+     * @throws ComponentNotFoundException
      */
     public static function render(string $component, array|ArrayInterface $props = []): Response
     {

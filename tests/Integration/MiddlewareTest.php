@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Inertia\Tests\Integration;
+
 use Inertia\Middleware\Middleware;
 use Inertia\Props\AlwaysProp;
 use Inertia\Support\Header;
@@ -9,6 +11,7 @@ use Inertia\Tests\Fixtures\ExampleMiddleware;
 use Inertia\Tests\Fixtures\TestController;
 use Inertia\Tests\TestCase;
 use Inertia\Views\InertiaView;
+use LogicException;
 use Tempest\Http\ContentType;
 use Tempest\Http\Request;
 use Tempest\Http\Session\Session;
