@@ -79,7 +79,7 @@ class Middleware implements HttpMiddleware
                 'user' => $auth->current(),
             ]),
             'flash' => [
-                'message' => fn () => $this->session->get('message')
+                'message' => fn() => $this->session->get('message'),
             ],
         ];
     }
