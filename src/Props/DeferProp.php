@@ -8,6 +8,7 @@ use Inertia\Contracts\IgnoreFirstLoad;
 use Inertia\Contracts\InvokableProp;
 use Inertia\Contracts\Mergeable;
 use Inertia\Traits\MergesProps;
+use Override;
 
 use function Tempest\invoke;
 
@@ -16,7 +17,6 @@ final class DeferProp implements IgnoreFirstLoad, Mergeable, InvokableProp
     use MergesProps;
 
     /**
-     * @mago-expect lint:property-type
      * @var callable
      */
     private $callback;
@@ -27,9 +27,6 @@ final class DeferProp implements IgnoreFirstLoad, Mergeable, InvokableProp
      * frontend, improving initial page performance.
      */
     public function __construct(
-        /**
-         * @var callable
-         */
         callable $callback,
         private readonly string $group = 'default',
     ) {
@@ -49,7 +46,7 @@ final class DeferProp implements IgnoreFirstLoad, Mergeable, InvokableProp
     /**
      * Resolve the property value.
      */
-    #[\Override]
+    #[Override]
     public function __invoke(): mixed
     {
         return invoke($this->callback);

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "098041161387744762d85bac9079d360",
+    "content-hash": "7541d6be48eabc4341662b6314823945",
     "packages": [
         {
             "name": "carbonphp/carbon-doctrine-types",
@@ -5753,16 +5753,16 @@
     "packages-dev": [
         {
             "name": "carthage-software/mago",
-            "version": "1.0.0-beta.28",
+            "version": "1.0.0-beta.34",
             "source": {
                 "type": "git",
                 "url": "https://github.com/carthage-software/mago.git",
-                "reference": "4fda6c12b126cf159d999fae36e87ecd2fd20957"
+                "reference": "1a29b3aae45456ec840d1af94be1346820415e38"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/carthage-software/mago/zipball/4fda6c12b126cf159d999fae36e87ecd2fd20957",
-                "reference": "4fda6c12b126cf159d999fae36e87ecd2fd20957",
+                "url": "https://api.github.com/repos/carthage-software/mago/zipball/1a29b3aae45456ec840d1af94be1346820415e38",
+                "reference": "1a29b3aae45456ec840d1af94be1346820415e38",
                 "shasum": ""
             },
             "require": {
@@ -5800,7 +5800,7 @@
             ],
             "support": {
                 "issues": "https://github.com/carthage-software/mago/issues",
-                "source": "https://github.com/carthage-software/mago/tree/1.0.0-beta.28"
+                "source": "https://github.com/carthage-software/mago/tree/1.0.0-beta.34"
             },
             "funding": [
                 {
@@ -5808,7 +5808,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-10-12T02:41:50+00:00"
+            "time": "2025-10-19T06:57:10+00:00"
         },
         {
             "name": "hamcrest/hamcrest-php",

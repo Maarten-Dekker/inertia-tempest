@@ -14,7 +14,6 @@ integrations = ["tempest", "phpunit"]
 
 [linter.rules]
 literal-named-argument = { enabled = false }
-parameter-type = { ignore-closure = true, ignore-arrow-function = true }
 return-type = { ignore-arrow-function = true }
 no-boolean-flag-parameter = { enabled = false }
 assertion-style = { style = "$this"}

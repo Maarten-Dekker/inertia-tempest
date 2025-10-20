@@ -12,7 +12,7 @@ use function Tempest\root_path;
 final class BundleDetector
 {
     private InertiaConfig $config {
-        get => get(InertiaConfig::class);
+        get => $this->config ??= get(InertiaConfig::class);
     }
 
     /**
@@ -26,12 +26,6 @@ final class BundleDetector
             root_path('ssr/inertia.ssr.js'),
         ];
 
-        foreach ($potentialPaths as $path) {
-            if ($path && file_exists($path)) {
-                return $path;
-            }
-        }
-
-        return null;
+        return array_find($potentialPaths, fn($path) => $path && file_exists($path));
     }
 }

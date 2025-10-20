@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-namespace Inertia\Tests\Integration;
-
 use Inertia\Props\AlwaysProp;
 use Inertia\Tests\TestCase;
 use Tempest\Http\Request;

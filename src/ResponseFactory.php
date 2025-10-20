@@ -70,15 +70,15 @@ final class ResponseFactory
     private ?Closure $urlResolver = null;
 
     private Session $session {
-        get => get(Session::class);
+        get => $this->session ??= get(Session::class);
     }
 
     private Request $request {
-        get => get(Request::class);
+        get => $this->request ??= get(Request::class);
     }
 
     private InertiaConfig $config {
-        get => get(InertiaConfig::class);
+        get => $this->config ??= get(InertiaConfig::class);
     }
 
     /**
@@ -96,7 +96,7 @@ final class ResponseFactory
      * included with every response, making it ideal for user authentication
      * state, flash messages, etc.
      *
-     * @param  string|array<array-key, mixed>|\Tempest\Support\Arr\ArrayInterface<array-key, mixed>  $key
+     * @param  string|array<array-key, mixed>|ArrayInterface<array-key, mixed> $key
      */
     public function share(string|array|ArrayInterface|ProvidesInertiaProperties $key, mixed $value = null): void
     {
@@ -248,7 +248,7 @@ final class ResponseFactory
     /**
      * Create an Inertia response.
      *
-     * @param array<array-key, mixed>|\Tempest\Support\Arr\ArrayInterface<array-key, mixed> $props
+     * @param array<array-key, mixed>|ArrayInterface<array-key, mixed> $props
      * @throws ComponentNotFoundException
      */
     public function render(string $component, array|ArrayInterface|ProvidesInertiaProperties $props = []): Response
@@ -298,7 +298,7 @@ final class ResponseFactory
     /**
      * Find the component or fail.
      *
-     * @throws \Inertia\Exceptions\ComponentNotFoundException
+     * @throws ComponentNotFoundException
      */
     private function findComponentOrFail(string $component): void
     {
