@@ -76,39 +76,10 @@ final readonly class HttpGateway implements Gateway, HasHealthCheck
      */
     private function shouldDispatch(): bool
     {
-        if (!$this->config->ssr->enabled) {
-            return false;
-        }
-
-        if (!$this->config->ssr->ensure_bundle_exists) {
-            return true;
-        }
-
-        return $this->bundleDetector->detect() !== null;
-    }
-
-    /**
-     * Determine if the SSR feature is enabled.
-     */
-    private function ssrIsEnabled(): bool
-    {
-        return $this->config->ssr->enabled;
-    }
-
-    /**
-     * Determine if dispatch should proceed without bundle detection.
-     */
-    private function shouldDispatchWithoutBundle(): bool
-    {
-        return !$this->config->ssr->ensure_bundle_exists;
-    }
-
-    /**
-     * Check if an SSR bundle exists.
-     */
-    private function bundleExists(): bool
-    {
-        return new BundleDetector()->detect() !== null;
+        return (
+            $this->config->ssr->enabled
+            && (!$this->config->ssr->ensure_bundle_exists || $this->bundleDetector->detect() !== null)
+        );
     }
 
     /**

@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Inertia\Middleware;
 
 use Closure;
+use Inertia\LazyBody;
 use Inertia\Response as InertiaResponse;
 use Inertia\ResponseFactory;
 use Inertia\Support\Header;
 use Inertia\Support\ResolveErrorProps;
 use Override;
+use Tempest\Auth\Authentication\Authenticator;
 use Tempest\Core\Priority;
 use Tempest\Http\Method;
 use Tempest\Http\Request;
@@ -73,6 +75,7 @@ class Middleware implements HttpMiddleware
     {
         return [
             'errors' => $this->inertia->always($this->errorResolver),
+            'user' => $this->inertia->always(fn(Authenticator $auth) => $auth->current()),
         ];
     }
 
@@ -97,6 +100,8 @@ class Middleware implements HttpMiddleware
     /**
      * This is the core of the Inertia middleware. It checks for Inertia headers,
      * handles asset versioning, and modifies the response accordingly.
+     *
+     * @throws ControllerActionHadNoReturn
      */
     #[Override]
     public function __invoke(Request $request, HttpMiddlewareCallable $next): Response
@@ -119,16 +124,17 @@ class Middleware implements HttpMiddleware
             $response = $this->onEmptyResponse();
         }
 
+        if ($response->body instanceof LazyBody) {
+            $resolvedBody = $response->body->jsonSerialize();
+            $response = $response->setBody($resolvedBody);
+        }
+
         $response = $response->addHeader(
             key: 'Vary',
             value: Header::INERTIA,
         );
 
-        if ($response instanceof InertiaResponse) {
-            return $response;
-        }
-
-        if (!$request->headers->has(Header::INERTIA)) {
+        if (!$request->headers->has(Header::INERTIA) || $response instanceof InertiaResponse) {
             return $response;
         }
 

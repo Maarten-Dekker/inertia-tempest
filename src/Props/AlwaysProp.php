@@ -6,6 +6,7 @@ namespace Inertia\Props;
 
 use Closure;
 use Inertia\Contracts\InvokableProp;
+use Override;
 
 use function Tempest\invoke;
 
@@ -23,7 +24,7 @@ final readonly class AlwaysProp implements InvokableProp
     /**
      * Resolve the property value.
      */
-    #[\Override]
+    #[Override]
     public function __invoke(): mixed
     {
         if (!is_callable($this->value)) {

@@ -6,13 +6,13 @@ namespace Inertia\Props;
 
 use Inertia\Contracts\IgnoreFirstLoad;
 use Inertia\Contracts\InvokableProp;
+use Override;
 
 use function Tempest\invoke;
 
 class OptionalProp implements IgnoreFirstLoad, InvokableProp
 {
     /**
-     * @mago-expect lint:property-type
      * @var callable
      */
     private $callback;
@@ -30,7 +30,7 @@ class OptionalProp implements IgnoreFirstLoad, InvokableProp
     /**
      * Resolve the property value.
      */
-    #[\Override]
+    #[Override]
     public function __invoke(): mixed
     {
         return invoke($this->callback);

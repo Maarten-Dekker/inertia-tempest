@@ -340,7 +340,6 @@ class ResponseFactoryTest extends TestCase
         $this->assertArrayHasKey('errors', $props);
         $this->assertArrayHasKey('foo', $props);
         $this->assertSame('bar', $props['foo']);
-        $this->assertCount(2, $props);
     }
 
     public function test_will_accept_arrays_containing_provides_inertia_props_in_render(): void
@@ -361,7 +360,6 @@ class ResponseFactoryTest extends TestCase
         $this->assertSame('prop', $props['regular']);
         $this->assertSame('value', $props['from_object']);
         $this->assertSame('normal_prop', $props['another']);
-        $this->assertCount(4, $props);
     }
 
     public function test_can_share_instances_of_provides_inertia_props(): void
@@ -380,7 +378,6 @@ class ResponseFactoryTest extends TestCase
         $this->assertArrayHasKey('regular', $props);
         $this->assertSame('data', $props['shared']);
         $this->assertSame('prop', $props['regular']);
-        $this->assertCount(3, $props);
     }
 
     public function test_can_share_arrays_containing_provides_inertia_props(): void
@@ -401,7 +398,6 @@ class ResponseFactoryTest extends TestCase
         $this->assertSame('shared_prop', $props['regular']);
         $this->assertSame('shared_value', $props['from_object']);
         $this->assertSame('prop', $props['component']);
-        $this->assertCount(4, $props);
     }
 
     public function test_will_throw_exception_if_component_does_not_exist_when_ensuring_is_enabled(): void

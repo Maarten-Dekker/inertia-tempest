@@ -10,99 +10,76 @@ use Closure;
 use JsonSerializable;
 use Override;
 
-class LazyBody implements JsonSerializable, ArrayAccess
+final class LazyBody implements JsonSerializable, ArrayAccess
 {
-    private mixed $builtBody = null;
-
-    private bool $isBuilt = false;
+    private mixed $body {
+        get => $this->body ??= ($this->builder)();
+        set => $this->body = $value;
+    }
 
     public function __construct(
         private readonly Closure $builder,
     ) {}
 
-    private function build(): void
-    {
-        if (!$this->isBuilt) {
-            $this->builtBody = ($this->builder)();
-            $this->isBuilt = true;
-        }
-    }
-
     public function __get(string $name): mixed
     {
-        $this->build();
-
-        if (is_object($this->builtBody)) {
-            return $this->builtBody->{$name} ?? null;
-        }
-
-        return null;
+        return $this->body?->{$name};
     }
 
     public function __isset(string $name): bool
     {
-        $this->build();
-
-        if (is_object($this->builtBody)) {
-            return isset($this->builtBody->{$name});
-        }
-
-        return false;
+        return isset($this->body->{$name});
     }
 
     #[Override]
     public function offsetExists(mixed $offset): bool
     {
-        $this->build();
-
-        return isset($this->builtBody[$offset]);
+        return isset($this->body[$offset]);
     }
 
     #[Override]
     public function offsetGet(mixed $offset): mixed
     {
-        $this->build();
-
-        return $this->builtBody[$offset] ?? null;
+        return $this->body[$offset] ?? null;
     }
 
     #[Override]
     public function offsetSet(mixed $offset, mixed $value): void
     {
-        $this->build();
+        $body = $this->body;
 
-        $this->builtBody[$offset] = $value;
+        if (is_null($offset)) {
+            $body[] = $value;
+        } else {
+            $body[$offset] = $value;
+        }
+
+        $this->body = $body;
     }
 
     #[Override]
     public function offsetUnset(mixed $offset): void
     {
-        $this->build();
+        $body = $this->body;
 
-        unset($this->builtBody[$offset]);
+        unset($body[$offset]);
+
+        $this->body = $body;
     }
 
     public function __call(string $method, array $arguments): mixed
     {
-        $this->build();
-
-        if (is_object($this->builtBody) && method_exists($this->builtBody, $method)) {
-            return $this->builtBody->{$method}(...$arguments);
+        if (is_object($this->body) && method_exists($this->body, $method)) {
+            return $this->body->{$method}(...$arguments);
         }
 
-        $type = get_debug_type($this->builtBody);
+        $type = get_debug_type($this->body);
         throw new BadMethodCallException("Method {$method} does not exist on type {$type}.");
     }
 
     #[Override]
     public function jsonSerialize(): mixed
     {
-        $this->build();
-
-        if ($this->builtBody instanceof JsonSerializable) {
-            return $this->builtBody->jsonSerialize();
-        }
-
-        return $this->builtBody;
+        return $this->body;
     }
 }

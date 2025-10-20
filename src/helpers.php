@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Inertia\Exceptions\ComponentNotFoundException;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Tempest\Support\Arr\ArrayInterface;
@@ -9,6 +10,9 @@ use Tempest\Support\Arr\ArrayInterface;
 use function Tempest\get;
 
 if (!function_exists('inertia')) {
+    /**
+     * @throws ComponentNotFoundException
+     */
     function inertia(?string $component = null, array|ArrayInterface $props = []): Response|ResponseFactory
     {
         $instance = get(ResponseFactory::class);
