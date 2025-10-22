@@ -8,7 +8,6 @@ use Closure;
 use Deprecated;
 use Inertia\Contracts\ProvidesInertiaProperties;
 use Inertia\Contracts\ProvidesScrollMetadata;
-use Inertia\Exceptions\ComponentNotFoundException;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
 use Inertia\Props\LazyProp;
@@ -120,7 +119,6 @@ class Inertia extends Facade
 
     /**
      * @param array<array-key, mixed>|ArrayInterface<array-key, mixed>|ProvidesInertiaProperties $props
-     * @throws ComponentNotFoundException
      */
     public static function render(string $component, array|ArrayInterface $props = []): Response
     {

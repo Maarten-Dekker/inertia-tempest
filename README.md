@@ -3,17 +3,37 @@
 A feature-complete Inertia.js adapter for the [Tempest](https://tempestphp.com) framework.  
 Mirrors the official [Inertia.js Laravel Adapter](https://github.com/inertiajs/inertia-laravel).
 
-## Installation
+## Server-side setup
 
-Install via Composer:
+### Install dependencies
+
+Install the Inertia server-side adapter using the Composer package manager.
 
 ```bash
 composer require maartendekker/inertia-tempest
 ```
 
-## Usage
+### Root template
 
-You can use either the globally available `inertia()` helper function or the static `Inertia` facade:
+Create a root view template `inertia.view.php` in your `app` directory. The adapter will automatically look for it.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title inertia>Inertia Tempest</title>
+
+    <x-vite-tags entrypoint="app/inertia.entrypoint.ts"/>
+</head>
+<body>
+    <?= $this->inertia() ?>
+</body>
+</html>
+```
+
+That's it, you're all ready to start creating Inertia pages. You can use either the globally available `inertia()` helper function or the static `Inertia` facade:
 
 ```php
 use Inertia\Response;
@@ -42,46 +62,46 @@ final readonly class AircraftController
 }
 ```
 
-## Initialize the Inertia app
+## Client-side setup
 
-Create a root view file `inertia.view.php` in your `app` directory:
+### Install dependencies
 
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title inertia>Inertia Tempest</title>
+Install the Inertia client-side adapter corresponding to your framework of choice.
 
-    <x-vite-tags entrypoint="app/inertia.entrypoint.ts"/>
-</head>
-<body>
-<?= $this->inertia() ?>
-</body>
-</html>
+```bash
+npm install @inertiajs/vue3
 ```
 
-The adapter will automatically look for `inertia.view.php` as the root view template. You can change this in three ways:
+<details>
+<summary>React</summary>
 
-1. Globally, by setting the `$rootView` property in your `HandleInertiaRequests` middleware for an application-wide
-   change.
-2. On a per-response basis, by calling `Inertia::setRootView()` from within a controller.
-3. Dynamically, by overriding the `rootView()` method in your `HandleInertiaRequests` middleware and implementing custom
-   logic based on the request context.
+```bash
+npm install @inertiajs/react
+```
+</details>
 
-Next, create your main `inertia.entrypoint.ts` (or `.js`) file to launch your Inertia app.
+<details>
+<summary>Svelte</summary>
 
-```ts
+```bash
+npm install @inertiajs/svelte
+```
+</details>
+
+### Initialize the Inertia app
+
+Update your main JavaScript file to boot your Inertia app.
+
+```js
 import '../app/main.entrypoint.css'
 
 import { createInertiaApp } from '@inertiajs/vue3'
-import { createApp, DefineComponent, h } from 'vue'
+import { createApp, h } from 'vue'
 
 void createInertiaApp({
     resolve: (name) => {
-        const pages = import.meta.glob<DefineComponent>('/app/**/*.vue')
-        return pages[`/app/${name}.vue`]()
+        const pages = import.meta.glob('./**/*.vue')
+        return pages[`./${name}.vue`]()
     },
     setup({ el, App, props, plugin }) {
         createApp({ render: () => h(App, props) })
@@ -91,8 +111,47 @@ void createInertiaApp({
 })
 ```
 
-With your root view and entrypoint set up, Inertia.js is now fully integrated with Tempest. You’re ready to start
-building reactive, single-page experiences with the elegance of server-side routing.
+<details>
+<summary>React</summary>
+
+```js
+import '../app/main.entrypoint.css'
+
+import { createInertiaApp } from '@inertiajs/react'
+import { createRoot } from 'react-dom/client'
+
+void createInertiaApp({
+  resolve: name => {
+      const pages = import.meta.glob('./**/*.jsx')
+      return pages[`./${name}.jsx`]()
+  },
+  setup({ el, App, props }) {
+      createRoot(el).render(<App {...props} />)
+  },
+})
+```
+</details>
+
+<details>
+<summary>Svelte</summary>
+
+```js
+import '../app/main.entrypoint.css'
+
+import { createInertiaApp } from '@inertiajs/svelte'
+import { mount } from 'svelte'
+
+void createInertiaApp({
+    resolve: name => {
+        const pages = import.meta.glob('./**/*.svelte')
+        return pages[`./${name}.svelte`]()
+    },
+    setup({ el, App, props }) {
+        mount(App, { target: el, props })
+    },
+})
+```
+</details>
 
 ## Validation Errors
 
@@ -134,7 +193,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'flash' => [
-                'message' => fn () => $request->session()->get('message'),
+                'status' => fn () => $request->session()->get('status'),
             ],
         ];
     }
@@ -159,8 +218,8 @@ return new InertiaConfig(
         ensure_pages_exists: env('INERTIA_ENSURE_PAGES_EXIST', false),
     ),
 
-    // Disable to use Tempest's native paginator format on the front-end.
-    transform_pagination: false
+    // Enable Laravel's paginator format on the front-end.
+    transform_pagination: true
 );
 ```
 
@@ -214,32 +273,73 @@ conditionally change the configuration.
 ### 2. Create an SSR Entry Point
 
 Create a new file, `app/inertia.ssr.ts` (or `.js`), that will serve as the entry point for your Node.js server. This
-file is
-responsible for creating the SSR server. Unlike client-side entrypoints, this file should not include `.entrypoint.` in
+file is responsible for creating the SSR server. Unlike client-side entrypoints, this file should not include `.entrypoint.` in
 its name. Tempest automatically discovers those for the browser, and this file is meant to stay server-side.
 
-```ts
-import {createInertiaApp} from '@inertiajs/vue3'
-import createServer from '@inertiajs/vue3/server'
-import {renderToString} from 'vue/server-renderer'
-import {createSSRApp, DefineComponent, h} from 'vue'
+```diff
+- import { createApp, h } from 'vue'
++ import { createSSRApp, h } from 'vue'
+import { createInertiaApp } from '@inertiajs/vue3'
 
-createServer(page =>
-    createInertiaApp({
-        page,
-        render: renderToString,
-        resolve: (name) => {
-            const pages = import.meta.glob<DefineComponent>('/app/**/*.vue')
-            return pages[`/app/${name}.vue`]()
-        },
-        setup({App, props, plugin}) {
-            return createSSRApp({
-                render: () => h(App, props),
-            }).use(plugin)
-        },
-    }),
-)
+void createInertiaApp({
+    resolve: name => {
+        const pages = import.meta.glob('./**/*.vue')
+        return pages[`./${name}.vue`]()
+    },
+    setup({ el, App, props, plugin }) {
+        -     createApp({ render: () => h(App, props) })
+        +     createSSRApp({ render: () => h(App, props) })
+            .use(plugin)
+            .mount(el)
+    },
+})
 ```
+
+<details>
+<summary>React</summary>
+
+```diff
+import { createInertiaApp } from '@inertiajs/react'
+- import { createRoot } from 'react-dom/client'
++ import { hydrateRoot } from 'react-dom/client'
+
+createInertiaApp({
+    resolve: name => {
+        const pages = import.meta.glob('./**/*.jsx')
+        return pages[`./${name}.jsx`]()
+    },
+    setup({ el, App, props }) {
+        -     createRoot(el).render(<App {...props} />)
+        +     hydrateRoot(el, <App {...props} />)
+    },
+})
+```
+</details>
+
+<details>
+<summary>Svelte</summary>
+
+```diff
+import { createInertiaApp } from '@inertiajs/svelte'
+-  import { mount } from 'svelte'
++  import { hydrate, mount } from 'svelte'
+
+createInertiaApp({
+    resolve: name => {
+        const pages = import.meta.glob('./**/*.svelte')
+        return pages[`./${name}.svelte`]()
+    },
+    setup({ el, App, props }) {
+        -      mount(App, { target: el, props })
+        +      if (el.dataset.serverRendered === 'true') {
+            +        hydrate(App, { target: el, props })
+            +      } else {
+            +        mount(App, { target: el, props })
+            +      }
+    },
+})
+```
+</details>
 
 ### 3. Update Build Script
 
@@ -277,8 +377,7 @@ content.
 ### 5. Enable SSR
 
 Finally, enable SSR in your `inertia.config.php` file. The package will automatically discover the `ssr/inertia.ssr.mjs`
-or
-`ssr/inertia.ssr.js` bundle. If your bundle is located elsewhere, you must specify the path.
+or `ssr/inertia.ssr.js` bundle. If your bundle is located elsewhere, you must specify the path.
 
 ```php
 use Inertia\Configs\InertiaConfig;
