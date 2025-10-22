@@ -287,8 +287,8 @@ void createInertiaApp({
         return pages[`./${name}.vue`]()
     },
     setup({ el, App, props, plugin }) {
-        -     createApp({ render: () => h(App, props) })
-        +     createSSRApp({ render: () => h(App, props) })
+-       createApp({ render: () => h(App, props) })
++       createSSRApp({ render: () => h(App, props) })
             .use(plugin)
             .mount(el)
     },
@@ -309,8 +309,8 @@ createInertiaApp({
         return pages[`./${name}.jsx`]()
     },
     setup({ el, App, props }) {
-        -     createRoot(el).render(<App {...props} />)
-        +     hydrateRoot(el, <App {...props} />)
+-       createRoot(el).render(<App {...props} />)
++       hydrateRoot(el, <App {...props} />)
     },
 })
 ```
@@ -321,8 +321,8 @@ createInertiaApp({
 
 ```diff
 import { createInertiaApp } from '@inertiajs/svelte'
--  import { mount } from 'svelte'
-+  import { hydrate, mount } from 'svelte'
+- import { mount } from 'svelte'
++ import { hydrate, mount } from 'svelte'
 
 createInertiaApp({
     resolve: name => {
@@ -330,12 +330,12 @@ createInertiaApp({
         return pages[`./${name}.svelte`]()
     },
     setup({ el, App, props }) {
-        -      mount(App, { target: el, props })
-        +      if (el.dataset.serverRendered === 'true') {
-            +        hydrate(App, { target: el, props })
-            +      } else {
-            +        mount(App, { target: el, props })
-            +      }
+-       mount(App, { target: el, props })
++       if (el.dataset.serverRendered === 'true') {
++           hydrate(App, { target: el, props })
++       } else {
++           mount(App, { target: el, props })
++      }
     },
 })
 ```
