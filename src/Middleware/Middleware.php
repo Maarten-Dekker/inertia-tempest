@@ -17,7 +17,6 @@ use Tempest\Http\Method;
 use Tempest\Http\Request;
 use Tempest\Http\Response;
 use Tempest\Http\Responses\Back;
-use Tempest\Http\Responses\Ok;
 use Tempest\Http\Session\Session;
 use Tempest\Http\Status;
 use Tempest\Router\Exceptions\ControllerActionHadNoReturn;
@@ -111,7 +110,7 @@ class Middleware implements HttpMiddleware
     #[Override]
     public function __invoke(Request $request, HttpMiddlewareCallable $next): Response
     {
-        $this->inertia->version($this->version());
+        $this->inertia->version($this->version(...));
         $this->inertia->share($this->share($request));
         $this->inertia->setRootView($this->rootView());
 
@@ -121,12 +120,12 @@ class Middleware implements HttpMiddleware
 
         try {
             $response = $next($request);
-        } catch (ControllerActionHadNoReturn) {
-            if (!$request->headers->has(Header::INERTIA)) {
-                return new Ok();
+        } catch (ControllerActionHadNoReturn $controllerActionHadNoReturn) {
+            if ($request->headers->has(Header::INERTIA)) {
+                $response = $this->onEmptyResponse();
+            } else {
+                throw $controllerActionHadNoReturn;
             }
-
-            $response = $this->onEmptyResponse();
         }
 
         if ($response->body instanceof LazyBody) {
@@ -145,7 +144,7 @@ class Middleware implements HttpMiddleware
 
         if (
             $request->method === Method::GET
-            && $request->headers->get(Header::VERSION) !== $this->inertia->getVersion()
+            && ($request->headers->get(Header::VERSION) ?? '') !== $this->inertia->getVersion()
         ) {
             $response = $this->onVersionChange($request);
         }

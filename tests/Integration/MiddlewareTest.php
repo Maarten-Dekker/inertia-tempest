@@ -16,6 +16,7 @@ use Tempest\Http\ContentType;
 use Tempest\Http\Request;
 use Tempest\Http\Session\Session;
 use Tempest\Http\Status;
+use Tempest\Router\Exceptions\ControllerActionHadNoReturn;
 use Tempest\Validation\Rules\IsEmail;
 
 use function Tempest\root_path;
@@ -63,16 +64,14 @@ class MiddlewareTest extends TestCase
 
     public function test_no_response_means_no_response_for_non_inertia_requests(): void
     {
-        $response = $this->http->put(
+        $this->expectException(ControllerActionHadNoReturn::class);
+
+        $this->http->put(
             uri: uri([TestController::class, 'voidPutAction']),
             headers: [
                 'Content-Type' => 'application/json',
             ],
         );
-
-        $this->assertTrue(TestController::$voidActionCalled, 'The controller action was not called.');
-        $response->assertStatus(Status::OK);
-        $this->assertEmpty($response->body);
     }
 
     public function test_the_version_is_optional(): void

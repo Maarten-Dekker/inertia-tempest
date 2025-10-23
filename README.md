@@ -93,8 +93,6 @@ npm install @inertiajs/svelte
 Update your main JavaScript file to boot your Inertia app.
 
 ```js
-import '../app/main.entrypoint.css'
-
 import { createInertiaApp } from '@inertiajs/vue3'
 import { createApp, h } from 'vue'
 
@@ -115,8 +113,6 @@ void createInertiaApp({
 <summary>React</summary>
 
 ```js
-import '../app/main.entrypoint.css'
-
 import { createInertiaApp } from '@inertiajs/react'
 import { createRoot } from 'react-dom/client'
 
@@ -136,8 +132,6 @@ void createInertiaApp({
 <summary>Svelte</summary>
 
 ```js
-import '../app/main.entrypoint.css'
-
 import { createInertiaApp } from '@inertiajs/svelte'
 import { mount } from 'svelte'
 
@@ -152,27 +146,6 @@ void createInertiaApp({
 })
 ```
 </details>
-
-## Validation Errors
-
-To handle validation errors, flash them to the session using Tempest's `Session::VALIDATION_ERRORS` key. When validation
-fails, redirect back using `Back()`:
-
-```php
-#[Post('/login')]
-public function login(Request $request, Validator $validator, Session $session): Response|Back
-{
-    $failures = $validator->validateValuesForClass(Login::class, $request->body);
-
-    if ($failures !== []) {
-        $session->flash(Session::VALIDATION_ERRORS, $failures);
-
-        return new Back();
-    }
-
-    // ... handle successful login
-}
-```
 
 The adapter will automatically expose these errors under the errors prop on the client side.
 
@@ -229,7 +202,7 @@ To enable SSR, you'll need to configure your front-end build process to generate
 
 ### 1. Update Vite Configuration
 
-Modify your `vite.config.ts` to handle both client and server builds. The `ssrBuild` flag provided by Vite allows you to
+Modify your `vite.config.js` to handle both client and server builds. The `ssrBuild` flag provided by Vite allows you to
 conditionally change the configuration.
 
 ```diff
@@ -240,21 +213,15 @@ conditionally change the configuration.
   import vue from '@vitejs/plugin-vue';
 
 - export default defineConfig({
--     plugins: [
--         tailwindcss(),
--         tempest(),
--         vue(),
--     ],
-- })
-+ export default defineConfig((configEnv: ConfigEnv) => {
++ export default defineConfig((ConfigEnv) => {
 +     const isSsrBuild = configEnv.ssrBuild === true;
 +
 +     return {
-+         plugins: [
-+             tailwindcss(),
-+             tempest(),
-+             vue(),
-+         ],
+          plugins: [
+              tailwindcss(),
+              tempest(),
+              vue(),
+          ],
 +         build: {
 +             outDir: isSsrBuild ? 'ssr' : 'public/build',
 +             manifest: !isSsrBuild ? 'manifest.json' : false,
@@ -267,12 +234,12 @@ conditionally change the configuration.
 +             noExternal: ['@inertiajs/vue3'],
 +         },
 +     };
-+ });
+  });
 ```
 
 ### 2. Create an SSR Entry Point
 
-Create a new file, `app/inertia.ssr.ts` (or `.js`), that will serve as the entry point for your Node.js server. This
+Create a new file, `app/inertia.ssr.js`, that will serve as the entry point for your Node.js server. This
 file is responsible for creating the SSR server. Unlike client-side entrypoints, this file should not include `.entrypoint.` in
 its name. Tempest automatically discovers those for the browser, and this file is meant to stay server-side.
 
