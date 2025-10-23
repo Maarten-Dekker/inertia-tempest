@@ -33,11 +33,6 @@ use function Tempest\invoke;
 final class ResponseFactory
 {
     /**
-     * @var array<string, bool>
-     */
-    private array $componentCache = [];
-
-    /**
      * The name of the root view.
      */
     private string $rootView = 'inertia.view.php';
@@ -68,6 +63,11 @@ final class ResponseFactory
      * The URL resolver callback.
      */
     private ?Closure $urlResolver = null;
+
+    /**
+     * @var array<string, bool>
+     */
+    private array $componentCache = [];
 
     private Session $session {
         get => $this->session ??= get(Session::class);
@@ -152,9 +152,11 @@ final class ResponseFactory
      */
     public function getVersion(): string
     {
-        $version = $this->version instanceof Closure ? invoke($this->version) : $this->version;
+        if ($this->version instanceof Closure) {
+            $this->version = (string) invoke($this->version);
+        }
 
-        return (string) $version;
+        return (string) $this->version;
     }
 
     /**
