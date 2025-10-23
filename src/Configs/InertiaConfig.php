@@ -77,6 +77,17 @@ final readonly class InertiaConfig
 
         /*
          * |--------------------------------------------------------------------------
+         * | Multiple Validation Errors
+         * |--------------------------------------------------------------------------
+         * |
+         * | When enabled, Inertia will return all validation errors for a request,
+         * | instead of only the first error encountered per field.
+         * |
+         */
+        public bool $multiple_validation_errors = false,
+
+        /*
+         * |--------------------------------------------------------------------------
          * | Pagination Transformation
          * |--------------------------------------------------------------------------
          * |

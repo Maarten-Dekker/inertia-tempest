@@ -11,5 +11,6 @@ return new InertiaConfig(
     ssr: new SsrConfig(),
     pages: new PageConfig(),
     history: new HistoryConfig(),
+    multiple_validation_errors: false,
     transform_pagination: false,
 );
