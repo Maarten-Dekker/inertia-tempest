@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Inertia\Tests\Integration;
 
+use Inertia\Configs\InertiaConfig;
 use Inertia\Middleware\Middleware;
 use Inertia\Props\AlwaysProp;
 use Inertia\Support\Header;
@@ -17,7 +18,7 @@ use Tempest\Http\Request;
 use Tempest\Http\Session\Session;
 use Tempest\Http\Status;
 use Tempest\Router\Exceptions\ControllerActionHadNoReturn;
-use Tempest\Validation\Rules\IsEmail;
+use Tempest\Validation\Rules;
 
 use function Tempest\root_path;
 use function Tempest\Router\uri;
@@ -181,16 +182,17 @@ class MiddlewareTest extends TestCase
         $sharedData = $middleware->share($request);
         $errors = $sharedData['errors']();
 
-        $this->assertIsObject($errors);
-        $this->assertEmpty(get_object_vars($errors));
+        $this->assertEmpty($errors);
     }
 
-    public function test_validation_errors_are_returned_in_the_correct_format(): void
+    public function test_validation_errors_returns_single_error(): void
     {
+        $this->container->singleton(InertiaConfig::class, fn() => new InertiaConfig(multiple_validation_errors: false));
+
         $session = $this->container->get(Session::class);
 
         $validationErrors = [
-            'email' => [new IsEmail()],
+            'email' => [new rules\IsEmail(), new Rules\HasLength(min: 50)],
         ];
         $this->assertInstanceOf(Session::class, $session);
         $session->set(Session::VALIDATION_ERRORS, $validationErrors);
@@ -202,8 +204,43 @@ class MiddlewareTest extends TestCase
         $sharedData = $middleware->share($request);
         $errors = $sharedData['errors']();
 
-        $this->assertIsObject($errors);
-        $this->assertSame('Email must be a valid email address', $errors->email);
+        $this->assertSame('email must be a valid email address', $errors['email']);
+    }
+
+    public function test_validation_errors_returns_multiple_errors(): void
+    {
+        $this->container->singleton(InertiaConfig::class, fn() => new InertiaConfig(multiple_validation_errors: true));
+
+        $session = $this->container->get(Session::class);
+
+        $validationErrors = [
+            'email' => [new Rules\IsEmail(), new Rules\HasLength(min: 50)],
+            'name' => [new Rules\HasLength(min: 50)],
+        ];
+        $this->assertInstanceOf(Session::class, $session);
+        $session->set(Session::VALIDATION_ERRORS, $validationErrors);
+
+        $middleware = $this->container->get(Middleware::class);
+        $request = $this->container->get(Request::class);
+        $this->assertInstanceOf(Middleware::class, $middleware);
+
+        $sharedData = $middleware->share($request);
+        $errors = $sharedData['errors']();
+
+        $this->assertSame(
+            [
+                'email must be a valid email address',
+                'email must be at least 50',
+            ],
+            $errors['email'],
+        );
+
+        $this->assertSame(
+            [
+                'name must be at least 50',
+            ],
+            $errors['name'],
+        );
     }
 
     public function test_default_validation_errors_can_be_overwritten(): void

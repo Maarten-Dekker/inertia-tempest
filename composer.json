@@ -40,7 +40,7 @@
     "carthage-software/mago": "1.0.0-beta.34",
     "mockery/mockery": "^1.6.12",
     "phpunit/phpunit": "^12.4.1",
-    "rector/rector": "^2.2.3"
+    "rector/rector": "^2.2.5"
   },
   "suggest": {
     "ext-pcntl": "Recommended when running the Inertia SSR server via the `inertia:start-ssr` tempest command."

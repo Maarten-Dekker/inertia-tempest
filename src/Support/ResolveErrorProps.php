@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Inertia\Support;
 
+use Inertia\Configs\InertiaConfig;
 use Tempest\Http\Session\Session;
 use Tempest\Validation\Rule;
 use Tempest\Validation\Validator;
@@ -15,29 +16,22 @@ final readonly class ResolveErrorProps
     public function __construct(
         private Session $session,
         private Validator $validator,
+        private InertiaConfig $config,
     ) {}
 
-    public function __invoke(): object
+    public function __invoke(): array
     {
+        /** @var array<string, Rule[]> $validationErrors */
         $validationErrors = $this->session->get(Session::VALIDATION_ERRORS) ?? [];
 
-        $processedErrors = arr($validationErrors)
-            ->map(function (array $rules): ?string {
-                $firstRule = $rules[0] ?? null;
+        return arr($validationErrors)->map(function (array $rules, string $key): string|array|null {
+            $messages = arr($rules)->map(fn(Rule $rule) => $this->validator->getErrorMessage($rule, $key))->toArray();
 
-                if ($firstRule instanceof Rule) {
-                    $message = $this->validator->getErrorMessage($firstRule);
+            if ($this->config->multiple_validation_errors) {
+                return $messages;
+            }
 
-                    if ($message !== '' && $message !== '0') {
-                        return $message;
-                    }
-                }
-
-                return null;
-            })
-            ->filter(fn(?string $message) => $message !== null)
-            ->toArray();
-
-        return (object) $processedErrors;
+            return array_shift($messages);
+        })->toArray();
     }
 }
