@@ -6,11 +6,12 @@ use Inertia\Configs\HistoryConfig;
 use Inertia\Configs\InertiaConfig;
 use Inertia\Configs\PageConfig;
 use Inertia\Configs\SsrConfig;
+use Inertia\Configs\ValidationConfig;
 
 return new InertiaConfig(
     ssr: new SsrConfig(),
     pages: new PageConfig(),
     history: new HistoryConfig(),
-    multiple_validation_errors: false,
+    validation: new ValidationConfig(),
     transform_pagination: false,
 );

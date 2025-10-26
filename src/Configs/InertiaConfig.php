@@ -77,14 +77,14 @@ final readonly class InertiaConfig
 
         /*
          * |--------------------------------------------------------------------------
-         * | Multiple Validation Errors
+         * | Validation Error Configuration
          * |--------------------------------------------------------------------------
          * |
-         * | When enabled, Inertia will return all validation errors for a request,
-         * | instead of only the first error encountered per field.
+         * | These options control how validation errors are formatted and presented
+         * | in the Inertia 'errors' prop.
          * |
          */
-        public bool $multiple_validation_errors = false,
+        public ValidationConfig $validation = new ValidationConfig(),
 
         /*
          * |--------------------------------------------------------------------------

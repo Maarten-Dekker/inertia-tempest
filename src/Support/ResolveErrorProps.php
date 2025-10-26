@@ -25,9 +25,13 @@ final readonly class ResolveErrorProps
         $validationErrors = $this->session->get(Session::VALIDATION_ERRORS) ?? [];
 
         return arr($validationErrors)->map(function (array $rules, string $key): string|array|null {
-            $messages = arr($rules)->map(fn(Rule $rule) => $this->validator->getErrorMessage($rule, $key))->toArray();
+            $fieldName = $this->config->validation->localize_fields ? $key : null;
 
-            if ($this->config->multiple_validation_errors) {
+            $messages = arr($rules)->map(
+                fn(Rule $rule) => $this->validator->getErrorMessage($rule, $fieldName),
+            )->toArray();
+
+            if ($this->config->validation->multiple_errors) {
                 return $messages;
             }
 
