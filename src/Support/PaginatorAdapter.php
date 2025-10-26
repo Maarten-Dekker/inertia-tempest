@@ -7,6 +7,7 @@ namespace Inertia\Support;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Contracts\Arrayable;
 use Override;
+use RuntimeException;
 use Tempest\Http\Request;
 use Tempest\Support\Paginator\PaginatedData;
 
@@ -19,6 +20,10 @@ final readonly class PaginatorAdapter implements Arrayable
 
     public function toIlluminatePaginator(): LengthAwarePaginator
     {
+        if (!class_exists(LengthAwarePaginator::class)) {
+            throw new RuntimeException('Cannot transform to Laravel paginator: package "illuminate/pagination" is not installed.');
+        }
+
         return new LengthAwarePaginator(
             items: $this->paginator->data,
             total: $this->paginator->totalItems,
