@@ -32,17 +32,18 @@
   "require": {
     "php": "^8.4",
     "ext-json": "*",
-    "tempest/framework": "^2.4",
-    "illuminate/pagination": "^12.0"
+    "tempest/framework": "^2.4"
   },
   "require-dev": {
     "ext-pdo_sqlite": "*",
     "carthage-software/mago": "1.0.0-beta.34",
     "mockery/mockery": "^1.6.12",
     "phpunit/phpunit": "^12.4.1",
-    "rector/rector": "^2.2.5"
+    "rector/rector": "^2.2.5",
+    "illuminate/pagination": "^12.35.1"
   },
   "suggest": {
+    "illuminate/pagination": "Required to transform PaginatedData into a Laravel paginator instance.",
     "ext-pcntl": "Recommended when running the Inertia SSR server via the `inertia:start-ssr` tempest command."
   },
   "minimum-stability": "dev",
