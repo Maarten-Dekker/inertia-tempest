@@ -21,7 +21,9 @@ final readonly class PaginatorAdapter implements Arrayable
     public function toIlluminatePaginator(): LengthAwarePaginator
     {
         if (!class_exists(LengthAwarePaginator::class)) {
-            throw new RuntimeException('Cannot transform to Laravel paginator: package "illuminate/pagination" is not installed.');
+            throw new RuntimeException(
+                'Cannot transform to Laravel paginator: package "illuminate/pagination" is not installed.',
+            );
         }
 
         return new LengthAwarePaginator(
