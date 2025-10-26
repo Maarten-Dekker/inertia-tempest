@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Inertia\Tests\Integration;
 
 use Inertia\Configs\InertiaConfig;
+use Inertia\Configs\ValidationConfig;
 use Inertia\Middleware\Middleware;
 use Inertia\Props\AlwaysProp;
 use Inertia\Support\Header;
@@ -187,7 +188,13 @@ class MiddlewareTest extends TestCase
 
     public function test_validation_errors_returns_single_error(): void
     {
-        $this->container->singleton(InertiaConfig::class, fn() => new InertiaConfig(multiple_validation_errors: false));
+        $this->container->singleton(
+            InertiaConfig::class,
+            fn() => new InertiaConfig(validation: new ValidationConfig(
+                multiple_errors: false,
+                localize_fields: false,
+            )),
+        );
 
         $session = $this->container->get(Session::class);
 
@@ -204,12 +211,18 @@ class MiddlewareTest extends TestCase
         $sharedData = $middleware->share($request);
         $errors = $sharedData['errors']();
 
-        $this->assertSame('email must be a valid email address', $errors['email']);
+        $this->assertSame('Email must be a valid email address', $errors['email']);
     }
 
     public function test_validation_errors_returns_multiple_errors(): void
     {
-        $this->container->singleton(InertiaConfig::class, fn() => new InertiaConfig(multiple_validation_errors: true));
+        $this->container->singleton(
+            InertiaConfig::class,
+            fn() => new InertiaConfig(validation: new ValidationConfig(
+                multiple_errors: true,
+                localize_fields: false,
+            )),
+        );
 
         $session = $this->container->get(Session::class);
 
@@ -229,18 +242,74 @@ class MiddlewareTest extends TestCase
 
         $this->assertSame(
             [
-                'email must be a valid email address',
-                'email must be at least 50',
+                'Email must be a valid email address',
+                'Value must be at least 50',
             ],
             $errors['email'],
         );
 
         $this->assertSame(
             [
-                'name must be at least 50',
+                'Value must be at least 50',
             ],
             $errors['name'],
         );
+    }
+
+    public function test_validation_errors_are_localized_when_config_is_true(): void
+    {
+        $this->container->singleton(
+            InertiaConfig::class,
+            fn() => new InertiaConfig(validation: new ValidationConfig(
+                multiple_errors: false,
+                localize_fields: true,
+            )),
+        );
+
+        $session = $this->container->get(Session::class);
+        $validationErrors = [
+            'email' => [new Rules\IsNotEmptyString()],
+        ];
+        $this->assertInstanceOf(\Tempest\Http\Session\Session::class, $session);
+        $session->set(Session::VALIDATION_ERRORS, $validationErrors);
+
+        $middleware = $this->container->get(Middleware::class);
+        $request = $this->container->get(Request::class);
+        $this->assertInstanceOf(\Inertia\Middleware\Middleware::class, $middleware);
+        $sharedData = $middleware->share($request);
+        $errors = $sharedData['errors']();
+
+        $this->assertIsArray($errors);
+        $this->assertArrayHasKey('email', $errors);
+        $this->assertSame('email must not be empty', $errors['email']);
+    }
+
+    public function test_validation_errors_are_generic_when_config_is_false(): void
+    {
+        $this->container->singleton(
+            InertiaConfig::class,
+            fn() => new InertiaConfig(validation: new ValidationConfig(
+                multiple_errors: false,
+                localize_fields: false,
+            )),
+        );
+
+        $session = $this->container->get(Session::class);
+        $validationErrors = [
+            'email' => [new Rules\IsNotEmptyString()],
+        ];
+        $this->assertInstanceOf(\Tempest\Http\Session\Session::class, $session);
+        $session->set(Session::VALIDATION_ERRORS, $validationErrors);
+
+        $middleware = $this->container->get(Middleware::class);
+        $request = $this->container->get(Request::class);
+        $this->assertInstanceOf(\Inertia\Middleware\Middleware::class, $middleware);
+        $sharedData = $middleware->share($request);
+        $errors = $sharedData['errors']();
+
+        $this->assertIsArray($errors);
+        $this->assertArrayHasKey('email', $errors);
+        $this->assertSame('Value must not be empty', $errors['email']);
     }
 
     public function test_default_validation_errors_can_be_overwritten(): void
