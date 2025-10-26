@@ -190,7 +190,10 @@ class MiddlewareTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            fn() => new InertiaConfig(validation: new ValidationConfig(multiple_errors: false, localize_fields: false)),
+            fn() => new InertiaConfig(validation: new ValidationConfig(
+                multiple_errors: false,
+                localize_fields: false,
+            )),
         );
 
         $session = $this->container->get(Session::class);
@@ -215,7 +218,10 @@ class MiddlewareTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            fn() => new InertiaConfig(validation: new ValidationConfig(multiple_errors: true, localize_fields: false)),
+            fn() => new InertiaConfig(validation: new ValidationConfig(
+                multiple_errors: true,
+                localize_fields: false,
+            )),
         );
 
         $session = $this->container->get(Session::class);
@@ -254,7 +260,10 @@ class MiddlewareTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            fn() => new InertiaConfig(validation: new ValidationConfig(multiple_errors: false, localize_fields: true)),
+            fn() => new InertiaConfig(validation: new ValidationConfig(
+                multiple_errors: false,
+                localize_fields: true,
+            )),
         );
 
         $session = $this->container->get(Session::class);
@@ -279,7 +288,10 @@ class MiddlewareTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            fn() => new InertiaConfig(validation: new ValidationConfig(multiple_errors: false, localize_fields: false)),
+            fn() => new InertiaConfig(validation: new ValidationConfig(
+                multiple_errors: false,
+                localize_fields: false,
+            )),
         );
 
         $session = $this->container->get(Session::class);
