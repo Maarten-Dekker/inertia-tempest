@@ -1,6 +1,7 @@
 /.tempest
 /vendor
 /.cache
+composer.lock
 
 /.fleet
 /.idea
