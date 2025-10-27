@@ -275,7 +275,7 @@ final class Response implements HttpResponse
                 default => $value,
             };
 
-            if ($this->config->transform_pagination && $value instanceof PaginatedData) {
+            if ($this->config->laravel_pagination && $value instanceof PaginatedData) {
                 $value = new PaginatorAdapter(
                     paginator: $value,
                     request: $this->request,

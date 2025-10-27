@@ -192,7 +192,7 @@ return new InertiaConfig(
     ),
 
     // Enable Laravel's paginator format on the front-end.
-    transform_pagination: true
+    laravel_pagination: true
 );
 ```
 
