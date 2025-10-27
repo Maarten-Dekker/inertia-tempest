@@ -13,5 +13,5 @@ return new InertiaConfig(
     pages: new PageConfig(),
     history: new HistoryConfig(),
     validation: new ValidationConfig(),
-    transform_pagination: false,
+    laravel_pagination: false,
 );

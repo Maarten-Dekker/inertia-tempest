@@ -696,7 +696,7 @@ class ResponseTest extends TestCase
 
     public function test_lazy_prop_returning_pagination_is_transformed(): void
     {
-        $this->container->singleton(InertiaConfig::class, fn() => new InertiaConfig(transform_pagination: true));
+        $this->container->singleton(InertiaConfig::class, fn() => new InertiaConfig(laravel_pagination: true));
 
         $this->makeRequest(
             uri: '/users?page=1',
@@ -746,7 +746,7 @@ class ResponseTest extends TestCase
 
     public function test_lazy_prop_returning_nested_pagination_is_transformed(): void
     {
-        $this->container->singleton(InertiaConfig::class, fn() => new InertiaConfig(transform_pagination: true));
+        $this->container->singleton(InertiaConfig::class, fn() => new InertiaConfig(laravel_pagination: true));
 
         $this->makeRequest(
             uri: '/users?page=1',

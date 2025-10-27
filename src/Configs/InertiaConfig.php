@@ -97,6 +97,6 @@ final readonly class InertiaConfig
          * | front-end pagination components.
          * |
          */
-        public bool $transform_pagination = false,
+        public bool $laravel_pagination = false,
     ) {}
 }
