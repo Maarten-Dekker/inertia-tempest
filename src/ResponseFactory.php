@@ -237,11 +237,13 @@ final class ResponseFactory
      */
     public function scroll(
         mixed $value,
+        string $pageName = 'page',
         string $wrapper = 'data',
         ProvidesScrollMetadata|callable|null $metadata = null,
     ): ScrollProp {
         return new ScrollProp(
             value: $value,
+            pageName: $pageName,
             wrapper: $wrapper,
             metadata: $metadata,
         );

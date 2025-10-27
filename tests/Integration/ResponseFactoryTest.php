@@ -288,7 +288,12 @@ class ResponseFactoryTest extends TestCase
         $data = ['item1', 'item2'];
         $metadataProvider = new ScrollMetadata('custom', 1, 3, 2);
 
-        $scrollProp = $this->factory->scroll($data, 'data', $metadataProvider);
+        $scrollProp = $this->factory->scroll(
+            value: $data,
+            pageName: 'test',
+            wrapper: 'data',
+            metadata: $metadataProvider,
+        );
 
         $this->assertInstanceOf(ScrollProp::class, $scrollProp);
         $this->assertSame($data, $scrollProp());

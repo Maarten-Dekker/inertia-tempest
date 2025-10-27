@@ -25,7 +25,7 @@ Create a root view template `inertia.view.php` in your `app` directory. The adap
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title inertia>Inertia Tempest</title>
 
-    <x-vite-tags entrypoint="app/inertia.entrypoint.ts"/>
+    <x-vite-tags/>
 </head>
 <body>
     <?= $this->inertia() ?>
@@ -33,7 +33,8 @@ Create a root view template `inertia.view.php` in your `app` directory. The adap
 </html>
 ```
 
-That's it, you're all ready to start creating Inertia pages. You can use either the globally available `inertia()` helper function or the static `Inertia` facade:
+That's it, you're all ready to start creating Inertia pages. You can use either the globally available `inertia()`
+helper function or the static `Inertia` facade:
 
 ```php
 use Inertia\Response;
@@ -78,6 +79,7 @@ npm install @inertiajs/vue3
 ```bash
 npm install @inertiajs/react
 ```
+
 </details>
 
 <details>
@@ -86,6 +88,7 @@ npm install @inertiajs/react
 ```bash
 npm install @inertiajs/svelte
 ```
+
 </details>
 
 ### Initialize the Inertia app
@@ -117,15 +120,16 @@ import { createInertiaApp } from '@inertiajs/react'
 import { createRoot } from 'react-dom/client'
 
 void createInertiaApp({
-  resolve: name => {
-      const pages = import.meta.glob('./**/*.jsx')
-      return pages[`./${name}.jsx`]()
-  },
-  setup({ el, App, props }) {
-      createRoot(el).render(<App {...props} />)
-  },
+    resolve: name => {
+        const pages = import.meta.glob('./**/*.jsx')
+        return pages[`./${name}.jsx`]()
+    },
+    setup({ el, App, props }) {
+        createRoot(el).render(<App {...props} />)
+    },
 })
 ```
+
 </details>
 
 <details>
@@ -145,6 +149,7 @@ void createInertiaApp({
     },
 })
 ```
+
 </details>
 
 The adapter will automatically expose these errors under the errors prop on the client side.
@@ -163,12 +168,11 @@ class HandleInertiaRequests extends Middleware
 {
     public function share(Request $request): array
     {
-        return [
-            ...parent::share($request),
+        return array_replace_recursive(parent::share($request), [
             'flash' => [
-                'status' => fn () => $request->session()->get('status'),
+                'status' => fn() => $request->session()->get('status'),
             ],
-        ];
+        ]);
     }
 }
 ```
@@ -194,6 +198,25 @@ return new InertiaConfig(
     // Enable Laravel's paginator format on the front-end.
     laravel_pagination: true
 );
+```
+
+## Infinite Scrolling
+
+A key difference from the Laravel adapter is that __Tempest's paginator is not automatically "request-aware"__. This
+means you are responsible for retrieving the current page from the request and passing it to your `paginate()` method. The
+`Inertia::scroll()` method accepts the `pageName` (which defaults to `'page'`) as its second argument. This ensures that the
+component's state is synchronized with the correct query parameter in the URL.
+
+```php
+public function index(Request $request): Response
+{
+    $currentPage = (int) $request->get('users', 1);
+
+    return Inertia::render('Books/Index', [
+        'books' => Inertia::scroll(fn() => Book::select()->paginate(currentPage: $currentPage), 'users'),
+    ]);
+
+}
 ```
 
 ## Server-Side Rendering (SSR)
@@ -240,7 +263,8 @@ conditionally change the configuration.
 ### 2. Create an SSR Entry Point
 
 Create a new file, `app/inertia.ssr.js`, that will serve as the entry point for your Node.js server. This
-file is responsible for creating the SSR server. Unlike client-side entrypoints, this file should not include `.entrypoint.` in
+file is responsible for creating the SSR server. Unlike client-side entrypoints, this file should not include
+`.entrypoint.` in
 its name. Tempest automatically discovers those for the browser, and this file is meant to stay server-side.
 
 ```diff
@@ -281,6 +305,7 @@ createInertiaApp({
     },
 })
 ```
+
 </details>
 
 <details>
@@ -306,6 +331,7 @@ createInertiaApp({
     },
 })
 ```
+
 </details>
 
 ### 3. Update Build Script
@@ -332,7 +358,7 @@ content.
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title inertia>Inertia Tempest</title>
     
-    <x-vite-tags entrypoint="app/inertia.entrypoint.ts"/>
+    <x-vite-tags />
 +   <?= $this->inertiaHead() ?>
 </head>
 <body>
@@ -349,6 +375,7 @@ or `ssr/inertia.ssr.js` bundle. If your bundle is located elsewhere, you must sp
 ```php
 use Inertia\Configs\InertiaConfig;
 use Inertia\Configs\SsrConfig;
+
 use function Tempest\root_path;
 
 return new InertiaConfig(
