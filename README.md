@@ -28,7 +28,7 @@ Create a root view template `inertia.view.php` in your `app` directory. The adap
     <x-vite-tags/>
 </head>
 <body>
-<?= $this->inertia() ?>
+    <?= $this->inertia() ?>
 </body>
 </html>
 ```
@@ -96,16 +96,16 @@ npm install @inertiajs/svelte
 Update your main JavaScript file to boot your Inertia app.
 
 ```js
-import {createInertiaApp} from '@inertiajs/vue3'
-import {createApp, h} from 'vue'
+import { createInertiaApp } from '@inertiajs/vue3'
+import { createApp, h } from 'vue'
 
 void createInertiaApp({
     resolve: (name) => {
         const pages = import.meta.glob('./**/*.vue')
         return pages[`./${name}.vue`]()
     },
-    setup({el, App, props, plugin}) {
-        createApp({render: () => h(App, props)})
+    setup({ el, App, props, plugin }) {
+        createApp({ render: () => h(App, props) })
             .use(plugin)
             .mount(el)
     },
@@ -116,15 +116,15 @@ void createInertiaApp({
 <summary>React</summary>
 
 ```js
-import {createInertiaApp} from '@inertiajs/react'
-import {createRoot} from 'react-dom/client'
+import { createInertiaApp } from '@inertiajs/react'
+import { createRoot } from 'react-dom/client'
 
 void createInertiaApp({
     resolve: name => {
         const pages = import.meta.glob('./**/*.jsx')
         return pages[`./${name}.jsx`]()
     },
-    setup({el, App, props}) {
+    setup({ el, App, props }) {
         createRoot(el).render(<App {...props} />)
     },
 })
@@ -136,16 +136,16 @@ void createInertiaApp({
 <summary>Svelte</summary>
 
 ```js
-import {createInertiaApp} from '@inertiajs/svelte'
-import {mount} from 'svelte'
+import { createInertiaApp } from '@inertiajs/svelte'
+import { mount } from 'svelte'
 
 void createInertiaApp({
     resolve: name => {
         const pages = import.meta.glob('./**/*.svelte')
         return pages[`./${name}.svelte`]()
     },
-    setup({el, App, props}) {
-        mount(App, {target: el, props})
+    setup({ el, App, props }) {
+        mount(App, { target: el, props })
     },
 })
 ```
