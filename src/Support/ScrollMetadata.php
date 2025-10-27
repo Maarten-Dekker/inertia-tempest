@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Inertia\Support;
 
-use Illuminate\Pagination\CursorPaginator;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Pagination\Paginator;
 use Inertia\Contracts\Arrayable;
 use Inertia\Contracts\ProvidesScrollMetadata;
 use InvalidArgumentException;
@@ -27,27 +24,29 @@ final readonly class ScrollMetadata implements Arrayable, ProvidesScrollMetadata
     /**
      * Create a scroll metadata instance from a Laravel or Tempest paginator.
      */
-    public static function fromPaginator(mixed $paginator): self
+    public static function fromPaginator(mixed $paginator, string $pageName = 'page'): self
     {
         if ($paginator instanceof PaginatedData) {
-            return new self('page', $paginator->previousPage, $paginator->nextPage, $paginator->currentPage);
-        }
-
-        if ($paginator instanceof CursorPaginator) {
             return new self(
-                $cursorName = $paginator->getCursorName(),
-                $paginator->previousCursor()?->encode(),
-                $paginator->nextCursor()?->encode(),
-                $paginator->onFirstPage() ? 1 : CursorPaginator::resolveCurrentCursor($cursorName)?->encode() ?? 1,
+                pageName: $pageName,
+                previousPage: $paginator->previousPage,
+                nextPage: $paginator->nextPage,
+                currentPage: $paginator->currentPage,
             );
         }
 
-        if ($paginator instanceof LengthAwarePaginator || $paginator instanceof Paginator) {
+        $paginatorClass = \Illuminate\Pagination\Paginator::class;
+        $lengthAwarePaginatorClass = \Illuminate\Pagination\LengthAwarePaginator::class;
+
+        if (
+            class_exists($paginatorClass)
+            && (is_a($paginator, $paginatorClass) || is_a($paginator, $lengthAwarePaginatorClass))
+        ) {
             return new self(
-                $paginator->getPageName(),
-                $paginator->currentPage() > 1 ? $paginator->currentPage() - 1 : null,
-                $paginator->hasMorePages() ? $paginator->currentPage() + 1 : null,
-                $paginator->currentPage(),
+                pageName: $pageName,
+                previousPage: $paginator->currentPage() > 1 ? $paginator->currentPage() - 1 : null,
+                nextPage: $paginator->hasMorePages() ? $paginator->currentPage() + 1 : null,
+                currentPage: $paginator->currentPage(),
             );
         }
 
