@@ -152,8 +152,6 @@ void createInertiaApp({
 
 </details>
 
-The adapter will automatically expose these errors under the errors prop on the client side.
-
 ## Shared Data
 
 The `Inertia\Middleware\Middleware` is the perfect place to define props that should be available on every page. This
