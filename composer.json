@@ -42,8 +42,11 @@
     "rector/rector": "2.2.5",
     "illuminate/pagination": "^12.35.1"
   },
+  "conflict": {
+    "tempest/framework": ">=2.6.0 <=2.7.0"
+  },
   "suggest": {
-    "illuminate/pagination": "Required to transform PaginatedData into a Laravel paginator instance.",
+    "illuminate/pagination": "Required to transform paginated data into a Laravel paginator instance.",
     "ext-pcntl": "Recommended when running the Inertia SSR server via the `inertia:start-ssr` tempest command."
   },
   "minimum-stability": "dev",
