@@ -507,7 +507,13 @@ final class Response implements HttpResponse
     {
         if (!$this->request->headers->has(Header::INERTIA)) {
             $ssr = $this->ssr($page);
-            return new InertiaView($this->rootView, ['page' => $page] + $this->viewData, $ssr?->head, $ssr?->body);
+
+            return new InertiaView(
+                path: $this->rootView,
+                inertia: ['page' => $page] + $this->viewData,
+                ssrHead: $ssr?->head,
+                ssrBody: $ssr?->body,
+            );
         }
 
         $inertiaVersion = $this->request->headers->get(Header::VERSION);
