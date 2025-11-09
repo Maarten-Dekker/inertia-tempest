@@ -270,13 +270,13 @@ final class ResponseFactory
         $combinedProps = array_merge($this->sharedProps, $props);
 
         return new Response(
-            $component,
-            $combinedProps,
-            $this->rootView,
-            $this->getVersion(),
-            $this->clearHistory,
-            $this->encryptHistory ?? $this->config->history->encrypt,
-            $this->urlResolver,
+            component: $component,
+            props: $combinedProps,
+            rootView: $this->rootView,
+            version: $this->getVersion(),
+            clearHistory: $this->clearHistory,
+            encryptHistory: $this->encryptHistory ?? $this->config->history->encrypt,
+            urlResolver: $this->urlResolver,
         );
     }
 

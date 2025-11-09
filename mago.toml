@@ -21,6 +21,7 @@ class-name = { enabled = false}
 interface-name = { enabled = false}
 trait-name = { enabled = false}
 too-many-methods = { enabled = false }
+too-many-properties = { enabled = false }
 no-else-clause = { enabled = false }
 excessive-parameter-list = { enabled = false }
 halstead = { enabled = false }
