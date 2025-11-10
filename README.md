@@ -1,5 +1,10 @@
 # Inertia.js Tempest Adapter
 
+![Unit Tests](https://github.com/Maarten-Dekker/inertia-tempest/workflows/CI/badge.svg)
+[![Packagist License](https://img.shields.io/badge/Licence-MIT-blue)](https://choosealicense.com/licenses/mit)
+[![Latest Stable Version](https://img.shields.io/packagist/v/maartendekker/inertia-tempest?label=Stable)](https://packagist.org/packages/maartendekker/inertia-tempest)
+[![Total Downloads](https://img.shields.io/packagist/dt/maartendekker/inertia-tempest?label=Downloads)](https://packagist.org/packages/maartendekker/inertia-tempest)
+
 A feature-complete Inertia.js adapter for the [Tempest](https://tempestphp.com) framework.  
 Mirrors the official [Inertia.js Laravel Adapter](https://github.com/inertiajs/inertia-laravel).
 
