@@ -10,6 +10,8 @@ use Inertia\Ssr\Contracts\Gateway;
 use Inertia\Ssr\Contracts\HasHealthCheck;
 use Override;
 use Tempest\HttpClient\HttpClient;
+use Tempest\Router\Exceptions\ControllerActionHadNoReturn;
+use Tempest\Router\Exceptions\MatchedRouteCouldNotBeResolved;
 use Tempest\Support\Str;
 use Throwable;
 
@@ -66,7 +68,11 @@ final readonly class HttpGateway implements Gateway, HasHealthCheck
             return $this
                 ->client->get($this->getUrl('/health'))
                 ->status->isSuccessful();
-        } catch (Throwable) {
+        } catch (Throwable $throwable) {
+            if ($throwable instanceof MatchedRouteCouldNotBeResolved) {
+                throw $throwable;
+            }
+
             return false;
         }
     }
