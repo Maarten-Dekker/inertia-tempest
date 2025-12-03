@@ -11,6 +11,7 @@ use Inertia\Ssr\Response as SsrResponse;
 use Inertia\Tests\Fixtures\FakeClientResponse;
 use Inertia\Tests\TestCase;
 use Mockery;
+use RuntimeException;
 use Tempest\HttpClient\HttpClient;
 
 use function Tempest\root_path;
@@ -172,8 +173,12 @@ final class HttpGatewayTest extends TestCase
 
         $mockClient = Mockery::mock(HttpClient::class)
             ->shouldReceive('get')
-            ->times(2)
-            ->andReturn($successResponse, $failureResponse)
+            ->times(3)
+            ->andReturn(
+                $successResponse,
+                $failureResponse,
+                Mockery::on(fn() => throw new RuntimeException('Connection refused')),
+            )
             ->getMock();
 
         $this->container->singleton(HttpClient::class, static fn() => $mockClient);
@@ -182,6 +187,7 @@ final class HttpGatewayTest extends TestCase
         $this->assertInstanceOf(HttpGateway::class, $gateway);
 
         $this->assertTrue($gateway->isHealthy());
+        $this->assertFalse($gateway->isHealthy());
         $this->assertFalse($gateway->isHealthy());
     }
 }
