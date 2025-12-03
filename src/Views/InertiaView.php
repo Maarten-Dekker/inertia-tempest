@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Inertia\Views;
 
+use Inertia\Configs\InertiaConfig;
 use JsonException;
 use Tempest\Support\Html\HtmlString;
 use Tempest\View\IsView;
 use Tempest\View\View;
+
+use function Tempest\get;
 
 final class InertiaView implements View
 {
@@ -20,6 +23,10 @@ final class InertiaView implements View
         public ?string $ssrBody = null,
     ) {}
 
+    private InertiaConfig $config {
+        get => $this->config ??= get(InertiaConfig::class);
+    }
+
     /**
      * Renders the Inertia root element.
      *
@@ -27,9 +34,19 @@ final class InertiaView implements View
      */
     public function inertia(string $id = 'app'): HtmlString
     {
-        $page = htmlspecialchars(json_encode($this->inertia['page'], JSON_THROW_ON_ERROR), ENT_QUOTES, 'UTF-8');
+        $id = trim($id) === '' ? 'app' : $id;
 
-        $body = $this->ssrBody ?? "<div id=\"{$id}\" data-page=\"{$page}\"></div>";
+        $json = json_encode($this->inertia['page'], JSON_THROW_ON_ERROR);
+        $escaped = htmlspecialchars($json, ENT_QUOTES, 'UTF-8');
+
+        if ($this->ssrBody) {
+            $body = $this->ssrBody;
+        } elseif ($this->config->pages->use_script_element_for_initial_page) {
+            $body =
+                "<script data-page=\"{$id}\" type=\"application/json\">{$json}</script>" . "<div id=\"{$id}\"></div>";
+        } else {
+            $body = "<div id=\"{$id}\" data-page=\"{$escaped}\"></div>";
+        }
 
         return new HtmlString($body);
     }

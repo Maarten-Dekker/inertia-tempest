@@ -31,10 +31,13 @@ final class PageConfig
 
     public array $page_extensions;
 
+    public bool $use_script_element_for_initial_page;
+
     public function __construct(
         ?bool $ensure_pages_exists = null,
         ?array $page_paths = null,
         ?array $page_extensions = null,
+        ?bool $use_script_element_for_initial_page = null,
     ) {
         $this->ensure_pages_exists = $ensure_pages_exists ?? false;
         $this->page_paths = $page_paths ?? [root_path('app/')];
@@ -46,5 +49,6 @@ final class PageConfig
             'tsx',
             'vue',
         ];
+        $this->use_script_element_for_initial_page = $use_script_element_for_initial_page ?? false;
     }
 }
