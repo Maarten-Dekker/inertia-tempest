@@ -17,7 +17,7 @@ final readonly class PaginatorAdapter implements Arrayable
         private Request $request,
     ) {}
 
-    public function toIlluminatePaginator(): object
+    public function toIlluminatePaginator(): \Illuminate\Pagination\LengthAwarePaginator
     {
         $laravelPaginatorClass = \Illuminate\Pagination\LengthAwarePaginator::class;
 

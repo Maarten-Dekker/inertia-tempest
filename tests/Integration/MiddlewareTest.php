@@ -24,7 +24,7 @@ use Tempest\Validation\Rules;
 use function Tempest\root_path;
 use function Tempest\Router\uri;
 
-class MiddlewareTest extends TestCase
+final class MiddlewareTest extends TestCase
 {
     #[\Override]
     protected function setUp(): void
@@ -190,7 +190,7 @@ class MiddlewareTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            fn() => new InertiaConfig(validation: new ValidationConfig(
+            static fn() => new InertiaConfig(validation: new ValidationConfig(
                 multiple_errors: false,
                 localize_fields: false,
             )),
@@ -218,7 +218,7 @@ class MiddlewareTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            fn() => new InertiaConfig(validation: new ValidationConfig(
+            static fn() => new InertiaConfig(validation: new ValidationConfig(
                 multiple_errors: true,
                 localize_fields: false,
             )),
@@ -260,7 +260,7 @@ class MiddlewareTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            fn() => new InertiaConfig(validation: new ValidationConfig(
+            static fn() => new InertiaConfig(validation: new ValidationConfig(
                 multiple_errors: false,
                 localize_fields: true,
             )),
@@ -288,7 +288,7 @@ class MiddlewareTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            fn() => new InertiaConfig(validation: new ValidationConfig(
+            static fn() => new InertiaConfig(validation: new ValidationConfig(
                 multiple_errors: false,
                 localize_fields: false,
             )),

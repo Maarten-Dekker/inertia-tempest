@@ -8,11 +8,11 @@ use Inertia\Props\MergeProp;
 use Inertia\Tests\TestCase;
 use Tempest\Http\Request;
 
-class DeepMergePropTest extends TestCase
+final class DeepMergePropTest extends TestCase
 {
     public function test_can_invoke_with_a_callback(): void
     {
-        $mergeProp = new MergeProp(fn(): string => 'A merge prop value')->deepMerge();
+        $mergeProp = new MergeProp(static fn(): string => 'A merge prop value')->deepMerge();
 
         $this->assertSame('A merge prop value', $mergeProp());
     }
@@ -26,7 +26,7 @@ class DeepMergePropTest extends TestCase
 
     public function test_can_resolve_bindings_when_invoked(): void
     {
-        $mergeProp = new MergeProp(fn(Request $request): Request => $request)->deepMerge();
+        $mergeProp = new MergeProp(static fn(Request $request): Request => $request)->deepMerge();
 
         $this->assertInstanceOf(Request::class, $mergeProp());
     }

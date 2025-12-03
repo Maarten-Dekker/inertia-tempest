@@ -13,9 +13,8 @@ use Inertia\Tests\Fixtures\FakeGateway;
 use Inertia\Tests\TestCase;
 use Inertia\Views\InertiaView;
 use Mockery;
-use Tempest\Router\Get;
 
-class DirectiveTest extends TestCase
+final class DirectiveTest extends TestCase
 {
     public function test_inertia_method_renders_the_root_element(): void
     {
@@ -34,7 +33,7 @@ class DirectiveTest extends TestCase
 
     public function test_inertia_directive_renders_the_root_element_and_script_element(): void
     {
-        $this->container->singleton(InertiaConfig::class, fn() => new InertiaConfig(
+        $this->container->singleton(InertiaConfig::class, static fn() => new InertiaConfig(
             ssr: new SsrConfig(enabled: false),
             pages: new PageConfig(use_script_element_for_initial_page: true),
         ));
@@ -52,7 +51,10 @@ class DirectiveTest extends TestCase
 
     public function test_inertia_directive_renders_server_side_rendered_content_when_enabled(): void
     {
-        $this->container->singleton(InertiaConfig::class, fn() => new InertiaConfig(ssr: new SsrConfig(enabled: true)));
+        $this->container->singleton(
+            InertiaConfig::class,
+            static fn() => new InertiaConfig(ssr: new SsrConfig(enabled: true)),
+        );
 
         $ssrResponse = new Response(
             head: '<title>SSR Head</title>',
@@ -63,7 +65,7 @@ class DirectiveTest extends TestCase
             ->once()
             ->andReturn($ssrResponse)
             ->getMock();
-        $this->container->singleton(Gateway::class, fn() => $mockGateway);
+        $this->container->singleton(Gateway::class, static fn() => $mockGateway);
 
         $response = $this->factory->render('User/Edit', self::EXAMPLE_PAGE_OBJECT['props']);
         $renderedHtml = (string) $response->body->inertia();
@@ -75,7 +77,7 @@ class DirectiveTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            fn() => new InertiaConfig(ssr: new SsrConfig(enabled: false)),
+            static fn() => new InertiaConfig(ssr: new SsrConfig(enabled: false)),
         );
 
         $response = $this->factory->render('Foo/Bar', self::EXAMPLE_PAGE_OBJECT['props']);
@@ -89,7 +91,7 @@ class DirectiveTest extends TestCase
 
     public function test_inertia_directive_can_use_a_different_root_element_id_when_using_script_element(): void
     {
-        $this->container->singleton(InertiaConfig::class, fn() => new InertiaConfig(
+        $this->container->singleton(InertiaConfig::class, static fn() => new InertiaConfig(
             ssr: new SsrConfig(enabled: false),
             pages: new PageConfig(use_script_element_for_initial_page: true),
         ));
@@ -131,10 +133,13 @@ class DirectiveTest extends TestCase
 
     public function test_the_server_side_rendering_request_is_dispatched_only_once_per_request(): void
     {
-        $this->container->singleton(InertiaConfig::class, fn() => new InertiaConfig(ssr: new SsrConfig(enabled: true)));
+        $this->container->singleton(
+            InertiaConfig::class,
+            static fn() => new InertiaConfig(ssr: new SsrConfig(enabled: true)),
+        );
 
         $gateway = new FakeGateway();
-        $this->container->singleton(Gateway::class, fn() => $gateway);
+        $this->container->singleton(Gateway::class, static fn() => $gateway);
 
         $response = $this->factory->render('User/Edit', self::EXAMPLE_PAGE_OBJECT['props']);
 

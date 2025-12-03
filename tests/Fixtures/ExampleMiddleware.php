@@ -34,7 +34,7 @@ final class ExampleMiddleware extends Middleware
     #[Override]
     public function urlResolver(): ?Closure
     {
-        return fn() => '/my-custom-url';
+        return static fn() => '/my-custom-url';
     }
 
     #[Override]
@@ -51,7 +51,7 @@ final class ExampleMiddleware extends Middleware
         return [
             ...parent::share($request),
             'flash' => [
-                'message' => fn() => $request->getCookie('massage'),
+                'message' => static fn() => $request->getCookie('massage'),
             ],
         ];
     }

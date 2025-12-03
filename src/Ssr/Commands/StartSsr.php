@@ -67,7 +67,7 @@ final readonly class StartSsr
         $process->start();
 
         if (extension_loaded('pcntl')) {
-            $stop = function () use ($process): void {
+            $stop = static function () use ($process): void {
                 $process->stop();
             };
             pcntl_async_signals(true);
