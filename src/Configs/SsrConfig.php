@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Inertia\Configs;
 
+// @mago-ignore lint:no-redundant-use
 use function Tempest\root_path;
 
 /*

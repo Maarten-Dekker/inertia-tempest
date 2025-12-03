@@ -12,7 +12,7 @@ use Inertia\Tests\TestCase;
 
 use function Tempest\Router\uri;
 
-class HistoryTest extends TestCase
+final class HistoryTest extends TestCase
 {
     public function test_the_history_is_not_encrypted_or_cleared_by_default(): void
     {
@@ -64,7 +64,7 @@ class HistoryTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            fn() => new InertiaConfig(history: new HistoryConfig(encrypt: true)),
+            static fn() => new InertiaConfig(history: new HistoryConfig(encrypt: true)),
         );
 
         $response = $this->http->get(
@@ -84,7 +84,7 @@ class HistoryTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            fn() => new InertiaConfig(history: new HistoryConfig(encrypt: true)),
+            static fn() => new InertiaConfig(history: new HistoryConfig(encrypt: true)),
         );
 
         $response = $this->http->get(

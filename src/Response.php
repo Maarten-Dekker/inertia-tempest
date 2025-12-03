@@ -328,7 +328,7 @@ final class Response implements HttpResponse
         }
 
         return [
-            'cache' => array_map(function ($value): int {
+            'cache' => array_map(static function ($value): int {
                 if ($value instanceof DateInterval) {
                     return new DateTimeImmutable('@0')->add($value)->getTimestamp();
                 }
@@ -361,7 +361,7 @@ final class Response implements HttpResponse
 
         return Arr\filter(
             $this->props,
-            fn($prop, $key) => (
+            static fn($prop, $key) => (
                 $prop instanceof Mergeable
                 && $prop->shouldMerge()
                 && !in_array($key, $resetProps, true)
@@ -420,7 +420,7 @@ final class Response implements HttpResponse
                 'deepMergeProps' => $deepMergeProps,
                 'matchPropsOn' => array_values(array_unique($matchPropsOn)),
             ],
-            fn(array $prop) => $prop !== [],
+            static fn(array $prop) => $prop !== [],
         );
     }
 
@@ -460,15 +460,21 @@ final class Response implements HttpResponse
         $scrollPropsResult = [];
 
         foreach ($this->getMergePropsForRequest(false) as $key => $prop) {
-            if ($prop instanceof ScrollProp) {
-                $scrollPropsResult[$key] = [
-                    ...$prop->metadata(),
-                    'reset' => in_array($key, $resetProps, true),
-                ];
+            if (!$prop instanceof ScrollProp) {
+                continue;
             }
+
+            $scrollPropsResult[$key] = [
+                ...$prop->metadata(),
+                'reset' => in_array($key, $resetProps, true),
+            ];
         }
 
-        return $scrollPropsResult === [] ? [] : ['scrollProps' => $scrollPropsResult];
+        if ($scrollPropsResult === []) {
+            return [];
+        }
+
+        return ['scrollProps' => $scrollPropsResult];
     }
 
     /**

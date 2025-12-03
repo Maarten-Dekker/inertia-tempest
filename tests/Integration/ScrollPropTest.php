@@ -13,7 +13,7 @@ use Inertia\Tests\Fixtures\UserSeeder;
 use Inertia\Tests\TestCase;
 use Tempest\Support\Paginator\PaginatedData;
 
-class ScrollPropTest extends TestCase
+final class ScrollPropTest extends TestCase
 {
     private PaginatedData $users;
 
@@ -56,7 +56,8 @@ class ScrollPropTest extends TestCase
 
     public function test_resolves_custom_meta_data(): void
     {
-        $callableMetadata = fn() => new readonly class('usersPage', 10, 12, 11) implements ProvidesScrollMetadata {
+        $callableMetadata = static fn() => new readonly class('usersPage', 10, 12, 11) implements
+            ProvidesScrollMetadata {
             public function __construct(
                 public string $pageName,
                 public int|null|string $previousPage,
@@ -126,7 +127,8 @@ class ScrollPropTest extends TestCase
 
     public function test_resolves_meta_data_with_callable_provider(): void
     {
-        $callableMetadata = fn() => new readonly class('callablePage', 5, 7, 6) implements ProvidesScrollMetadata {
+        $callableMetadata = static fn() => new readonly class('callablePage', 5, 7, 6) implements
+            ProvidesScrollMetadata {
             public function __construct(
                 public string $pageName,
                 public int|null|string $previousPage,
@@ -159,7 +161,7 @@ class ScrollPropTest extends TestCase
         $callCount = 0;
         $expectedValue = ['item1', 'item2', 'item3'];
 
-        $scrollProp = new ScrollProp(value: function () use (&$callCount, $expectedValue): array {
+        $scrollProp = new ScrollProp(value: static function () use (&$callCount, $expectedValue): array {
             $callCount++;
 
             return $expectedValue;

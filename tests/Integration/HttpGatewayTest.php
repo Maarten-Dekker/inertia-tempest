@@ -16,13 +16,13 @@ use Tempest\HttpClient\HttpClient;
 
 use function Tempest\root_path;
 
-class HttpGatewayTest extends TestCase
+final class HttpGatewayTest extends TestCase
 {
     public function test_it_returns_null_when_ssr_is_disabled(): void
     {
         $this->container->singleton(
             InertiaConfig::class,
-            fn() => new InertiaConfig(ssr: new SsrConfig(enabled: false)),
+            static fn() => new InertiaConfig(ssr: new SsrConfig(enabled: false)),
         );
 
         $gateway = $this->container->get(HttpGateway::class);
@@ -35,7 +35,7 @@ class HttpGatewayTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            fn() => new InertiaConfig(ssr: new SsrConfig(
+            static fn() => new InertiaConfig(ssr: new SsrConfig(
                 enabled: true,
                 bundle: null,
             )),
@@ -54,7 +54,7 @@ class HttpGatewayTest extends TestCase
 
         $this->container->singleton(
             InertiaConfig::class,
-            fn() => new InertiaConfig(ssr: new SsrConfig(
+            static fn() => new InertiaConfig(ssr: new SsrConfig(
                 enabled: true,
                 bundle: $bundlePath,
             )),
@@ -74,7 +74,7 @@ class HttpGatewayTest extends TestCase
             ->andReturn($fakeResponse)
             ->getMock();
 
-        $this->container->singleton(HttpClient::class, fn() => $mockClient);
+        $this->container->singleton(HttpClient::class, static fn() => $mockClient);
 
         try {
             $gateway = $this->container->get(HttpGateway::class);
@@ -95,7 +95,7 @@ class HttpGatewayTest extends TestCase
 
         $this->container->singleton(
             InertiaConfig::class,
-            fn() => new InertiaConfig(ssr: new SsrConfig(
+            static fn() => new InertiaConfig(ssr: new SsrConfig(
                 enabled: true,
                 bundle: $bundlePath,
             )),
@@ -112,7 +112,7 @@ class HttpGatewayTest extends TestCase
             ->andReturn($fakeResponse)
             ->getMock();
 
-        $this->container->singleton(HttpClient::class, fn() => $mockClient);
+        $this->container->singleton(HttpClient::class, static fn() => $mockClient);
 
         try {
             $gateway = $this->container->get(HttpGateway::class);
@@ -131,7 +131,7 @@ class HttpGatewayTest extends TestCase
 
         $this->container->singleton(
             InertiaConfig::class,
-            fn() => new InertiaConfig(ssr: new SsrConfig(
+            static fn() => new InertiaConfig(ssr: new SsrConfig(
                 enabled: true,
                 bundle: $bundlePath,
             )),
@@ -148,7 +148,7 @@ class HttpGatewayTest extends TestCase
             ->andReturn($fakeResponse)
             ->getMock();
 
-        $this->container->singleton(HttpClient::class, fn() => $mockClient);
+        $this->container->singleton(HttpClient::class, static fn() => $mockClient);
 
         try {
             $gateway = $this->container->get(HttpGateway::class);
@@ -181,7 +181,7 @@ class HttpGatewayTest extends TestCase
             )
             ->getMock();
 
-        $this->container->singleton(HttpClient::class, fn() => $mockClient);
+        $this->container->singleton(HttpClient::class, static fn() => $mockClient);
 
         $gateway = $this->container->get(HttpGateway::class);
         $this->assertInstanceOf(HttpGateway::class, $gateway);

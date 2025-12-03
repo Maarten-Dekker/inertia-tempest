@@ -74,7 +74,7 @@ class Middleware implements HttpMiddleware
     {
         return [
             'errors' => $this->inertia->always($this->errorResolver),
-            'auth' => $this->inertia->always(fn(Authenticator $auth) => [
+            'auth' => $this->inertia->always(static fn(Authenticator $auth) => [
                 'user' => $auth->current(),
             ]),
             'flash' => [
