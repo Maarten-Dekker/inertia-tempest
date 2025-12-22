@@ -241,12 +241,7 @@ final class ResponseFactory
         string $wrapper = 'data',
         ProvidesScrollMetadata|callable|null $metadata = null,
     ): ScrollProp {
-        return new ScrollProp(
-            value: $value,
-            pageName: $pageName,
-            wrapper: $wrapper,
-            metadata: $metadata,
-        );
+        return new ScrollProp(value: $value, pageName: $pageName, wrapper: $wrapper, metadata: $metadata);
     }
 
     /**
@@ -290,10 +285,7 @@ final class ResponseFactory
                 $url = $url->getHeader('Location')->values[0];
             }
 
-            return new GenericResponse(
-                status: Status::CONFLICT,
-                headers: [Header::LOCATION => $url],
-            );
+            return new GenericResponse(status: Status::CONFLICT, headers: [Header::LOCATION => $url]);
         }
 
         return $url instanceof Redirect ? $url : new Redirect($url);

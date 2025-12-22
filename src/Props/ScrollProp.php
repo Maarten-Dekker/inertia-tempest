@@ -112,10 +112,7 @@ final class ScrollProp implements Mergeable, InvokableProp
         $value = $this();
 
         if (is_null($this->metadata)) {
-            return ScrollMetadata::fromPaginator(
-                paginator: $value,
-                pageName: $this->pageName,
-            );
+            return ScrollMetadata::fromPaginator(paginator: $value, pageName: $this->pageName);
         }
 
         return ($this->metadata)($value);

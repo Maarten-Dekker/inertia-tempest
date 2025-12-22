@@ -70,11 +70,7 @@ abstract class TestCase extends IntegrationTest
         Method $method = Method::GET,
         array $headers = [],
     ): Request {
-        $request = new GenericRequest(
-            method: $method,
-            uri: $uri,
-            headers: $headers,
-        );
+        $request = new GenericRequest(method: $method, uri: $uri, headers: $headers);
         $this->container->singleton(Request::class, static fn() => $request);
 
         return $request;

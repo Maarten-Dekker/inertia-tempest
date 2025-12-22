@@ -36,11 +36,11 @@
   },
   "require-dev": {
     "ext-pdo_sqlite": "*",
-    "carthage-software/mago": "1.0.0-rc.7",
+    "carthage-software/mago": "1.0.1",
     "mockery/mockery": "^1.6.12",
-    "phpunit/phpunit": "^12.4.1",
-    "rector/rector": "2.2.11",
-    "illuminate/pagination": "^12.35.1"
+    "phpunit/phpunit": "^12.5.4",
+    "rector/rector": "2.2.14",
+    "illuminate/pagination": "^12.43.1"
   },
   "conflict": {
     "tempest/framework": ">=2.6.0 <=2.7.0"

@@ -276,19 +276,13 @@ final class Response implements HttpResponse
             };
 
             if ($this->config->laravel_pagination && $value instanceof PaginatedData) {
-                $value = new PaginatorAdapter(
-                    paginator: $value,
-                    request: $this->request,
-                );
+                $value = new PaginatorAdapter(paginator: $value, request: $this->request);
             }
 
             $currentKey = $parentKey ? $parentKey . '.' . $key : $key;
 
             if ($value instanceof ProvidesInertiaProperty) {
-                $value = $value->toInertiaProperty(new PropertyContext(
-                    key: $currentKey,
-                    props: $props,
-                ));
+                $value = $value->toInertiaProperty(new PropertyContext(key: $currentKey, props: $props));
             }
 
             $value = match (true) {
@@ -299,11 +293,7 @@ final class Response implements HttpResponse
             };
 
             if (is_array($value)) {
-                $value = $this->resolvePropertyInstances(
-                    props: $value,
-                    unpackDotProps: false,
-                    parentKey: $currentKey,
-                );
+                $value = $this->resolvePropertyInstances(props: $value, unpackDotProps: false, parentKey: $currentKey);
             }
 
             if ($unpackDotProps && is_string($key) && str_contains($key, '.')) {

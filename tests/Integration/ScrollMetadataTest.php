@@ -97,11 +97,11 @@ final class ScrollMetadataTest extends TestCase
 
         $mockRequest = $this->makeRequest(uri: '/users');
 
-        $tempestPaginator1 = new Paginator(
-            totalItems: 40,
-            itemsPerPage: 15,
-            currentPage: 1,
-        )->paginate(array_slice($this->users, 0, 15));
+        $tempestPaginator1 = new Paginator(totalItems: 40, itemsPerPage: 15, currentPage: 1)->paginate(array_slice(
+            $this->users,
+            0,
+            15,
+        ));
 
         $laravelPaginator1 = new PaginatorAdapter($tempestPaginator1, $mockRequest)->toIlluminatePaginator();
 
@@ -115,11 +115,11 @@ final class ScrollMetadataTest extends TestCase
             ScrollMetadata::fromPaginator($laravelPaginator1)->toArray(),
         );
 
-        $tempestPaginator2 = new Paginator(
-            totalItems: 40,
-            itemsPerPage: 15,
-            currentPage: 2,
-        )->paginate(array_slice($this->users, 15, 15));
+        $tempestPaginator2 = new Paginator(totalItems: 40, itemsPerPage: 15, currentPage: 2)->paginate(array_slice(
+            $this->users,
+            15,
+            15,
+        ));
 
         $laravelPaginator2 = new PaginatorAdapter($tempestPaginator2, $mockRequest)->toIlluminatePaginator();
 
@@ -133,11 +133,11 @@ final class ScrollMetadataTest extends TestCase
             ScrollMetadata::fromPaginator($laravelPaginator2)->toArray(),
         );
 
-        $tempestPaginator3 = new Paginator(
-            totalItems: 40,
-            itemsPerPage: 15,
-            currentPage: 3,
-        )->paginate(array_slice($this->users, 30, 10));
+        $tempestPaginator3 = new Paginator(totalItems: 40, itemsPerPage: 15, currentPage: 3)->paginate(array_slice(
+            $this->users,
+            30,
+            10,
+        ));
 
         $laravelPaginator3 = new PaginatorAdapter($tempestPaginator3, $mockRequest)->toIlluminatePaginator();
 

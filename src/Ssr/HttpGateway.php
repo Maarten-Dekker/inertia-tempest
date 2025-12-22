@@ -10,7 +10,6 @@ use Inertia\Ssr\Contracts\Gateway;
 use Inertia\Ssr\Contracts\HasHealthCheck;
 use Override;
 use Tempest\HttpClient\HttpClient;
-use Tempest\Router\Exceptions\ControllerActionHadNoReturn;
 use Tempest\Router\Exceptions\MatchedRouteCouldNotBeResolved;
 use Tempest\Support\Str;
 use Throwable;

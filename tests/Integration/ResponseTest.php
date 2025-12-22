@@ -169,18 +169,19 @@ final class ResponseTest extends TestCase
 
         $this->makeRequest(headers: $headers);
 
-        $scrollProp = new ScrollProp(
-            value: ['data' => [['id' => 1]]],
-            wrapper: 'data',
-            metadata: new readonly class('page', null, 2, 1) implements ProvidesScrollMetadata {
-                public function __construct(
-                    public string $pageName,
-                    public int|null|string $previousPage,
-                    public int|null|string $nextPage,
-                    public int|null|string $currentPage,
-                ) {}
-            },
-        );
+        $scrollProp = new ScrollProp(value: ['data' => [['id' => 1]]], wrapper: 'data', metadata: new readonly class(
+            'page',
+            null,
+            2,
+            1,
+        ) implements ProvidesScrollMetadata {
+            public function __construct(
+                public string $pageName,
+                public int|null|string $previousPage,
+                public int|null|string $nextPage,
+                public int|null|string $currentPage,
+            ) {}
+        });
 
         $response = $this->factory->render('User/Index', ['users' => $scrollProp]);
 
@@ -644,10 +645,7 @@ final class ResponseTest extends TestCase
 
     public function test_lazy_callable_resource_response(): void
     {
-        $this->makeRequest(
-            uri: '/users',
-            headers: [Header::INERTIA => 'true'],
-        );
+        $this->makeRequest(uri: '/users', headers: [Header::INERTIA => 'true']);
         $this->factory->version('123');
 
         $response = $this->factory->render('User/Index', [
@@ -667,14 +665,11 @@ final class ResponseTest extends TestCase
 
     public function test_lazy_callable_resource_partial_response(): void
     {
-        $this->makeRequest(
-            uri: '/users',
-            headers: [
-                Header::INERTIA => 'true',
-                Header::PARTIAL_COMPONENT => 'User/Index',
-                Header::PARTIAL_ONLY => 'users',
-            ],
-        );
+        $this->makeRequest(uri: '/users', headers: [
+            Header::INERTIA => 'true',
+            Header::PARTIAL_COMPONENT => 'User/Index',
+            Header::PARTIAL_ONLY => 'users',
+        ]);
         $this->factory->version('123');
 
         $response = $this->factory->render('User/Index', [
@@ -698,12 +693,9 @@ final class ResponseTest extends TestCase
     {
         $this->container->singleton(InertiaConfig::class, static fn() => new InertiaConfig(laravel_pagination: true));
 
-        $this->makeRequest(
-            uri: '/users?page=1',
-            headers: [
-                Header::INERTIA => 'true',
-            ],
-        );
+        $this->makeRequest(uri: '/users?page=1', headers: [
+            Header::INERTIA => 'true',
+        ]);
 
         $callable = static function (): PaginatedData {
             $users = [
@@ -712,11 +704,7 @@ final class ResponseTest extends TestCase
                 ['name' => 'Jeffrey'],
             ];
 
-            $paginator = new Paginator(
-                totalItems: count($users),
-                itemsPerPage: 2,
-                currentPage: 1,
-            );
+            $paginator = new Paginator(totalItems: count($users), itemsPerPage: 2, currentPage: 1);
 
             return $paginator->paginate(array_slice($users, 0, 2));
         };
@@ -748,12 +736,9 @@ final class ResponseTest extends TestCase
     {
         $this->container->singleton(InertiaConfig::class, static fn() => new InertiaConfig(laravel_pagination: true));
 
-        $this->makeRequest(
-            uri: '/users?page=1',
-            headers: [
-                Header::INERTIA => 'true',
-            ],
-        );
+        $this->makeRequest(uri: '/users?page=1', headers: [
+            Header::INERTIA => 'true',
+        ]);
 
         $callable = static function (): array {
             $users = [
@@ -762,11 +747,7 @@ final class ResponseTest extends TestCase
                 ['name' => 'Jeffrey'],
             ];
 
-            $paginator = new Paginator(
-                totalItems: count($users),
-                itemsPerPage: 2,
-                currentPage: 1,
-            );
+            $paginator = new Paginator(totalItems: count($users), itemsPerPage: 2, currentPage: 1);
 
             return [
                 'users' => $paginator->paginate(array_slice($users, 0, 2)),
@@ -959,12 +940,9 @@ final class ResponseTest extends TestCase
 
     public function test_lazy_props_are_not_included_by_default(): void
     {
-        $this->makeRequest(
-            uri: '/users',
-            headers: [
-                Header::INERTIA => 'true',
-            ],
-        );
+        $this->makeRequest(uri: '/users', headers: [
+            Header::INERTIA => 'true',
+        ]);
 
         $lazyProp = new LazyProp(static fn() => 'A lazy value');
 
@@ -981,14 +959,11 @@ final class ResponseTest extends TestCase
 
     public function test_lazy_props_are_included_in_partial_reload(): void
     {
-        $this->makeRequest(
-            uri: '/users',
-            headers: [
-                Header::INERTIA => 'true',
-                Header::PARTIAL_COMPONENT => 'Users',
-                Header::PARTIAL_ONLY => 'lazy',
-            ],
-        );
+        $this->makeRequest(uri: '/users', headers: [
+            Header::INERTIA => 'true',
+            Header::PARTIAL_COMPONENT => 'Users',
+            Header::PARTIAL_ONLY => 'lazy',
+        ]);
 
         $lazyProp = new LazyProp(static fn() => 'A lazy value');
 
@@ -1005,14 +980,11 @@ final class ResponseTest extends TestCase
 
     public function test_defer_arrayable_props_are_resolved_in_partial_reload(): void
     {
-        $this->makeRequest(
-            uri: '/users',
-            headers: [
-                Header::INERTIA => 'true',
-                Header::PARTIAL_COMPONENT => 'Users',
-                Header::PARTIAL_ONLY => 'defer',
-            ],
-        );
+        $this->makeRequest(uri: '/users', headers: [
+            Header::INERTIA => 'true',
+            Header::PARTIAL_COMPONENT => 'Users',
+            Header::PARTIAL_ONLY => 'defer',
+        ]);
 
         $deferProp = new DeferProp(static fn(): Arrayable => new class implements Arrayable {
             #[\Override]
@@ -1064,10 +1036,9 @@ final class ResponseTest extends TestCase
 
     public function test_inertia_responsable_objects(): void
     {
-        $response = $this->http->get(
-            uri: uri([TestController::class, 'responsableProps']),
-            headers: [Header::INERTIA => 'true'],
-        );
+        $response = $this->http->get(uri: uri([TestController::class, 'responsableProps']), headers: [
+            Header::INERTIA => 'true',
+        ]);
 
         $page = $response->body;
         $props = $page['props'];
@@ -1079,10 +1050,9 @@ final class ResponseTest extends TestCase
 
     public function test_props_can_be_merged_with_shared_data(): void
     {
-        $response = $this->http->get(
-            uri: uri([TestController::class, 'mergeWithShared']),
-            headers: [Header::INERTIA => 'true'],
-        );
+        $response = $this->http->get(uri: uri([TestController::class, 'mergeWithShared']), headers: [
+            Header::INERTIA => 'true',
+        ]);
 
         $page = $response->body;
 
@@ -1094,10 +1064,7 @@ final class ResponseTest extends TestCase
 
     public function test_top_level_dot_props_get_unpacked(): void
     {
-        $this->makeRequest(
-            uri: '/products/123',
-            headers: [Header::INERTIA => 'true'],
-        );
+        $this->makeRequest(uri: '/products/123', headers: [Header::INERTIA => 'true']);
 
         $props = [
             'auth' => [
@@ -1122,10 +1089,7 @@ final class ResponseTest extends TestCase
 
     public function test_nested_dot_props_do_not_get_unpacked(): void
     {
-        $this->makeRequest(
-            uri: '/products/123',
-            headers: [Header::INERTIA => 'true'],
-        );
+        $this->makeRequest(uri: '/products/123', headers: [Header::INERTIA => 'true']);
 
         $props = [
             'auth' => [
@@ -1150,10 +1114,9 @@ final class ResponseTest extends TestCase
 
     public function test_props_can_be_added_using_the_with_method(): void
     {
-        $response = $this->http->get(
-            uri: uri([TestController::class, 'withMethod']),
-            headers: [Header::INERTIA => 'true'],
-        );
+        $response = $this->http->get(uri: uri([TestController::class, 'withMethod']), headers: [
+            Header::INERTIA => 'true',
+        ]);
 
         $page = $response->body;
         $props = $page['props'];
@@ -1196,10 +1159,7 @@ final class ResponseTest extends TestCase
 
     public function test_the_page_url_doesnt_double_up(): void
     {
-        $this->makeRequest(
-            uri: '/subpath/product/122',
-            headers: [Header::INERTIA => 'true'],
-        );
+        $this->makeRequest(uri: '/subpath/product/122', headers: [Header::INERTIA => 'true']);
 
         $response = $this->factory->render('Product/Show', []);
         $page = $response->body;
@@ -1209,10 +1169,7 @@ final class ResponseTest extends TestCase
 
     public function test_trailing_slashes_in_a_url_are_preserved(): void
     {
-        $this->makeRequest(
-            uri: '/users/',
-            headers: [Header::INERTIA => 'true'],
-        );
+        $this->makeRequest(uri: '/users/', headers: [Header::INERTIA => 'true']);
 
         $response = $this->factory->render('User/Index', []);
         $page = $response->body;
@@ -1222,10 +1179,7 @@ final class ResponseTest extends TestCase
 
     public function test_trailing_slashes_in_a_url_with_query_parameters_are_preserved(): void
     {
-        $this->makeRequest(
-            uri: '/users/?page=1&sort=name',
-            headers: [Header::INERTIA => 'true'],
-        );
+        $this->makeRequest(uri: '/users/?page=1&sort=name', headers: [Header::INERTIA => 'true']);
 
         $response = $this->factory->render('User/Index', []);
         $page = $response->body;
@@ -1235,10 +1189,7 @@ final class ResponseTest extends TestCase
 
     public function test_a_url_without_trailing_slash_is_resolved_correctly(): void
     {
-        $this->makeRequest(
-            uri: '/users',
-            headers: [Header::INERTIA => 'true'],
-        );
+        $this->makeRequest(uri: '/users', headers: [Header::INERTIA => 'true']);
 
         $response = $this->factory->render('User/Index', []);
         $page = $response->body;
@@ -1248,10 +1199,7 @@ final class ResponseTest extends TestCase
 
     public function test_a_url_without_trailing_slash_and_query_parameters_is_resolved_correctly(): void
     {
-        $this->makeRequest(
-            uri: '/users?page=1&sort=name',
-            headers: [Header::INERTIA => 'true'],
-        );
+        $this->makeRequest(uri: '/users?page=1&sort=name', headers: [Header::INERTIA => 'true']);
 
         $response = $this->factory->render('User/Index', []);
         $page = $response->body;

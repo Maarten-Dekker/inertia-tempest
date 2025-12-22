@@ -36,14 +36,11 @@ final class MiddlewareTest extends TestCase
 
     public function test_no_response_value_by_default_means_automatically_redirecting_back_for_inertia_requests(): void
     {
-        $response = $this->http->put(
-            uri: uri([TestController::class, 'voidPutAction']),
-            headers: [
-                Header::INERTIA => 'true',
-                'Content-Type' => 'application/json',
-                'Referer' => '/foo',
-            ],
-        );
+        $response = $this->http->put(uri: uri([TestController::class, 'voidPutAction']), headers: [
+            Header::INERTIA => 'true',
+            'Content-Type' => 'application/json',
+            'Referer' => '/foo',
+        ]);
 
         $response->assertStatus(Status::SEE_OTHER);
         $this->assertSame('/foo', $response->headers['Location']->values[0]);
@@ -55,35 +52,26 @@ final class MiddlewareTest extends TestCase
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('An empty Inertia response was returned.');
 
-        $this->http->get(
-            uri: uri([TestController::class, 'customEmptyResponseAction']),
-            headers: [
-                Header::INERTIA => 'true',
-                'Content-Type' => 'application/json',
-            ],
-        );
+        $this->http->get(uri: uri([TestController::class, 'customEmptyResponseAction']), headers: [
+            Header::INERTIA => 'true',
+            'Content-Type' => 'application/json',
+        ]);
     }
 
     public function test_no_response_means_no_response_for_non_inertia_requests(): void
     {
         $this->expectException(ControllerActionHadNoReturn::class);
 
-        $this->http->put(
-            uri: uri([TestController::class, 'voidPutAction']),
-            headers: [
-                'Content-Type' => 'application/json',
-            ],
-        );
+        $this->http->put(uri: uri([TestController::class, 'voidPutAction']), headers: [
+            'Content-Type' => 'application/json',
+        ]);
     }
 
     public function test_the_version_is_optional(): void
     {
-        $response = $this->http->get(
-            uri: uri([TestController::class, 'basicRender']),
-            headers: [
-                Header::INERTIA => 'true',
-            ],
-        );
+        $response = $this->http->get(uri: uri([TestController::class, 'basicRender']), headers: [
+            Header::INERTIA => 'true',
+        ]);
 
         $page = $response->body;
 
@@ -96,13 +84,10 @@ final class MiddlewareTest extends TestCase
     {
         $version = 1597347897973;
 
-        $response = $this->http->get(
-            uri: uri([TestController::class, 'numericVersion']),
-            headers: [
-                Header::INERTIA => 'true',
-                Header::VERSION => (string) $version,
-            ],
-        );
+        $response = $this->http->get(uri: uri([TestController::class, 'numericVersion']), headers: [
+            Header::INERTIA => 'true',
+            Header::VERSION => (string) $version,
+        ]);
 
         $page = $response->body;
 
@@ -115,13 +100,10 @@ final class MiddlewareTest extends TestCase
     {
         $version = 'foo-version';
 
-        $response = $this->http->get(
-            uri: uri([TestController::class, 'stringVersion']),
-            headers: [
-                Header::INERTIA => 'true',
-                Header::VERSION => $version,
-            ],
-        );
+        $response = $this->http->get(uri: uri([TestController::class, 'stringVersion']), headers: [
+            Header::INERTIA => 'true',
+            Header::VERSION => $version,
+        ]);
 
         $page = $response->body;
 
@@ -132,13 +114,10 @@ final class MiddlewareTest extends TestCase
 
     public function test_it_will_instruct_inertia_to_reload_on_a_version_mismatch(): void
     {
-        $response = $this->http->get(
-            uri: uri([TestController::class, 'stringVersion']),
-            headers: [
-                Header::INERTIA => 'true',
-                Header::VERSION => 'a-different-version',
-            ],
-        );
+        $response = $this->http->get(uri: uri([TestController::class, 'stringVersion']), headers: [
+            Header::INERTIA => 'true',
+            Header::VERSION => 'a-different-version',
+        ]);
 
         $response->assertStatus(Status::CONFLICT);
         $this->assertSame('/string-version-test', $response->headers[Header::LOCATION]->values[0]);
@@ -147,12 +126,9 @@ final class MiddlewareTest extends TestCase
 
     public function test_the_url_can_be_resolved_with_a_custom_resolver(): void
     {
-        $response = $this->http->get(
-            uri: uri([TestController::class, 'basicRenderWithExampleMiddleware']),
-            headers: [
-                Header::INERTIA => 'true',
-            ],
-        );
+        $response = $this->http->get(uri: uri([TestController::class, 'basicRenderWithExampleMiddleware']), headers: [
+            Header::INERTIA => 'true',
+        ]);
 
         $page = $response->body;
 
@@ -318,12 +294,9 @@ final class MiddlewareTest extends TestCase
         $this->assertInstanceOf(Session::class, $session);
         $session->set(Session::VALIDATION_ERRORS, ['name' => ['This should be overwritten.']]);
 
-        $response = $this->http->get(
-            uri: uri([TestController::class, 'overwriteErrorsProp']),
-            headers: [
-                Header::INERTIA => 'true',
-            ],
-        );
+        $response = $this->http->get(uri: uri([TestController::class, 'overwriteErrorsProp']), headers: [
+            Header::INERTIA => 'true',
+        ]);
 
         $page = $response->body;
 

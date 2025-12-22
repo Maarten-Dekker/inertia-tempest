@@ -133,10 +133,7 @@ class Middleware implements HttpMiddleware
             $response = $response->setBody($resolvedBody);
         }
 
-        $response = $response->addHeader(
-            key: 'Vary',
-            value: Header::INERTIA,
-        );
+        $response = $response->addHeader(key: 'Vary', value: Header::INERTIA);
 
         if (!$request->headers->has(Header::INERTIA) || $response instanceof InertiaResponse) {
             return $response;
