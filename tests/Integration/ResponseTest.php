@@ -11,8 +11,8 @@ use Inertia\Contracts\ProvidesScrollMetadata;
 use Inertia\LazyBody;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
-use Inertia\Props\LazyProp;
 use Inertia\Props\MergeProp;
+use Inertia\Props\OptionalProp;
 use Inertia\Props\ScrollProp;
 use Inertia\Support\Header;
 use Inertia\Tests\Fixtures\FakeResource;
@@ -275,7 +275,7 @@ final class ResponseTest extends TestCase
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":"foo value","bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["bar"],"prependProps":["foo"]}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
-        $this->assertInstanceOf(\Tempest\View\ViewRenderer::class, $renderer);
+        $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
         $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
@@ -312,7 +312,7 @@ final class ResponseTest extends TestCase
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":{"data":[{"id":1},{"id":2}]},"bar":{"data":{"items":[{"uuid":1},{"uuid":2}]}}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo.data"],"prependProps":["bar.data.items"]}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
-        $this->assertInstanceOf(\Tempest\View\ViewRenderer::class, $renderer);
+        $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
         $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
@@ -352,7 +352,7 @@ final class ResponseTest extends TestCase
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":{"data":[{"id":1},{"id":2}]},"bar":{"data":{"items":[{"uuid":1},{"uuid":2}]}}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo.data"],"prependProps":["bar.data.items"],"matchPropsOn":["foo.data.id","bar.data.items.uuid"]}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
-        $this->assertInstanceOf(\Tempest\View\ViewRenderer::class, $renderer);
+        $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
         $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
@@ -642,7 +642,7 @@ final class ResponseTest extends TestCase
         $this->assertSame('123', $page['version']);
     }
 
-    public function test_lazy_callable_resource_response(): void
+    public function test_optional_callable_resource_response(): void
     {
         $this->makeRequest(
             uri: '/users',
@@ -665,7 +665,7 @@ final class ResponseTest extends TestCase
         $this->assertSame([['name' => 'Inertia']], $page['props']['organizations']);
     }
 
-    public function test_lazy_callable_resource_partial_response(): void
+    public function test_optional_callable_resource_partial_response(): void
     {
         $this->makeRequest(
             uri: '/users',
@@ -694,7 +694,7 @@ final class ResponseTest extends TestCase
         $this->assertArrayNotHasKey('organizations', $page['props']);
     }
 
-    public function test_lazy_prop_returning_pagination_is_transformed(): void
+    public function test_optional_prop_returning_pagination_is_transformed(): void
     {
         $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(laravel_pagination: true));
 
@@ -744,7 +744,7 @@ final class ResponseTest extends TestCase
         $this->assertSame(3, $paginatedUsers['total']);
     }
 
-    public function test_lazy_prop_returning_nested_pagination_is_transformed(): void
+    public function test_optional_prop_returning_nested_pagination_is_transformed(): void
     {
         $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(laravel_pagination: true));
 
@@ -903,7 +903,7 @@ final class ResponseTest extends TestCase
 
         $props = [
             'auth' => [
-                'user' => new LazyProp(static fn () => [
+                'user' => new OptionalProp(static fn () => [
                     'name' => 'Jonathan Reinink',
                     'email' => 'jonathan@example.com',
                 ]),
@@ -937,7 +937,7 @@ final class ResponseTest extends TestCase
 
         $props = [
             'auth' => [
-                'user' => new LazyProp(static fn () => [
+                'user' => new OptionalProp(static fn () => [
                     'name' => 'Jonathan Reinink',
                     'email' => 'jonathan@example.com',
                 ]),
@@ -957,7 +957,7 @@ final class ResponseTest extends TestCase
         $this->assertSame('value', $page['props']['auth']['shared_value']);
     }
 
-    public function test_lazy_props_are_not_included_by_default(): void
+    public function test_optional_props_are_not_included_by_default(): void
     {
         $this->makeRequest(
             uri: '/users',
@@ -966,41 +966,41 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $lazyProp = new LazyProp(static fn () => 'A lazy value');
+        $optionalProp = new OptionalProp(static fn () => 'An optional value');
 
         $response = $this->factory->render('Users', [
             'users' => [],
-            'lazy' => $lazyProp,
+            'optional' => $optionalProp,
         ]);
 
         $page = $response->body;
 
         $this->assertSame([], $page['props']['users']);
-        $this->assertArrayNotHasKey('lazy', $page['props']);
+        $this->assertArrayNotHasKey('optional', $page['props']);
     }
 
-    public function test_lazy_props_are_included_in_partial_reload(): void
+    public function test_optional_props_are_included_in_partial_reload(): void
     {
         $this->makeRequest(
             uri: '/users',
             headers: [
                 Header::INERTIA => 'true',
                 Header::PARTIAL_COMPONENT => 'Users',
-                Header::PARTIAL_ONLY => 'lazy',
+                Header::PARTIAL_ONLY => 'optional',
             ],
         );
 
-        $lazyProp = new LazyProp(static fn () => 'A lazy value');
+        $optionalProp = new OptionalProp(static fn () => 'An optional value');
 
         $response = $this->factory->render('Users', [
             'users' => [],
-            'lazy' => $lazyProp,
+            'optional' => $optionalProp,
         ]);
 
         $page = $response->body;
 
         $this->assertArrayNotHasKey('users', $page['props']);
-        $this->assertSame('A lazy value', $page['props']['lazy']);
+        $this->assertSame('An optional value', $page['props']['optional']);
     }
 
     public function test_defer_arrayable_props_are_resolved_in_partial_reload(): void
@@ -1042,7 +1042,7 @@ final class ResponseTest extends TestCase
         ]);
 
         $props = [
-            'user' => new LazyProp(static fn () => [
+            'user' => new OptionalProp(static fn () => [
                 'name' => 'Jonathan Reinink',
                 'email' => 'jonathan@example.com',
             ]),

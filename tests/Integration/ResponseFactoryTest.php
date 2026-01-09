@@ -9,7 +9,6 @@ use Inertia\Configs\PageConfig;
 use Inertia\Exceptions\ComponentNotFoundException;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
-use Inertia\Props\LazyProp;
 use Inertia\Props\MergeProp;
 use Inertia\Props\OptionalProp;
 use Inertia\Props\ScrollProp;
@@ -209,17 +208,6 @@ final class ResponseFactoryTest extends TestCase
         $this->assertSame(['foo' => 'bar'], inertia()->getShared());
         inertia()->flushShared();
         $this->assertSame([], inertia()->getShared());
-    }
-
-    public function test_can_create_lazy_prop(): void
-    {
-        $this->expectUserDeprecationMessage('Method '
-        . ResponseFactory::class
-        . '::lazy() is deprecated, Use `optional` instead.');
-
-        $lazyProp = $this->factory->lazy(static fn (): string => 'A lazy value');
-
-        $this->assertInstanceOf(LazyProp::class, $lazyProp);
     }
 
     public function test_can_create_deferred_prop(): void
