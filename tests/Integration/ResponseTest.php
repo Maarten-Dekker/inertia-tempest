@@ -642,7 +642,7 @@ final class ResponseTest extends TestCase
         $this->assertSame('123', $page['version']);
     }
 
-    public function test_optional_callable_resource_response(): void
+    public function test_callable_resource_response(): void
     {
         $this->makeRequest(
             uri: '/users',
@@ -665,7 +665,7 @@ final class ResponseTest extends TestCase
         $this->assertSame([['name' => 'Inertia']], $page['props']['organizations']);
     }
 
-    public function test_optional_callable_resource_partial_response(): void
+    public function test_callable_resource_partial_response(): void
     {
         $this->makeRequest(
             uri: '/users',
@@ -694,7 +694,7 @@ final class ResponseTest extends TestCase
         $this->assertArrayNotHasKey('organizations', $page['props']);
     }
 
-    public function test_optional_prop_returning_pagination_is_transformed(): void
+    public function test_callable_returning_pagination_is_transformed(): void
     {
         $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(laravel_pagination: true));
 
@@ -744,7 +744,7 @@ final class ResponseTest extends TestCase
         $this->assertSame(3, $paginatedUsers['total']);
     }
 
-    public function test_optional_prop_returning_nested_pagination_is_transformed(): void
+    public function test_callable_returning_nested_pagination_is_transformed(): void
     {
         $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(laravel_pagination: true));
 
