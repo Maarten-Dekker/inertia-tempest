@@ -30,7 +30,7 @@ final readonly class StartSsr
     #[ConsoleCommand(name: 'inertia:start-ssr', description: 'Start the Inertia SSR server')]
     public function __invoke(string $runtime = 'node'): ExitCode|int
     {
-        if (!$this->config->ssr->enabled) {
+        if (! $this->config->ssr->enabled) {
             $this->console->error('Inertia SSR is not enabled. Enable it via the `inertia.ssr.enabled` config option.');
 
             return ExitCode::ERROR;
@@ -54,7 +54,7 @@ final readonly class StartSsr
             $this->console->warning('Using a default bundle instead: "' . $bundle . '"');
         }
 
-        if (!in_array($runtime, ['node', 'bun'], true)) {
+        if (! in_array($runtime, ['node', 'bun'], true)) {
             $this->console->error('Unsupported runtime: "' . $runtime . '". Supported runtimes are `node` and `bun`.');
 
             return ExitCode::ERROR;

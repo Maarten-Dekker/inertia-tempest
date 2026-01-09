@@ -22,7 +22,7 @@ final class HttpGatewayTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            static fn() => new InertiaConfig(ssr: new SsrConfig(enabled: false)),
+            static fn () => new InertiaConfig(ssr: new SsrConfig(enabled: false)),
         );
 
         $gateway = $this->container->get(HttpGateway::class);
@@ -35,7 +35,10 @@ final class HttpGatewayTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            static fn() => new InertiaConfig(ssr: new SsrConfig(enabled: true, bundle: null)),
+            static fn () => new InertiaConfig(ssr: new SsrConfig(
+                enabled: true,
+                bundle: null,
+            )),
         );
 
         $gateway = $this->container->get(HttpGateway::class);
@@ -51,13 +54,19 @@ final class HttpGatewayTest extends TestCase
 
         $this->container->singleton(
             InertiaConfig::class,
-            static fn() => new InertiaConfig(ssr: new SsrConfig(enabled: true, bundle: $bundlePath)),
+            static fn () => new InertiaConfig(ssr: new SsrConfig(
+                enabled: true,
+                bundle: $bundlePath,
+            )),
         );
 
-        $fakeResponse = new FakeClientResponse(body: json_encode([
-            'head' => ['<title>SSR Test</title>', '<style></style>'],
-            'body' => '<div id="app">SSR Response</div>',
-        ]), isSuccess: true);
+        $fakeResponse = new FakeClientResponse(
+            body: json_encode([
+                'head' => ['<title>SSR Test</title>', '<style></style>'],
+                'body' => '<div id="app">SSR Response</div>',
+            ]),
+            isSuccess: true,
+        );
 
         $mockClient = Mockery::mock(HttpClient::class)
             ->shouldReceive('post')
@@ -65,7 +74,7 @@ final class HttpGatewayTest extends TestCase
             ->andReturn($fakeResponse)
             ->getMock();
 
-        $this->container->singleton(HttpClient::class, static fn() => $mockClient);
+        $this->container->singleton(HttpClient::class, static fn () => $mockClient);
 
         try {
             $gateway = $this->container->get(HttpGateway::class);
@@ -86,10 +95,16 @@ final class HttpGatewayTest extends TestCase
 
         $this->container->singleton(
             InertiaConfig::class,
-            static fn() => new InertiaConfig(ssr: new SsrConfig(enabled: true, bundle: $bundlePath)),
+            static fn () => new InertiaConfig(ssr: new SsrConfig(
+                enabled: true,
+                bundle: $bundlePath,
+            )),
         );
 
-        $fakeResponse = new FakeClientResponse(body: '', isSuccess: false);
+        $fakeResponse = new FakeClientResponse(
+            body: '',
+            isSuccess: false,
+        );
 
         $mockClient = Mockery::mock(HttpClient::class)
             ->shouldReceive('post')
@@ -97,7 +112,7 @@ final class HttpGatewayTest extends TestCase
             ->andReturn($fakeResponse)
             ->getMock();
 
-        $this->container->singleton(HttpClient::class, static fn() => $mockClient);
+        $this->container->singleton(HttpClient::class, static fn () => $mockClient);
 
         try {
             $gateway = $this->container->get(HttpGateway::class);
@@ -116,10 +131,16 @@ final class HttpGatewayTest extends TestCase
 
         $this->container->singleton(
             InertiaConfig::class,
-            static fn() => new InertiaConfig(ssr: new SsrConfig(enabled: true, bundle: $bundlePath)),
+            static fn () => new InertiaConfig(ssr: new SsrConfig(
+                enabled: true,
+                bundle: $bundlePath,
+            )),
         );
 
-        $fakeResponse = new FakeClientResponse(body: 'invalid json', isSuccess: true);
+        $fakeResponse = new FakeClientResponse(
+            body: 'invalid json',
+            isSuccess: true,
+        );
 
         $mockClient = Mockery::mock(HttpClient::class)
             ->shouldReceive('post')
@@ -127,7 +148,7 @@ final class HttpGatewayTest extends TestCase
             ->andReturn($fakeResponse)
             ->getMock();
 
-        $this->container->singleton(HttpClient::class, static fn() => $mockClient);
+        $this->container->singleton(HttpClient::class, static fn () => $mockClient);
 
         try {
             $gateway = $this->container->get(HttpGateway::class);
@@ -141,8 +162,14 @@ final class HttpGatewayTest extends TestCase
 
     public function test_health_check_the_ssr_server(): void
     {
-        $successResponse = new FakeClientResponse(body: '', isSuccess: true);
-        $failureResponse = new FakeClientResponse(body: '', isSuccess: false);
+        $successResponse = new FakeClientResponse(
+            body: '',
+            isSuccess: true,
+        );
+        $failureResponse = new FakeClientResponse(
+            body: '',
+            isSuccess: false,
+        );
 
         $mockClient = Mockery::mock(HttpClient::class)
             ->shouldReceive('get')
@@ -150,11 +177,11 @@ final class HttpGatewayTest extends TestCase
             ->andReturn(
                 $successResponse,
                 $failureResponse,
-                Mockery::on(static fn() => throw new RuntimeException('Connection refused')),
+                Mockery::on(static fn () => throw new RuntimeException('Connection refused')),
             )
             ->getMock();
 
-        $this->container->singleton(HttpClient::class, static fn() => $mockClient);
+        $this->container->singleton(HttpClient::class, static fn () => $mockClient);
 
         $gateway = $this->container->get(HttpGateway::class);
         $this->assertInstanceOf(HttpGateway::class, $gateway);

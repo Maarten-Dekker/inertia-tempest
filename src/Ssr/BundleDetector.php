@@ -26,6 +26,6 @@ final class BundleDetector
             root_path('ssr/inertia.ssr.js'),
         ];
 
-        return array_find($potentialPaths, static fn($path) => $path && file_exists($path));
+        return array_find($potentialPaths, static fn ($path) => $path && file_exists($path));
     }
 }

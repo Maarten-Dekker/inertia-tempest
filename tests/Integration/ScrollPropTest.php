@@ -56,7 +56,7 @@ final class ScrollPropTest extends TestCase
 
     public function test_resolves_custom_meta_data(): void
     {
-        $callableMetadata = static fn() => new readonly class('usersPage', 10, 12, 11) implements
+        $callableMetadata = static fn () => new readonly class('usersPage', 10, 12, 11) implements
             ProvidesScrollMetadata {
             public function __construct(
                 public string $pageName,
@@ -66,7 +66,11 @@ final class ScrollPropTest extends TestCase
             ) {}
         };
 
-        $scrollProp = new ScrollProp(value: $this->users, wrapper: 'data', metadata: $callableMetadata);
+        $scrollProp = new ScrollProp(
+            value: $this->users,
+            wrapper: 'data',
+            metadata: $callableMetadata,
+        );
 
         $metadata = $scrollProp->metadata();
 
@@ -111,7 +115,10 @@ final class ScrollPropTest extends TestCase
         $this->makeRequest(headers: [
             Header::INFINITE_SCROLL_MERGE_INTENT => 'prepend',
         ]);
-        $prependProp = new ScrollProp(value: $this->users, wrapper: 'items');
+        $prependProp = new ScrollProp(
+            value: $this->users,
+            wrapper: 'items',
+        );
         $prependProp->configureMergeIntent();
 
         $this->assertSame(['items'], $prependProp->prependsAtPaths());
@@ -120,7 +127,7 @@ final class ScrollPropTest extends TestCase
 
     public function test_resolves_meta_data_with_callable_provider(): void
     {
-        $callableMetadata = static fn() => new readonly class('callablePage', 5, 7, 6) implements
+        $callableMetadata = static fn () => new readonly class('callablePage', 5, 7, 6) implements
             ProvidesScrollMetadata {
             public function __construct(
                 public string $pageName,
@@ -130,7 +137,11 @@ final class ScrollPropTest extends TestCase
             ) {}
         };
 
-        $scrollProp = new ScrollProp(value: [], wrapper: 'data', metadata: $callableMetadata);
+        $scrollProp = new ScrollProp(
+            value: [],
+            wrapper: 'data',
+            metadata: $callableMetadata,
+        );
 
         $metadata = $scrollProp->metadata();
 

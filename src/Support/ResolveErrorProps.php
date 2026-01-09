@@ -28,7 +28,7 @@ final readonly class ResolveErrorProps
             $fieldName = $this->config->validation->localize_fields ? $key : null;
 
             $messages = arr($rules)->map(
-                fn(Rule $rule) => $this->validator->getErrorMessage($rule, $fieldName),
+                fn (Rule $rule) => $this->validator->getErrorMessage($rule, $fieldName),
             )->toArray();
 
             if ($this->config->validation->multiple_errors) {

@@ -21,7 +21,7 @@ final readonly class PaginatorAdapter implements Arrayable
     {
         $laravelPaginatorClass = \Illuminate\Pagination\LengthAwarePaginator::class;
 
-        if (!class_exists($laravelPaginatorClass)) {
+        if (! class_exists($laravelPaginatorClass)) {
             throw new RuntimeException(
                 'Cannot transform to Laravel paginator: package "illuminate/pagination" is not installed.',
             );

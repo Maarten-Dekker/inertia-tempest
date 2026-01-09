@@ -30,7 +30,7 @@ final readonly class HttpGateway implements Gateway, HasHealthCheck
     #[Override]
     public function dispatch(array $page): ?Response
     {
-        if (!$this->shouldDispatch()) {
+        if (! $this->shouldDispatch()) {
             return null;
         }
 
@@ -41,7 +41,7 @@ final readonly class HttpGateway implements Gateway, HasHealthCheck
                 body: json_encode($page),
             );
 
-            if (!$response->isSuccessful()) {
+            if (! $response->isSuccessful()) {
                 throw new Exception('SSR request failed.');
             }
 
@@ -83,7 +83,7 @@ final readonly class HttpGateway implements Gateway, HasHealthCheck
     {
         return (
             $this->config->ssr->enabled
-            && (!$this->config->ssr->ensure_bundle_exists || $this->bundleDetector->detect() !== null)
+            && (! $this->config->ssr->ensure_bundle_exists || $this->bundleDetector->detect() !== null)
         );
     }
 

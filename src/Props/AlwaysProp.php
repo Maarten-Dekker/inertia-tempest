@@ -27,7 +27,7 @@ final readonly class AlwaysProp implements InvokableProp
     #[Override]
     public function __invoke(): mixed
     {
-        if (!is_callable($this->value)) {
+        if (! is_callable($this->value)) {
             return $this->value;
         }
 

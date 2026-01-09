@@ -29,7 +29,10 @@ final class ResponseFactoryTest extends TestCase
 {
     public function test_location_response_for_inertia_requests(): void
     {
-        $this->makeRequest(uri: '/', headers: [Header::INERTIA => 'true']);
+        $this->makeRequest(
+            uri: '/',
+            headers: [Header::INERTIA => 'true'],
+        );
 
         $response = $this->factory->location('https://inertiajs.com');
 
@@ -49,7 +52,10 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_location_response_for_inertia_requests_using_redirect_response(): void
     {
-        $this->makeRequest(uri: '/', headers: [Header::INERTIA => 'true']);
+        $this->makeRequest(
+            uri: '/',
+            headers: [Header::INERTIA => 'true'],
+        );
 
         $redirect = new Redirect('https://inertiajs.com');
 
@@ -97,10 +103,13 @@ final class ResponseFactoryTest extends TestCase
     {
         $expectedVersion = 'test-version-from-closure';
 
-        $response = $this->http->get(uri: uri([TestController::class, 'versionCanBeAClosure']), headers: [
-            Header::INERTIA => 'true',
-            Header::VERSION => $expectedVersion,
-        ]);
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'versionCanBeAClosure']),
+            headers: [
+                Header::INERTIA => 'true',
+                Header::VERSION => $expectedVersion,
+            ],
+        );
 
         $page = $response->body;
 
@@ -115,9 +124,12 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_the_url_can_be_resolved_with_a_custom_resolver(): void
     {
-        $response = $this->http->get(uri: uri([TestController::class, 'customUrlResolver']), headers: [
-            Header::INERTIA => 'true',
-        ]);
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'customUrlResolver']),
+            headers: [
+                Header::INERTIA => 'true',
+            ],
+        );
 
         $page = $response->body;
 
@@ -127,9 +139,12 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_shared_data_can_be_shared_from_anywhere(): void
     {
-        $response = $this->http->get(uri: uri([TestController::class, 'sharedData']), headers: [
-            Header::INERTIA => 'true',
-        ]);
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'sharedData']),
+            headers: [
+                Header::INERTIA => 'true',
+            ],
+        );
 
         $page = $response->body;
 
@@ -140,9 +155,12 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_dot_props_are_merged_from_shared(): void
     {
-        $response = $this->http->get(uri: uri([TestController::class, 'dotPropMerging']), headers: [
-            Header::INERTIA => 'true',
-        ]);
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'dotPropMerging']),
+            headers: [
+                Header::INERTIA => 'true',
+            ],
+        );
 
         $page = $response->body;
         $props = $page['props'];
@@ -154,9 +172,12 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_shared_data_can_resolve_closure_arguments(): void
     {
-        $response = $this->http->get(uri: uri([TestController::class, 'sharedClosure']) . '?foo=bar', headers: [
-            Header::INERTIA => 'true',
-        ]);
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'sharedClosure']) . '?foo=bar',
+            headers: [
+                Header::INERTIA => 'true',
+            ],
+        );
 
         $page = $response->body;
 
@@ -167,9 +188,12 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_dot_props_with_callbacks_are_merged_from_shared(): void
     {
-        $response = $this->http->get(uri: uri([TestController::class, 'dotPropsWithCallbacksMerging']), headers: [
-            Header::INERTIA => 'true',
-        ]);
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'dotPropsWithCallbacksMerging']),
+            headers: [
+                Header::INERTIA => 'true',
+            ],
+        );
 
         $page = $response->body;
         $props = $page['props'];
@@ -193,14 +217,14 @@ final class ResponseFactoryTest extends TestCase
         . ResponseFactory::class
         . '::lazy() is deprecated, Use `optional` instead.');
 
-        $lazyProp = $this->factory->lazy(static fn(): string => 'A lazy value');
+        $lazyProp = $this->factory->lazy(static fn (): string => 'A lazy value');
 
         $this->assertInstanceOf(LazyProp::class, $lazyProp);
     }
 
     public function test_can_create_deferred_prop(): void
     {
-        $deferredProp = $this->factory->defer(static fn(): string => 'A deferred value');
+        $deferredProp = $this->factory->defer(static fn (): string => 'A deferred value');
 
         $this->assertInstanceOf(DeferProp::class, $deferredProp);
         $this->assertSame('default', $deferredProp->group());
@@ -208,7 +232,7 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_can_create_deferred_prop_with_custom_group(): void
     {
-        $deferredProp = $this->factory->defer(static fn(): string => 'A deferred value', 'foo');
+        $deferredProp = $this->factory->defer(static fn (): string => 'A deferred value', 'foo');
 
         $this->assertInstanceOf(DeferProp::class, $deferredProp);
         $this->assertSame('foo', $deferredProp->group());
@@ -216,35 +240,35 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_can_create_merged_prop(): void
     {
-        $mergedProp = $this->factory->merge(static fn(): string => 'A merged value');
+        $mergedProp = $this->factory->merge(static fn (): string => 'A merged value');
 
         $this->assertInstanceOf(MergeProp::class, $mergedProp);
     }
 
     public function test_can_create_deep_merged_prop(): void
     {
-        $mergedProp = $this->factory->deepMerge(static fn(): string => 'A merged value');
+        $mergedProp = $this->factory->deepMerge(static fn (): string => 'A merged value');
 
         $this->assertInstanceOf(MergeProp::class, $mergedProp);
     }
 
     public function test_can_create_deferred_and_merged_prop(): void
     {
-        $deferredProp = $this->factory->defer(static fn(): string => 'A deferred + merged value')->merge();
+        $deferredProp = $this->factory->defer(static fn (): string => 'A deferred + merged value')->merge();
 
         $this->assertInstanceOf(DeferProp::class, $deferredProp);
     }
 
     public function test_can_create_deferred_and_deep_merged_prop(): void
     {
-        $deferredProp = $this->factory->defer(static fn(): string => 'A deferred + merged value')->deepMerge();
+        $deferredProp = $this->factory->defer(static fn (): string => 'A deferred + merged value')->deepMerge();
 
         $this->assertInstanceOf(DeferProp::class, $deferredProp);
     }
 
     public function test_can_create_optional_prop(): void
     {
-        $optionalProp = $this->factory->optional(static fn(): string => 'An optional value');
+        $optionalProp = $this->factory->optional(static fn (): string => 'An optional value');
 
         $this->assertInstanceOf(OptionalProp::class, $optionalProp);
     }
@@ -286,16 +310,19 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_can_create_always_prop(): void
     {
-        $alwaysProp = $this->factory->always(static fn(): string => 'An always value');
+        $alwaysProp = $this->factory->always(static fn (): string => 'An always value');
 
         $this->assertInstanceOf(AlwaysProp::class, $alwaysProp);
     }
 
     public function test_will_accept_arrayable_props(): void
     {
-        $response = $this->http->get(uri: uri([TestController::class, 'arrayableProps']), headers: [
-            Header::INERTIA => 'true',
-        ]);
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'arrayableProps']),
+            headers: [
+                Header::INERTIA => 'true',
+            ],
+        );
 
         $page = $response->body;
 
@@ -306,9 +333,12 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_will_accept_instances_of_provides_inertia_props(): void
     {
-        $response = $this->http->get(uri: uri([TestController::class, 'renderWithProvider']), headers: [
-            Header::INERTIA => 'true',
-        ]);
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'renderWithProvider']),
+            headers: [
+                Header::INERTIA => 'true',
+            ],
+        );
 
         $page = $response->body;
         $props = $page['props'];
@@ -321,9 +351,12 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_will_accept_arrays_containing_provides_inertia_props_in_render(): void
     {
-        $response = $this->http->get(uri: uri([TestController::class, 'renderWithMixedProps']), headers: [
-            Header::INERTIA => 'true',
-        ]);
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'renderWithMixedProps']),
+            headers: [
+                Header::INERTIA => 'true',
+            ],
+        );
 
         $page = $response->body;
         $props = $page['props'];
@@ -340,9 +373,12 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_can_share_instances_of_provides_inertia_props(): void
     {
-        $response = $this->http->get(uri: uri([TestController::class, 'shareWithProvider']), headers: [
-            Header::INERTIA => 'true',
-        ]);
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'shareWithProvider']),
+            headers: [
+                Header::INERTIA => 'true',
+            ],
+        );
 
         $page = $response->body;
         $props = $page['props'];
@@ -357,9 +393,12 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_can_share_arrays_containing_provides_inertia_props(): void
     {
-        $response = $this->http->get(uri: uri([TestController::class, 'shareWithMixedProps']), headers: [
-            Header::INERTIA => 'true',
-        ]);
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'shareWithMixedProps']),
+            headers: [
+                Header::INERTIA => 'true',
+            ],
+        );
 
         $page = $response->body;
         $props = $page['props'];
@@ -378,7 +417,7 @@ final class ResponseFactoryTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            static fn() => new InertiaConfig(pages: new PageConfig(ensure_pages_exists: true)),
+            static fn () => new InertiaConfig(pages: new PageConfig(ensure_pages_exists: true)),
         );
 
         $this->expectException(ComponentNotFoundException::class);
@@ -397,7 +436,7 @@ final class ResponseFactoryTest extends TestCase
 
             $this->assertInstanceOf(Response::class, $response);
         } finally {
-            if (!$originalEnv) {
+            if (! $originalEnv) {
                 putenv('INERTIA_ENSURE_PAGES_EXISTS');
             } else {
                 putenv("INERTIA_ENSURE_PAGES_EXISTS={$originalEnv}");

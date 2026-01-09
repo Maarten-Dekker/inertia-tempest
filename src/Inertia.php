@@ -41,12 +41,20 @@ class Inertia extends Facade
      */
     public static function share(string|array|ArrayInterface $key, mixed $value = null): void
     {
-        static::instance()->share(key: $key, value: $value);
+        static::instance()
+            ->share(
+                key: $key,
+                value: $value,
+            );
     }
 
     public static function getShared(?string $key = null, mixed $default = null): mixed
     {
-        return static::instance()->getShared(key: $key, default: $default);
+        return static::instance()
+            ->getShared(
+                key: $key,
+                default: $default,
+            );
     }
 
     public static function clearHistory(): void
@@ -85,7 +93,13 @@ class Inertia extends Facade
         string $wrapper = 'data',
         ProvidesScrollMetadata|callable|null $metadata = null,
     ): ScrollProp {
-        return static::instance()->scroll(value: $value, pageName: $pageName, wrapper: $wrapper, metadata: $metadata);
+        return static::instance()
+            ->scroll(
+                value: $value,
+                pageName: $pageName,
+                wrapper: $wrapper,
+                metadata: $metadata,
+            );
     }
 
     public static function optional(callable $callback): OptionalProp
@@ -101,7 +115,11 @@ class Inertia extends Facade
 
     public static function defer(callable $callback, string $group = 'default'): DeferProp
     {
-        return static::instance()->defer(callback: $callback, group: $group);
+        return static::instance()
+            ->defer(
+                callback: $callback,
+                group: $group,
+            );
     }
 
     public static function always(mixed $value): AlwaysProp
@@ -124,7 +142,11 @@ class Inertia extends Facade
      */
     public static function render(string $component, array|ArrayInterface $props = []): Response
     {
-        return static::instance()->render(component: $component, props: $props);
+        return static::instance()
+            ->render(
+                component: $component,
+                props: $props,
+            );
     }
 
     public static function location(string|Redirect $url): \Tempest\Http\Response

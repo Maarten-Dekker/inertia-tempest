@@ -6,8 +6,9 @@ includes = ["vendor"]
 excludes = []
 
 [formatter]
-print-width = 120
-null-type-hint = "question"
+space-after-logical-not-unary-prefix-operator = true
+space-before-arrow-function-parameter-list-parenthesis = true
+always-break-named-arguments-list = true
 
 [linter]
 integrations = ["tempest", "phpunit"]

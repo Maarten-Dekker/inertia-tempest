@@ -28,7 +28,7 @@ final readonly class StopSsr
     public function __invoke(bool $silent = false): ExitCode|int
     {
         if (($this->checkSsrCommand)(silent: true)->value === ExitCode::ERROR->value) {
-            if (!$silent) {
+            if (! $silent) {
                 $this->console->error("Inertia SSR server isn't running.");
             }
 
@@ -48,7 +48,7 @@ final readonly class StopSsr
             usleep(200000);
 
             if (($this->checkSsrCommand)(silent: true)->value === ExitCode::ERROR->value) {
-                if (!$silent) {
+                if (! $silent) {
                     $this->console->info('Inertia SSR server stopped successfully.');
                 }
 
@@ -56,7 +56,7 @@ final readonly class StopSsr
             }
         }
 
-        if (!$silent) {
+        if (! $silent) {
             $this->console->error('Failed to stop the Inertia SSR server.');
         }
 
