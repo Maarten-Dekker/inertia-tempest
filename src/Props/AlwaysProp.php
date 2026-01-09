@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Inertia\Props;
 
-use Closure;
 use Inertia\Contracts\InvokableProp;
+use Inertia\Traits\ResolvesCallables;
 use Override;
-
-use function Tempest\invoke;
 
 final readonly class AlwaysProp implements InvokableProp
 {
+    use ResolvesCallables;
+
     /**
      * Create a new always property instance. Always properties are included
      * in every Inertia response, even during partial reloads when only
@@ -27,14 +27,6 @@ final readonly class AlwaysProp implements InvokableProp
     #[Override]
     public function __invoke(): mixed
     {
-        if (! is_callable($this->value)) {
-            return $this->value;
-        }
-
-        if ($this->value instanceof Closure) {
-            return invoke($this->value);
-        }
-
-        return call_user_func($this->value);
+        return $this->resolveCallable($this->value);
     }
 }

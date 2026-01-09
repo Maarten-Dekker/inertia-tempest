@@ -10,11 +10,11 @@ use Inertia\Contracts\ProvidesScrollMetadata;
 use Inertia\Support\Header;
 use Inertia\Support\ScrollMetadata;
 use Inertia\Traits\MergesProps;
+use Inertia\Traits\ResolvesCallables;
 use Override;
 use Tempest\Http\Request;
 
 use function Tempest\get;
-use function Tempest\invoke;
 
 /**
  * Represents a paginated property that can be merged during partial reloads.
@@ -25,6 +25,7 @@ use function Tempest\invoke;
 final class ScrollProp implements Mergeable, InvokableProp
 {
     use MergesProps;
+    use ResolvesCallables;
 
     /**
      * The resolved property value.
@@ -97,7 +98,7 @@ final class ScrollProp implements Mergeable, InvokableProp
     #[Override]
     public function __invoke(): mixed
     {
-        return $this->resolved ?? ($this->resolved = is_callable($this->value) ? invoke($this->value) : $this->value);
+        return $this->resolved ?? ($this->resolved = $this->resolveCallable($this->value));
     }
 
     /**

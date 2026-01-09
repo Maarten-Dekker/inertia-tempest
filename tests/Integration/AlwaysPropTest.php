@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Inertia\Tests\Integration;
+
 use Inertia\Props\AlwaysProp;
 use Inertia\Tests\TestCase;
 use Tempest\Http\Request;
@@ -20,6 +22,13 @@ final class AlwaysPropTest extends TestCase
         $alwaysProp = new AlwaysProp('An always value');
 
         $this->assertSame('An always value', $alwaysProp());
+    }
+
+    public function test_string_function_names_are_not_invoked(): void
+    {
+        $alwaysProp = new AlwaysProp('date');
+
+        $this->assertSame('date', $alwaysProp());
     }
 
     public function test_can_accept_callables(): void

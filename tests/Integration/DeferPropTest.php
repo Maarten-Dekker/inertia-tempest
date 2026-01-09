@@ -18,6 +18,13 @@ final class DeferPropTest extends TestCase
         $this->assertSame('default', $deferProp->group());
     }
 
+    public function test_string_function_names_are_not_invoked(): void
+    {
+        $deferProp = new DeferProp('date');
+
+        $this->assertSame('date', $deferProp());
+    }
+
     public function test_can_invoke_and_merge(): void
     {
         $deferProp = new DeferProp(static fn (): string => 'A deferred value')->merge();
