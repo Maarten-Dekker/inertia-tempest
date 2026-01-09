@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Inertia;
 
 use Closure;
-use DateInterval;
-use DateTimeImmutable;
 use GuzzleHttp\Promise\PromiseInterface;
 use Inertia\Configs\InertiaConfig;
 use Inertia\Contracts\Arrayable;
@@ -49,13 +47,6 @@ final class Response implements HttpResponse
      */
     private array $viewData = [];
 
-    /**
-     * The cache duration settings.
-     *
-     * @var array<int, mixed>
-     */
-    private array $cacheFor = [];
-
     private Request $request {
         get => $this->request ??= get(Request::class);
     }
@@ -97,7 +88,6 @@ final class Response implements HttpResponse
                 ],
                 $this->resolveMergeProps(),
                 $this->resolveDeferredProps(),
-                $this->resolveCacheDirections(),
                 $this->resolveScrollProps(),
             );
 
@@ -141,18 +131,6 @@ final class Response implements HttpResponse
     public function rootView(string $rootView): self
     {
         $this->rootView = $rootView;
-
-        return $this;
-    }
-
-    /**
-     * Set the cache duration for the response.
-     *
-     * @param  string|array<int, mixed>  $cacheFor
-     */
-    public function cache(string|array $cacheFor): self
-    {
-        $this->cacheFor = is_array($cacheFor) ? $cacheFor : [$cacheFor];
 
         return $this;
     }
@@ -314,28 +292,6 @@ final class Response implements HttpResponse
         }
 
         return $result;
-    }
-
-    /**
-     * Resolve the cache directions for the response.
-     *
-     * @return array<string, mixed>
-     */
-    public function resolveCacheDirections(): array
-    {
-        if ($this->cacheFor === []) {
-            return [];
-        }
-
-        return [
-            'cache' => array_map(static function ($value): int {
-                if ($value instanceof DateInterval) {
-                    return new DateTimeImmutable('@0')->add($value)->getTimestamp();
-                }
-
-                return intval($value);
-            }, $this->cacheFor),
-        ];
     }
 
     /**
