@@ -8,7 +8,7 @@ use Tempest\Support\Arr\ArrayInterface;
 
 use function Tempest\get;
 
-if (!function_exists('inertia')) {
+if (! function_exists('inertia')) {
     function inertia(?string $component = null, array|ArrayInterface $props = []): Response|ResponseFactory
     {
         $instance = get(ResponseFactory::class);
@@ -21,7 +21,7 @@ if (!function_exists('inertia')) {
     }
 }
 
-if (!function_exists('inertia_location')) {
+if (! function_exists('inertia_location')) {
     function inertia_location(string $url): Response
     {
         return get(ResponseFactory::class)->location($url);

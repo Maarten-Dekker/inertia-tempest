@@ -74,7 +74,7 @@ final class ResponseTest extends TestCase
         $user = ['name' => 'Jonathan'];
         $response = $this->factory->render('User/Edit', [
             'user' => $user,
-            'foo' => new DeferProp(static fn() => 'bar'),
+            'foo' => new DeferProp(static fn () => 'bar'),
         ]);
 
         $this->assertInstanceOf(LazyBody::class, $response->body);
@@ -112,9 +112,9 @@ final class ResponseTest extends TestCase
         $user = ['name' => 'Jonathan'];
         $response = $this->factory->render('User/Edit', [
             'user' => $user,
-            'foo' => new DeferProp(static fn() => 'foo value'),
-            'bar' => new DeferProp(static fn() => 'bar value'),
-            'baz' => new DeferProp(static fn() => 'baz value', 'custom'),
+            'foo' => new DeferProp(static fn () => 'foo value'),
+            'bar' => new DeferProp(static fn () => 'bar value'),
+            'baz' => new DeferProp(static fn () => 'baz value', 'custom'),
         ]);
 
         $renderer = $this->container->get(ViewRenderer::class);
@@ -446,7 +446,7 @@ final class ResponseTest extends TestCase
         $user = ['name' => 'Jonathan'];
         $response = $this->factory->render('User/Edit', [
             'user' => $user,
-            'foo' => new DeferProp(static fn() => 'foo value')->merge(),
+            'foo' => new DeferProp(static fn () => 'foo value')->merge(),
             'bar' => new MergeProp('bar value'),
         ]);
 
@@ -485,7 +485,7 @@ final class ResponseTest extends TestCase
         $user = ['name' => 'Jonathan'];
         $response = $this->factory->render('User/Edit', [
             'user' => $user,
-            'foo' => new DeferProp(static fn() => 'foo value')->deepMerge(),
+            'foo' => new DeferProp(static fn () => 'foo value')->deepMerge(),
             'bar' => new MergeProp('bar value')->deepMerge(),
         ]);
 
@@ -651,8 +651,8 @@ final class ResponseTest extends TestCase
         $this->factory->version('123');
 
         $response = $this->factory->render('User/Index', [
-            'users' => static fn() => [['name' => 'Jonathan']],
-            'organizations' => static fn() => [['name' => 'Inertia']],
+            'users' => static fn () => [['name' => 'Jonathan']],
+            'organizations' => static fn () => [['name' => 'Inertia']],
         ]);
 
         $page = $response->body->jsonSerialize();
@@ -678,8 +678,8 @@ final class ResponseTest extends TestCase
         $this->factory->version('123');
 
         $response = $this->factory->render('User/Index', [
-            'users' => static fn() => [['name' => 'Jonathan']],
-            'organizations' => static fn() => [['name' => 'Inertia']],
+            'users' => static fn () => [['name' => 'Jonathan']],
+            'organizations' => static fn () => [['name' => 'Inertia']],
         ]);
 
         $page = $response->body->jsonSerialize();
@@ -696,7 +696,7 @@ final class ResponseTest extends TestCase
 
     public function test_lazy_prop_returning_pagination_is_transformed(): void
     {
-        $this->container->singleton(InertiaConfig::class, static fn() => new InertiaConfig(laravel_pagination: true));
+        $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(laravel_pagination: true));
 
         $this->makeRequest(
             uri: '/users?page=1',
@@ -746,7 +746,7 @@ final class ResponseTest extends TestCase
 
     public function test_lazy_prop_returning_nested_pagination_is_transformed(): void
     {
-        $this->container->singleton(InertiaConfig::class, static fn() => new InertiaConfig(laravel_pagination: true));
+        $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(laravel_pagination: true));
 
         $this->makeRequest(
             uri: '/users?page=1',
@@ -903,7 +903,7 @@ final class ResponseTest extends TestCase
 
         $props = [
             'auth' => [
-                'user' => new LazyProp(static fn() => [
+                'user' => new LazyProp(static fn () => [
                     'name' => 'Jonathan Reinink',
                     'email' => 'jonathan@example.com',
                 ]),
@@ -937,7 +937,7 @@ final class ResponseTest extends TestCase
 
         $props = [
             'auth' => [
-                'user' => new LazyProp(static fn() => [
+                'user' => new LazyProp(static fn () => [
                     'name' => 'Jonathan Reinink',
                     'email' => 'jonathan@example.com',
                 ]),
@@ -966,7 +966,7 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $lazyProp = new LazyProp(static fn() => 'A lazy value');
+        $lazyProp = new LazyProp(static fn () => 'A lazy value');
 
         $response = $this->factory->render('Users', [
             'users' => [],
@@ -990,7 +990,7 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $lazyProp = new LazyProp(static fn() => 'A lazy value');
+        $lazyProp = new LazyProp(static fn () => 'A lazy value');
 
         $response = $this->factory->render('Users', [
             'users' => [],
@@ -1014,7 +1014,7 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $deferProp = new DeferProp(static fn(): Arrayable => new class implements Arrayable {
+        $deferProp = new DeferProp(static fn (): Arrayable => new class implements Arrayable {
             #[\Override]
             public function toArray(): array
             {
@@ -1042,14 +1042,14 @@ final class ResponseTest extends TestCase
         ]);
 
         $props = [
-            'user' => new LazyProp(static fn() => [
+            'user' => new LazyProp(static fn () => [
                 'name' => 'Jonathan Reinink',
                 'email' => 'jonathan@example.com',
             ]),
             'data' => [
                 'name' => 'Taylor Otwell',
             ],
-            'errors' => new AlwaysProp(static fn() => [
+            'errors' => new AlwaysProp(static fn () => [
                 'name' => 'The email field is required.',
             ]),
         ];
@@ -1066,7 +1066,9 @@ final class ResponseTest extends TestCase
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'responsableProps']),
-            headers: [Header::INERTIA => 'true'],
+            headers: [
+                Header::INERTIA => 'true',
+            ],
         );
 
         $page = $response->body;
@@ -1081,7 +1083,9 @@ final class ResponseTest extends TestCase
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'mergeWithShared']),
-            headers: [Header::INERTIA => 'true'],
+            headers: [
+                Header::INERTIA => 'true',
+            ],
         );
 
         $page = $response->body;
@@ -1152,7 +1156,9 @@ final class ResponseTest extends TestCase
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'withMethod']),
-            headers: [Header::INERTIA => 'true'],
+            headers: [
+                Header::INERTIA => 'true',
+            ],
         );
 
         $page = $response->body;

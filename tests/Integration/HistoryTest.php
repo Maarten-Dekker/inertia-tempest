@@ -64,7 +64,7 @@ final class HistoryTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            static fn() => new InertiaConfig(history: new HistoryConfig(encrypt: true)),
+            static fn () => new InertiaConfig(history: new HistoryConfig(encrypt: true)),
         );
 
         $response = $this->http->get(
@@ -84,7 +84,7 @@ final class HistoryTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            static fn() => new InertiaConfig(history: new HistoryConfig(encrypt: true)),
+            static fn () => new InertiaConfig(history: new HistoryConfig(encrypt: true)),
         );
 
         $response = $this->http->get(

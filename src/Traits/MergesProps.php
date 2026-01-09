@@ -113,7 +113,7 @@ trait MergesProps
      */
     public function prependsAtRoot(): bool
     {
-        return !$this->append && $this->mergesAtRoot();
+        return ! $this->append && $this->mergesAtRoot();
     }
 
     /**
@@ -134,7 +134,7 @@ trait MergesProps
         match (true) {
             is_bool($path) => $this->append = $path,
             is_string($path) => $this->appendsAtPaths[] = $path,
-            is_array($path) => array_walk($path, fn($value, $key) => is_numeric($key)
+            is_array($path) => array_walk($path, fn ($value, $key) => is_numeric($key)
                 ? $this->append($value)
                 : $this->append($key, $value)),
         };
@@ -154,9 +154,9 @@ trait MergesProps
     public function prepend(bool|string|array $path = true, ?string $matchOn = null): static
     {
         match (true) {
-            is_bool($path) => $this->append = !$path,
+            is_bool($path) => $this->append = ! $path,
             is_string($path) => $this->prependsAtPaths[] = $path,
-            is_array($path) => array_walk($path, fn($value, $key) => is_numeric($key)
+            is_array($path) => array_walk($path, fn ($value, $key) => is_numeric($key)
                 ? $this->prepend($value)
                 : $this->prepend($key, $value)),
         };

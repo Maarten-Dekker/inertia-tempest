@@ -208,8 +208,8 @@ final class Response implements HttpResponse
      */
     public function resolvePartialProperties(array $props): array
     {
-        if (!$this->isPartial()) {
-            return array_filter($props, static fn($prop) => !$prop instanceof IgnoreFirstLoad);
+        if (! $this->isPartial()) {
+            return array_filter($props, static fn ($prop) => ! $prop instanceof IgnoreFirstLoad);
         }
 
         $only = $this->parsePartialHeader(Header::PARTIAL_ONLY);
@@ -246,7 +246,7 @@ final class Response implements HttpResponse
      */
     public function resolveAlways(array $props): array
     {
-        $always = array_filter($this->props, static fn($prop) => $prop instanceof AlwaysProp);
+        $always = array_filter($this->props, static fn ($prop) => $prop instanceof AlwaysProp);
 
         return array_merge($always, $props);
     }
@@ -361,12 +361,12 @@ final class Response implements HttpResponse
 
         return Arr\filter(
             $this->props,
-            static fn($prop, $key) => (
+            static fn ($prop, $key) => (
                 $prop instanceof Mergeable
                 && $prop->shouldMerge()
-                && !in_array($key, $resetProps, true)
+                && ! in_array($key, $resetProps, true)
                 && ($onlyProps === [] || in_array($key, $onlyProps, true))
-                && !in_array($key, $exceptProps, true)
+                && ! in_array($key, $exceptProps, true)
             ),
         );
     }
@@ -390,7 +390,7 @@ final class Response implements HttpResponse
                 $deepMergeProps[] = $key;
             }
 
-            if (!$prop->shouldDeepMerge()) {
+            if (! $prop->shouldDeepMerge()) {
                 if ($prop->appendsAtRoot()) {
                     $appendProps[] = $key;
                 } else {
@@ -420,7 +420,7 @@ final class Response implements HttpResponse
                 'deepMergeProps' => $deepMergeProps,
                 'matchPropsOn' => array_values(array_unique($matchPropsOn)),
             ],
-            static fn(array $prop) => $prop !== [],
+            static fn (array $prop) => $prop !== [],
         );
     }
 
@@ -438,7 +438,7 @@ final class Response implements HttpResponse
         $groupedProps = [];
 
         foreach ($this->props as $key => $prop) {
-            if (!$prop instanceof DeferProp) {
+            if (! $prop instanceof DeferProp) {
                 continue;
             }
 
@@ -460,7 +460,7 @@ final class Response implements HttpResponse
         $scrollPropsResult = [];
 
         foreach ($this->getMergePropsForRequest(false) as $key => $prop) {
-            if (!$prop instanceof ScrollProp) {
+            if (! $prop instanceof ScrollProp) {
                 continue;
             }
 
@@ -511,7 +511,7 @@ final class Response implements HttpResponse
      */
     private function resolveBody(array $page): array|null|InertiaView
     {
-        if (!$this->request->headers->has(Header::INERTIA)) {
+        if (! $this->request->headers->has(Header::INERTIA)) {
             $ssr = $this->ssr($page);
 
             return new InertiaView(
@@ -548,7 +548,7 @@ final class Response implements HttpResponse
      */
     private function ssr(array $page): ?SsrResponse
     {
-        if (!$this->config->ssr->enabled) {
+        if (! $this->config->ssr->enabled) {
             return null;
         }
 

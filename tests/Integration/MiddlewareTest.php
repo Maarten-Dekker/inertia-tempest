@@ -190,7 +190,7 @@ final class MiddlewareTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            static fn() => new InertiaConfig(validation: new ValidationConfig(
+            static fn () => new InertiaConfig(validation: new ValidationConfig(
                 multiple_errors: false,
                 localize_fields: false,
             )),
@@ -218,7 +218,7 @@ final class MiddlewareTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            static fn() => new InertiaConfig(validation: new ValidationConfig(
+            static fn () => new InertiaConfig(validation: new ValidationConfig(
                 multiple_errors: true,
                 localize_fields: false,
             )),
@@ -260,7 +260,7 @@ final class MiddlewareTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            static fn() => new InertiaConfig(validation: new ValidationConfig(
+            static fn () => new InertiaConfig(validation: new ValidationConfig(
                 multiple_errors: false,
                 localize_fields: true,
             )),
@@ -288,7 +288,7 @@ final class MiddlewareTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            static fn() => new InertiaConfig(validation: new ValidationConfig(
+            static fn () => new InertiaConfig(validation: new ValidationConfig(
                 multiple_errors: false,
                 localize_fields: false,
             )),
@@ -357,7 +357,7 @@ final class MiddlewareTest extends TestCase
         $directoryPath = dirname($manifestPath);
         $contents = json_encode(['vite' => true]);
 
-        if (!is_dir($directoryPath)) {
+        if (! is_dir($directoryPath)) {
             mkdir($directoryPath, 0o777, true);
         }
 
@@ -379,7 +379,7 @@ final class MiddlewareTest extends TestCase
 
     public function test_extended_middleware_only_runs_once(): void
     {
-        $this->container->singleton(Middleware::class, fn() => $this->container->get(ExampleMiddleware::class));
+        $this->container->singleton(Middleware::class, fn () => $this->container->get(ExampleMiddleware::class));
 
         $this->http->get(uri: uri([TestController::class, 'basicRender']));
 

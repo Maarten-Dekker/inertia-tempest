@@ -56,7 +56,7 @@ final class ScrollPropTest extends TestCase
 
     public function test_resolves_custom_meta_data(): void
     {
-        $callableMetadata = static fn() => new readonly class('usersPage', 10, 12, 11) implements
+        $callableMetadata = static fn () => new readonly class('usersPage', 10, 12, 11) implements
             ProvidesScrollMetadata {
             public function __construct(
                 public string $pageName,
@@ -127,7 +127,7 @@ final class ScrollPropTest extends TestCase
 
     public function test_resolves_meta_data_with_callable_provider(): void
     {
-        $callableMetadata = static fn() => new readonly class('callablePage', 5, 7, 6) implements
+        $callableMetadata = static fn () => new readonly class('callablePage', 5, 7, 6) implements
             ProvidesScrollMetadata {
             public function __construct(
                 public string $pageName,

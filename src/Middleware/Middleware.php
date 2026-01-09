@@ -74,11 +74,11 @@ class Middleware implements HttpMiddleware
     {
         return [
             'errors' => $this->inertia->always($this->errorResolver),
-            'auth' => $this->inertia->always(static fn(Authenticator $auth) => [
+            'auth' => $this->inertia->always(static fn (Authenticator $auth) => [
                 'user' => $auth->current(),
             ]),
             'flash' => [
-                'message' => fn() => $this->session->get('message'),
+                'message' => fn () => $this->session->get('message'),
             ],
         ];
     }
@@ -138,7 +138,7 @@ class Middleware implements HttpMiddleware
             value: Header::INERTIA,
         );
 
-        if (!$request->headers->has(Header::INERTIA) || $response instanceof InertiaResponse) {
+        if (! $request->headers->has(Header::INERTIA) || $response instanceof InertiaResponse) {
             return $response;
         }
 

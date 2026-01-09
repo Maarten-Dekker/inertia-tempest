@@ -57,7 +57,7 @@ abstract class TestCase extends IntegrationTest
     {
         $application = new HttpApplication($this->container);
 
-        $this->container->singleton(Application::class, static fn() => $application);
+        $this->container->singleton(Application::class, static fn () => $application);
 
         return $application;
     }
@@ -75,7 +75,7 @@ abstract class TestCase extends IntegrationTest
             uri: $uri,
             headers: $headers,
         );
-        $this->container->singleton(Request::class, static fn() => $request);
+        $this->container->singleton(Request::class, static fn () => $request);
 
         return $request;
     }

@@ -38,7 +38,7 @@ final class TestController
     #[Get('/version-test-with-helper', middleware: [ExampleMiddleware::class])]
     public function versionCanBeAClosure(): Response
     {
-        inertia()->version(static fn() => 'test-version-from-closure');
+        inertia()->version(static fn () => 'test-version-from-closure');
 
         return inertia()->render('User/Edit', [
             'foo' => 'bar',
@@ -48,7 +48,7 @@ final class TestController
     #[Get('/custom-url-resolver')]
     public function customUrlResolver(): Response
     {
-        inertia()->resolveUrlUsing(static fn() => '/my-custom-url');
+        inertia()->resolveUrlUsing(static fn () => '/my-custom-url');
 
         return inertia()->render('User/Edit');
     }
@@ -76,7 +76,7 @@ final class TestController
     #[Get('/shared-closure-test')]
     public function sharedClosure(): Response
     {
-        inertia()->share('query', static fn(Request $request) => $request->query);
+        inertia()->share('query', static fn (Request $request) => $request->query);
 
         return inertia()->render('User/Edit');
     }
@@ -84,7 +84,7 @@ final class TestController
     #[Get('/dot-prop-callbacks-merging-test')]
     public function dotPropsWithCallbacksMerging(): Response
     {
-        inertia()->share('auth.user', static fn() => [
+        inertia()->share('auth.user', static fn () => [
             'name' => 'Jonathan',
         ]);
 

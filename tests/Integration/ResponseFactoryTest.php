@@ -217,14 +217,14 @@ final class ResponseFactoryTest extends TestCase
         . ResponseFactory::class
         . '::lazy() is deprecated, Use `optional` instead.');
 
-        $lazyProp = $this->factory->lazy(static fn(): string => 'A lazy value');
+        $lazyProp = $this->factory->lazy(static fn (): string => 'A lazy value');
 
         $this->assertInstanceOf(LazyProp::class, $lazyProp);
     }
 
     public function test_can_create_deferred_prop(): void
     {
-        $deferredProp = $this->factory->defer(static fn(): string => 'A deferred value');
+        $deferredProp = $this->factory->defer(static fn (): string => 'A deferred value');
 
         $this->assertInstanceOf(DeferProp::class, $deferredProp);
         $this->assertSame('default', $deferredProp->group());
@@ -232,7 +232,7 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_can_create_deferred_prop_with_custom_group(): void
     {
-        $deferredProp = $this->factory->defer(static fn(): string => 'A deferred value', 'foo');
+        $deferredProp = $this->factory->defer(static fn (): string => 'A deferred value', 'foo');
 
         $this->assertInstanceOf(DeferProp::class, $deferredProp);
         $this->assertSame('foo', $deferredProp->group());
@@ -240,35 +240,35 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_can_create_merged_prop(): void
     {
-        $mergedProp = $this->factory->merge(static fn(): string => 'A merged value');
+        $mergedProp = $this->factory->merge(static fn (): string => 'A merged value');
 
         $this->assertInstanceOf(MergeProp::class, $mergedProp);
     }
 
     public function test_can_create_deep_merged_prop(): void
     {
-        $mergedProp = $this->factory->deepMerge(static fn(): string => 'A merged value');
+        $mergedProp = $this->factory->deepMerge(static fn (): string => 'A merged value');
 
         $this->assertInstanceOf(MergeProp::class, $mergedProp);
     }
 
     public function test_can_create_deferred_and_merged_prop(): void
     {
-        $deferredProp = $this->factory->defer(static fn(): string => 'A deferred + merged value')->merge();
+        $deferredProp = $this->factory->defer(static fn (): string => 'A deferred + merged value')->merge();
 
         $this->assertInstanceOf(DeferProp::class, $deferredProp);
     }
 
     public function test_can_create_deferred_and_deep_merged_prop(): void
     {
-        $deferredProp = $this->factory->defer(static fn(): string => 'A deferred + merged value')->deepMerge();
+        $deferredProp = $this->factory->defer(static fn (): string => 'A deferred + merged value')->deepMerge();
 
         $this->assertInstanceOf(DeferProp::class, $deferredProp);
     }
 
     public function test_can_create_optional_prop(): void
     {
-        $optionalProp = $this->factory->optional(static fn(): string => 'An optional value');
+        $optionalProp = $this->factory->optional(static fn (): string => 'An optional value');
 
         $this->assertInstanceOf(OptionalProp::class, $optionalProp);
     }
@@ -310,7 +310,7 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_can_create_always_prop(): void
     {
-        $alwaysProp = $this->factory->always(static fn(): string => 'An always value');
+        $alwaysProp = $this->factory->always(static fn (): string => 'An always value');
 
         $this->assertInstanceOf(AlwaysProp::class, $alwaysProp);
     }
@@ -335,7 +335,9 @@ final class ResponseFactoryTest extends TestCase
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'renderWithProvider']),
-            headers: [Header::INERTIA => 'true'],
+            headers: [
+                Header::INERTIA => 'true',
+            ],
         );
 
         $page = $response->body;
@@ -351,7 +353,9 @@ final class ResponseFactoryTest extends TestCase
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'renderWithMixedProps']),
-            headers: [Header::INERTIA => 'true'],
+            headers: [
+                Header::INERTIA => 'true',
+            ],
         );
 
         $page = $response->body;
@@ -371,7 +375,9 @@ final class ResponseFactoryTest extends TestCase
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'shareWithProvider']),
-            headers: [Header::INERTIA => 'true'],
+            headers: [
+                Header::INERTIA => 'true',
+            ],
         );
 
         $page = $response->body;
@@ -389,7 +395,9 @@ final class ResponseFactoryTest extends TestCase
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'shareWithMixedProps']),
-            headers: [Header::INERTIA => 'true'],
+            headers: [
+                Header::INERTIA => 'true',
+            ],
         );
 
         $page = $response->body;
@@ -409,7 +417,7 @@ final class ResponseFactoryTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            static fn() => new InertiaConfig(pages: new PageConfig(ensure_pages_exists: true)),
+            static fn () => new InertiaConfig(pages: new PageConfig(ensure_pages_exists: true)),
         );
 
         $this->expectException(ComponentNotFoundException::class);
@@ -428,7 +436,7 @@ final class ResponseFactoryTest extends TestCase
 
             $this->assertInstanceOf(Response::class, $response);
         } finally {
-            if (!$originalEnv) {
+            if (! $originalEnv) {
                 putenv('INERTIA_ENSURE_PAGES_EXISTS');
             } else {
                 putenv("INERTIA_ENSURE_PAGES_EXISTS={$originalEnv}");

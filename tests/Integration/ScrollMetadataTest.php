@@ -93,7 +93,7 @@ final class ScrollMetadataTest extends TestCase
 
     public function test_extract_metadata_when_laravel_adapter_is_used(): void
     {
-        $this->container->singleton(InertiaConfig::class, static fn() => new InertiaConfig(laravel_pagination: true));
+        $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(laravel_pagination: true));
 
         $mockRequest = $this->makeRequest(uri: '/users');
 

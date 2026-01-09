@@ -12,7 +12,7 @@ final class DeferPropTest extends TestCase
 {
     public function test_can_invoke(): void
     {
-        $deferProp = new DeferProp(static fn(): string => 'A deferred value', 'default');
+        $deferProp = new DeferProp(static fn (): string => 'A deferred value', 'default');
 
         $this->assertSame('A deferred value', $deferProp());
         $this->assertSame('default', $deferProp->group());
@@ -20,14 +20,14 @@ final class DeferPropTest extends TestCase
 
     public function test_can_invoke_and_merge(): void
     {
-        $deferProp = new DeferProp(static fn(): string => 'A deferred value')->merge();
+        $deferProp = new DeferProp(static fn (): string => 'A deferred value')->merge();
 
         $this->assertSame('A deferred value', $deferProp());
     }
 
     public function test_can_resolve_bindings_when_invoked(): void
     {
-        $deferProp = new DeferProp(static fn(Request $request): Request => $request);
+        $deferProp = new DeferProp(static fn (Request $request): Request => $request);
 
         $this->assertInstanceOf(Request::class, $deferProp());
     }

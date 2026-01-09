@@ -307,7 +307,7 @@ final class ResponseFactory
     private function findComponentOrFail(string $component): void
     {
         if (isset($this->componentCache[$component])) {
-            if (!$this->componentCache[$component]) {
+            if (! $this->componentCache[$component]) {
                 throw new ComponentNotFoundException($component, $this->config->pages->page_paths);
             }
 
