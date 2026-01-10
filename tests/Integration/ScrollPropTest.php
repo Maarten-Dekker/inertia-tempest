@@ -177,4 +177,11 @@ final class ScrollPropTest extends TestCase
         $this->assertSame($value1, $value2);
         $this->assertSame($value2, $value3);
     }
+
+    public function test_string_function_names_are_not_invoked(): void
+    {
+        $scrollProp = new ScrollProp('date');
+
+        $this->assertSame('date', $scrollProp());
+    }
 }

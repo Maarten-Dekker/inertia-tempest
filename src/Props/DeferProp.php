@@ -8,13 +8,13 @@ use Inertia\Contracts\IgnoreFirstLoad;
 use Inertia\Contracts\InvokableProp;
 use Inertia\Contracts\Mergeable;
 use Inertia\Traits\MergesProps;
+use Inertia\Traits\ResolvesCallables;
 use Override;
-
-use function Tempest\invoke;
 
 final class DeferProp implements IgnoreFirstLoad, Mergeable, InvokableProp
 {
     use MergesProps;
+    use ResolvesCallables;
 
     /**
      * @var callable
@@ -49,6 +49,6 @@ final class DeferProp implements IgnoreFirstLoad, Mergeable, InvokableProp
     #[Override]
     public function __invoke(): mixed
     {
-        return invoke($this->callback);
+        return $this->resolveCallable($this->callback);
     }
 }

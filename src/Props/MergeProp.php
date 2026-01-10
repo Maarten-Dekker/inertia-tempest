@@ -7,13 +7,13 @@ namespace Inertia\Props;
 use Inertia\Contracts\InvokableProp;
 use Inertia\Contracts\Mergeable;
 use Inertia\Traits\MergesProps;
+use Inertia\Traits\ResolvesCallables;
 use Override;
-
-use function Tempest\invoke;
 
 class MergeProp implements Mergeable, InvokableProp
 {
     use MergesProps;
+    use ResolvesCallables;
 
     /**
      * Create a new merge property instance. Merge properties are combined
@@ -32,6 +32,6 @@ class MergeProp implements Mergeable, InvokableProp
     #[Override]
     public function __invoke(): mixed
     {
-        return is_callable($this->value) ? invoke($this->value) : $this->value;
+        return $this->resolveCallable($this->value);
     }
 }

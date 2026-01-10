@@ -1062,6 +1062,21 @@ final class ResponseTest extends TestCase
         $this->assertArrayNotHasKey('user', $page['props']);
     }
 
+    public function test_string_function_names_are_not_invoked_as_callables(): void
+    {
+        $this->makeRequest();
+
+        $response = $this->factory->render('User/Edit', [
+            'always' => new AlwaysProp('date'),
+            'merge' => new MergeProp('trim'),
+        ]);
+
+        $page = $response->body->inertia['page'];
+
+        $this->assertSame('date', $page['props']['always']);
+        $this->assertSame('trim', $page['props']['merge']);
+    }
+
     public function test_inertia_responsable_objects(): void
     {
         $response = $this->http->get(
