@@ -13,11 +13,17 @@ use Inertia\Props\LazyProp;
 use Inertia\Props\MergeProp;
 use Inertia\Props\OptionalProp;
 use Inertia\Props\ScrollProp;
+use Inertia\Response as InertiaResponse;
 use Inertia\ResponseFactory;
 use Inertia\Support\Header;
 use Inertia\Support\ScrollMetadata;
+use Inertia\Tests\Enums\IntBackedEnum;
+use Inertia\Tests\Enums\StringBackedEnum;
+use Inertia\Tests\Enums\UnitEnum;
 use Inertia\Tests\Fixtures\TestController;
 use Inertia\Tests\TestCase;
+use InvalidArgumentException;
+use ReflectionProperty;
 use Tempest\Http\ContentType;
 use Tempest\Http\Response;
 use Tempest\Http\Responses\Redirect;
@@ -442,5 +448,32 @@ final class ResponseFactoryTest extends TestCase
                 putenv("INERTIA_ENSURE_PAGES_EXISTS={$originalEnv}");
             }
         }
+    }
+
+    public function test_render_accepts_backed_enum(): void
+    {
+        $response = new ResponseFactory()->render(StringBackedEnum::UsersIndex);
+        $this->assertInstanceOf(InertiaResponse::class, $response);
+
+        $ref = new ReflectionProperty($response, 'component');
+
+        $this->assertSame('UsersPage/Index', $ref->getValue($response));
+    }
+
+    public function test_render_accepts_unit_enum(): void
+    {
+        $response = new ResponseFactory()->render(UnitEnum::Index);
+        $this->assertInstanceOf(InertiaResponse::class, $response);
+
+        $ref = new ReflectionProperty($response, 'component');
+
+        $this->assertSame('Index', $ref->getValue($response));
+    }
+
+    public function test_render_throws_for_non_string_backed_enum(): void
+    {
+        $factory = new ResponseFactory();
+        $this->expectException(InvalidArgumentException::class);
+        $factory->render(IntBackedEnum::Zero);
     }
 }

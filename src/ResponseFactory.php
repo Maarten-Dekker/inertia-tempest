@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Inertia;
 
+use BackedEnum;
 use Closure;
 use Deprecated;
 use Inertia\Configs\InertiaConfig;
@@ -17,6 +18,7 @@ use Inertia\Props\MergeProp;
 use Inertia\Props\OptionalProp;
 use Inertia\Props\ScrollProp;
 use Inertia\Support\Header;
+use InvalidArgumentException;
 use Tempest\Container\Singleton;
 use Tempest\Http\GenericResponse;
 use Tempest\Http\Request;
@@ -25,6 +27,7 @@ use Tempest\Http\Session\Session;
 use Tempest\Http\Status;
 use Tempest\Support\Arr;
 use Tempest\Support\Arr\ArrayInterface;
+use UnitEnum;
 
 use function Tempest\get;
 use function Tempest\invoke;
@@ -255,8 +258,20 @@ final class ResponseFactory
      * @param array<array-key, mixed>|ArrayInterface<array-key, mixed> $props
      * @throws ComponentNotFoundException
      */
-    public function render(string $component, array|ArrayInterface|ProvidesInertiaProperties $props = []): Response
-    {
+    public function render(
+        string|BackedEnum|UnitEnum $component,
+        array|ArrayInterface|ProvidesInertiaProperties $props = [],
+    ): Response {
+        $component = match (true) {
+            $component instanceof BackedEnum => $component->value,
+            $component instanceof UnitEnum => $component->name,
+            default => $component,
+        };
+
+        if (! is_string($component)) {
+            throw new InvalidArgumentException('Component argument must be of type string or a string BackedEnum');
+        }
+
         if ($this->config->pages->ensure_pages_exists) {
             $this->findComponentOrFail($component);
         }
