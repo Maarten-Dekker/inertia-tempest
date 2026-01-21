@@ -8,13 +8,13 @@ use ArrayAccess;
 use BadMethodCallException;
 use Closure;
 use JsonSerializable;
+use LogicException;
 use Override;
 
 final class LazyBody implements JsonSerializable, ArrayAccess
 {
     private mixed $body {
         get => $this->body ??= ($this->builder)();
-        set => $this->body = $value;
     }
 
     public function __construct(
@@ -46,25 +46,15 @@ final class LazyBody implements JsonSerializable, ArrayAccess
     #[Override]
     public function offsetSet(mixed $offset, mixed $value): void
     {
-        $body = $this->body;
-
-        if (is_null($offset)) {
-            $body[] = $value;
-        } else {
-            $body[$offset] = $value;
-        }
-
-        $this->body = $body;
+        throw new LogicException(
+            'Inertia LazyBody is immutable. You cannot modify props after the Response is created.',
+        );
     }
 
     #[Override]
     public function offsetUnset(mixed $offset): void
     {
-        $body = $this->body;
-
-        unset($body[$offset]);
-
-        $this->body = $body;
+        throw new LogicException('Inertia LazyBody is immutable.');
     }
 
     public function __call(string $method, array $arguments): mixed
