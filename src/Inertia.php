@@ -16,9 +16,9 @@ use Inertia\Props\MergeProp;
 use Inertia\Props\OptionalProp;
 use Inertia\Props\ScrollProp;
 use Inertia\Support\Facade;
-use Inertia\Tests\Enums\UnitEnum;
 use Tempest\Http\Responses\Redirect;
 use Tempest\Support\Arr\ArrayInterface;
+use UnitEnum;
 
 class Inertia extends Facade
 {
