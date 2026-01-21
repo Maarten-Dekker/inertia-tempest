@@ -92,7 +92,7 @@ final class Response implements HttpResponse
                     'props' => $resolvedProps,
                     'url' => $this->getUrl(),
                     'version' => $this->version,
-                    'clearHistory' => $this->resolveClearHistory(),
+                    'clearHistory' => $this->session->consume('inertia.clear_history', $this->clearHistory),
                     'encryptHistory' => $this->encryptHistory,
                 ],
                 $this->resolveMergeProps(),
@@ -493,14 +493,6 @@ final class Response implements HttpResponse
     private function normalizeProps(array|ArrayInterface $props): array
     {
         return $props instanceof ArrayInterface ? $props->toArray() : $props;
-    }
-
-    /**
-     * Resolve the clear history flag from the session.
-     */
-    private function resolveClearHistory(): bool
-    {
-        return $this->session->get('inertia.clear_history', $this->clearHistory);
     }
 
     /**
