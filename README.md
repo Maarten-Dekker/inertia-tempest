@@ -1,6 +1,6 @@
 # Inertia.js Tempest Adapter
 
-![Unit Tests](https://github.com/Maarten-Dekker/inertia-tempest/workflows/CI/badge.svg)
+![Unit Tests](https://github.com/Maarten-Dekker/inertia-tempest/actions/workflows/ci.yml/badge.svg?branch=main)
 [![Packagist License](https://img.shields.io/badge/Licence-MIT-blue)](https://choosealicense.com/licenses/mit)
 [![Latest Stable Version](https://img.shields.io/packagist/v/maartendekker/inertia-tempest?label=Stable)](https://packagist.org/packages/maartendekker/inertia-tempest)
 [![Total Downloads](https://img.shields.io/packagist/dt/maartendekker/inertia-tempest?label=Downloads)](https://packagist.org/packages/maartendekker/inertia-tempest)
