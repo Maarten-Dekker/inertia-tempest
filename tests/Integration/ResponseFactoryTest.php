@@ -452,7 +452,7 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_render_accepts_backed_enum(): void
     {
-        $response = new ResponseFactory()->render(StringBackedEnum::UsersIndex);
+        $response = $this->factory->render(StringBackedEnum::UsersIndex);
         $this->assertInstanceOf(InertiaResponse::class, $response);
 
         $ref = new ReflectionProperty($response, 'component');
@@ -462,7 +462,7 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_render_accepts_unit_enum(): void
     {
-        $response = new ResponseFactory()->render(UnitEnum::Index);
+        $response = $this->factory->render(UnitEnum::Index);
         $this->assertInstanceOf(InertiaResponse::class, $response);
 
         $ref = new ReflectionProperty($response, 'component');
@@ -472,8 +472,7 @@ final class ResponseFactoryTest extends TestCase
 
     public function test_render_throws_for_non_string_backed_enum(): void
     {
-        $factory = new ResponseFactory();
         $this->expectException(InvalidArgumentException::class);
-        $factory->render(IntBackedEnum::Zero);
+        $this->factory->render(IntBackedEnum::Zero);
     }
 }

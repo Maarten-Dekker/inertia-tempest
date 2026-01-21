@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Inertia;
 
+use BackedEnum;
 use Closure;
 use Deprecated;
 use Inertia\Contracts\ProvidesInertiaProperties;
@@ -15,6 +16,7 @@ use Inertia\Props\MergeProp;
 use Inertia\Props\OptionalProp;
 use Inertia\Props\ScrollProp;
 use Inertia\Support\Facade;
+use Inertia\Tests\Enums\UnitEnum;
 use Tempest\Http\Responses\Redirect;
 use Tempest\Support\Arr\ArrayInterface;
 
@@ -140,7 +142,7 @@ class Inertia extends Facade
     /**
      * @param array<array-key, mixed>|ArrayInterface<array-key, mixed>|ProvidesInertiaProperties $props
      */
-    public static function render(string $component, array|ArrayInterface $props = []): Response
+    public static function render(string|BackedEnum|UnitEnum $component, array|ArrayInterface $props = []): Response
     {
         return static::instance()
             ->render(
