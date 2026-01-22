@@ -6,7 +6,7 @@ namespace Inertia\Support;
 
 enum SessionKey: string
 {
-    /*
+    /**
      * Session key for clearing the Inertia history.
      */
     case ClearHistory = 'inertia.clear_history';

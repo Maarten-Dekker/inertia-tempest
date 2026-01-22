@@ -50,9 +50,6 @@ final class ExampleMiddleware extends Middleware
 
         return [
             ...parent::share($request),
-            'flash' => [
-                'message' => fn () => $this->session->get('message'),
-            ],
         ];
     }
 }
