@@ -8,6 +8,7 @@ use Inertia\Middleware\EncryptHistoryMiddleware;
 use Inertia\Middleware\Middleware;
 use Inertia\Response;
 use Tempest\Http\Request;
+use Tempest\Http\Responses\Back;
 use Tempest\Http\Responses\Redirect;
 use Tempest\Router\Get;
 use Tempest\Router\Put;
@@ -255,5 +256,49 @@ final class TestController
             ->with(['foo' => 'bar', 'baz' => 'qux'])
             ->with(['quux' => 'corge'])
             ->with(new ExampleInertiaPropsProvider(['grault' => 'garply']));
+    }
+
+    #[Get('/flash-test', middleware: [Middleware::class])]
+    public function flashTest(): Back
+    {
+        return inertia()->flash(['message' => 'Success!'])->back();
+    }
+
+    #[Get('/flash-render-test', middleware: [Middleware::class])]
+    public function flashRenderTest(): Response
+    {
+        return inertia()
+            ->flash('type', 'success')
+            ->render('User/Edit', ['user' => 'Jonathan'])
+            ->flash(['message' => 'User updated!']);
+    }
+
+    #[Get('/no-flash-test', middleware: [Middleware::class])]
+    public function noFlashTest(): Response
+    {
+        return inertia()->render('User/Edit', ['user' => 'Jonathan']);
+    }
+
+    #[Get('/multiple-flash-test', middleware: [Middleware::class])]
+    public function multipleFlashTest(): Response
+    {
+        inertia()->flash('foo', 'value1');
+        inertia()->flash('bar', 'value2');
+
+        return inertia()->render('User/Show');
+    }
+
+    #[Get('/action')]
+    public function actionWithRedirect(): Redirect
+    {
+        inertia()->flash('message', 'Success!');
+
+        return new Redirect('/dashboard');
+    }
+
+    #[Get('/dashboard', middleware: [Middleware::class])]
+    public function dashboard(): Response
+    {
+        return inertia()->render('Dashboard');
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Inertia;
 
+use BackedEnum;
 use Closure;
 use DateInterval;
 use DateTimeImmutable;
@@ -24,6 +25,7 @@ use Inertia\Support\Header;
 use Inertia\Support\PaginatorAdapter;
 use Inertia\Support\PropertyContext;
 use Inertia\Support\RenderContext;
+use Inertia\Support\SessionKey;
 use Inertia\Views\InertiaView;
 use Tempest\Http\ContentType;
 use Tempest\Http\IsResponse;
@@ -34,6 +36,7 @@ use Tempest\Http\Status;
 use Tempest\Support\Arr;
 use Tempest\Support\Arr\ArrayInterface;
 use Tempest\Support\Paginator\PaginatedData;
+use UnitEnum;
 
 use function Tempest\get;
 use function Tempest\invoke;
@@ -71,7 +74,7 @@ final class Response implements HttpResponse
     /**
      * Create a new Inertia response instance.
      *
-     * @param  array<array-key, mixed|ProvidesInertiaProperties>  $props
+     * @param array<array-key, mixed|ProvidesInertiaProperties> $props
      */
     public function __construct(
         private readonly string $component,
@@ -92,13 +95,14 @@ final class Response implements HttpResponse
                     'props' => $resolvedProps,
                     'url' => $this->getUrl(),
                     'version' => $this->version,
-                    'clearHistory' => $this->session->consume('inertia.clear_history', $this->clearHistory),
+                    'clearHistory' => $this->session->consume(SessionKey::ClearHistory->value, $this->clearHistory),
                     'encryptHistory' => $this->encryptHistory,
                 ],
                 $this->resolveMergeProps(),
                 $this->resolveDeferredProps(),
                 $this->resolveCacheDirections(),
                 $this->resolveScrollProps(),
+                $this->resolveFlashData(),
             );
 
             return $this->resolveBody($page);
@@ -108,7 +112,7 @@ final class Response implements HttpResponse
     /**
      * Add additional properties to the page.
      *
-     * @param  string|array<string, mixed>|ProvidesInertiaProperties $key
+     * @param string|array<string, mixed>|ProvidesInertiaProperties $key
      */
     public function with(string|array|ProvidesInertiaProperties $key, mixed $value = null): self
     {
@@ -148,7 +152,7 @@ final class Response implements HttpResponse
     /**
      * Set the cache duration for the response.
      *
-     * @param  string|array<int, mixed>  $cacheFor
+     * @param string|array<int, mixed> $cacheFor
      */
     public function cache(string|array $cacheFor): self
     {
@@ -158,9 +162,21 @@ final class Response implements HttpResponse
     }
 
     /**
+     * Add flash data to the response.
+     *
+     * @param BackedEnum|UnitEnum|string|array<string, mixed> $key
+     */
+    public function flash(BackedEnum|UnitEnum|string|array $key, mixed $value = null): self
+    {
+        inertia()->flash($key, $value);
+
+        return $this;
+    }
+
+    /**
      * Resolve the properties for the response.
      *
-     * @param  array<array-key, mixed>  $props
+     * @param array<array-key, mixed> $props
      * @return array<string, mixed>
      */
     public function resolveProperties(array $props): array
@@ -175,7 +191,7 @@ final class Response implements HttpResponse
     /**
      * Resolve the ProvidesInertiaProperties props.
      *
-     * @param  array<array-key, mixed>  $props
+     * @param array<array-key, mixed> $props
      * @return array<string, mixed>
      */
     public function resolveInertiaPropsProviders(array $props): array
@@ -203,7 +219,7 @@ final class Response implements HttpResponse
      * 'only' and 'except' headers from the client, allowing for selective
      * data loading to improve performance.
      *
-     * @param  array<string, mixed>  $props
+     * @param array<string, mixed> $props
      * @return array<string, mixed>
      */
     public function resolvePartialProperties(array $props): array
@@ -241,7 +257,7 @@ final class Response implements HttpResponse
     /**
      * Resolve `always` properties that should always be included.
      *
-     * @param  array<string, mixed>  $props
+     * @param array<string, mixed> $props
      * @return array<string, mixed>
      */
     public function resolveAlways(array $props): array
@@ -254,7 +270,7 @@ final class Response implements HttpResponse
     /**
      * Resolve all necessary class instances in the given props.
      *
-     * @param  array<string, mixed>  $props
+     * @param array<string, mixed> $props
      * @return array<string, mixed>
      */
     public function resolvePropertyInstances(
@@ -475,6 +491,18 @@ final class Response implements HttpResponse
         }
 
         return ['scrollProps' => $scrollPropsResult];
+    }
+
+    /**
+     * Resolve flash data from the session.
+     *
+     * @return array<string, mixed>
+     */
+    private function resolveFlashData(): array
+    {
+        $flash = inertia()->getFlashed();
+
+        return $flash !== [] ? ['flash' => $flash] : [];
     }
 
     /**

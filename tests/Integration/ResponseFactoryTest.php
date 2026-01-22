@@ -16,11 +16,13 @@ use Inertia\Props\ScrollProp;
 use Inertia\ResponseFactory;
 use Inertia\Support\Header;
 use Inertia\Support\ScrollMetadata;
+use Inertia\Support\SessionKey;
 use Inertia\Tests\Fixtures\TestController;
 use Inertia\Tests\TestCase;
 use Tempest\Http\ContentType;
 use Tempest\Http\Response;
 use Tempest\Http\Responses\Redirect;
+use Tempest\Http\Session\Session;
 use Tempest\Http\Status;
 
 use function Tempest\Router\uri;
@@ -442,5 +444,68 @@ final class ResponseFactoryTest extends TestCase
                 putenv("INERTIA_ENSURE_PAGES_EXISTS={$originalEnv}");
             }
         }
+    }
+
+    public function test_flash_data_is_flashed_to_session_on_redirect(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'flashTest']),
+            headers: [
+                Header::INERTIA => 'true',
+            ],
+        );
+
+        $session = $this->container->get(Session::class);
+
+        $response->assertRedirect();
+        $this->assertSame(['message' => 'Success!'], $session->get(SessionKey::FlashData->value));
+    }
+
+    public function test_render_with_flash_includes_flash_in_page(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'flashRenderTest']),
+            headers: [
+                Header::INERTIA => 'true',
+            ],
+        );
+
+        $session = $this->container->get(Session::class);
+        $session->cleanup();
+
+        $page = $response->body;
+
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertSame('Jonathan', $page['props']['user']);
+        $this->assertSame('User updated!', $page['flash']['message']);
+        $this->assertSame('success', $page['flash']['type']);
+        $this->assertArrayNotHasKey(SessionKey::FlashData->value, $session->all());
+    }
+
+    public function test_render_without_flash_does_not_include_flash_key(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'noFlashTest']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $page = $response->body;
+
+        $this->assertArrayNotHasKey('flash', $page);
+        $this->assertSame('User/Edit', $page['component']);
+    }
+
+    public function test_multiple_flash_calls_are_merged(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'multipleFlashTest']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $page = $response->body;
+
+        $this->assertArrayHasKey('flash', $page);
+        $this->assertSame('value1', $page['flash']['foo']);
+        $this->assertSame('value2', $page['flash']['bar']);
     }
 }
