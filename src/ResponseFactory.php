@@ -100,7 +100,7 @@ final class ResponseFactory
      * included with every response, making it ideal for user authentication
      * state, flash messages, etc.
      *
-     * @param  string|array<array-key, mixed>|ArrayInterface<array-key, mixed> $key
+     * @param string|array<array-key, mixed>|ArrayInterface<array-key, mixed> $key
      */
     public function share(string|array|ArrayInterface|ProvidesInertiaProperties $key, mixed $value = null): void
     {
@@ -308,7 +308,7 @@ final class ResponseFactory
      * flash data is not persisted in the browser's history state, making it
      * ideal for one-time notifications like toasts or highlights.
      *
-     * @param  array<string, mixed>  $key
+     * @param BackedEnum|UnitEnum|string|array<string, mixed> $key
      */
     public function flash(BackedEnum|UnitEnum|string|array $key, mixed $value = null): self
     {

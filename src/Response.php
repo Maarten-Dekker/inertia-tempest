@@ -74,7 +74,7 @@ final class Response implements HttpResponse
     /**
      * Create a new Inertia response instance.
      *
-     * @param  array<array-key, mixed|ProvidesInertiaProperties>  $props
+     * @param array<array-key, mixed|ProvidesInertiaProperties> $props
      */
     public function __construct(
         private readonly string $component,
@@ -112,7 +112,7 @@ final class Response implements HttpResponse
     /**
      * Add additional properties to the page.
      *
-     * @param  string|array<string, mixed>|ProvidesInertiaProperties $key
+     * @param string|array<string, mixed>|ProvidesInertiaProperties $key
      */
     public function with(string|array|ProvidesInertiaProperties $key, mixed $value = null): self
     {
@@ -152,7 +152,7 @@ final class Response implements HttpResponse
     /**
      * Set the cache duration for the response.
      *
-     * @param  string|array<int, mixed>  $cacheFor
+     * @param string|array<int, mixed> $cacheFor
      */
     public function cache(string|array $cacheFor): self
     {
@@ -164,7 +164,7 @@ final class Response implements HttpResponse
     /**
      * Add flash data to the response.
      *
-     * @param  array<string, mixed>  $key
+     * @param BackedEnum|UnitEnum|string|array<string, mixed> $key
      */
     public function flash(BackedEnum|UnitEnum|string|array $key, mixed $value = null): self
     {
@@ -176,7 +176,7 @@ final class Response implements HttpResponse
     /**
      * Resolve the properties for the response.
      *
-     * @param  array<array-key, mixed>  $props
+     * @param array<array-key, mixed> $props
      * @return array<string, mixed>
      */
     public function resolveProperties(array $props): array
@@ -191,7 +191,7 @@ final class Response implements HttpResponse
     /**
      * Resolve the ProvidesInertiaProperties props.
      *
-     * @param  array<array-key, mixed>  $props
+     * @param array<array-key, mixed> $props
      * @return array<string, mixed>
      */
     public function resolveInertiaPropsProviders(array $props): array
@@ -219,7 +219,7 @@ final class Response implements HttpResponse
      * 'only' and 'except' headers from the client, allowing for selective
      * data loading to improve performance.
      *
-     * @param  array<string, mixed>  $props
+     * @param array<string, mixed> $props
      * @return array<string, mixed>
      */
     public function resolvePartialProperties(array $props): array
@@ -257,7 +257,7 @@ final class Response implements HttpResponse
     /**
      * Resolve `always` properties that should always be included.
      *
-     * @param  array<string, mixed>  $props
+     * @param array<string, mixed> $props
      * @return array<string, mixed>
      */
     public function resolveAlways(array $props): array
@@ -270,7 +270,7 @@ final class Response implements HttpResponse
     /**
      * Resolve all necessary class instances in the given props.
      *
-     * @param  array<string, mixed>  $props
+     * @param array<string, mixed> $props
      * @return array<string, mixed>
      */
     public function resolvePropertyInstances(
