@@ -9,7 +9,6 @@ use Inertia\Middleware\Middleware;
 use LogicException;
 use Override;
 use Tempest\Discovery\SkipDiscovery;
-use Tempest\Http\Request;
 use Tempest\Http\Response;
 
 #[SkipDiscovery]
@@ -44,12 +43,12 @@ final class ExampleMiddleware extends Middleware
     }
 
     #[\Override]
-    public function share(Request $request): array
+    public function share(): array
     {
         self::$runCount++;
 
         return [
-            ...parent::share($request),
+            ...parent::share(),
         ];
     }
 }
