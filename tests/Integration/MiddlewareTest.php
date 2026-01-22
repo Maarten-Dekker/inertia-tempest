@@ -385,4 +385,20 @@ final class MiddlewareTest extends TestCase
 
         $this->assertSame(1, ExampleMiddleware::$runCount);
     }
+
+    public function test_flash_data_is_preserved_on_non_inertia_redirect(): void
+    {
+        $firstResponse = $this->http->get(uri: uri([TestController::class, 'actionWithRedirect']));
+
+        $firstResponse->assertRedirect('/dashboard');
+
+        $secondResponse = $this->http->get(
+            uri: uri([TestController::class, 'dashboard']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $page = $secondResponse->body;
+
+        $this->assertSame('Success!', $page['flash']['message']);
+    }
 }

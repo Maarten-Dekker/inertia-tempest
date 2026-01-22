@@ -10,6 +10,7 @@ use Inertia\Response as InertiaResponse;
 use Inertia\ResponseFactory;
 use Inertia\Support\Header;
 use Inertia\Support\ResolveErrorProps;
+use Inertia\Support\SessionKey;
 use Override;
 use Tempest\Auth\Authentication\Authenticator;
 use Tempest\Core\Priority;
@@ -30,8 +31,8 @@ use function Tempest\root_path;
 class Middleware implements HttpMiddleware
 {
     public function __construct(
-        private readonly ResponseFactory $inertia,
-        private readonly Session $session,
+        protected readonly ResponseFactory $inertia,
+        protected readonly Session $session,
         private readonly ViteConfig $viteConfig,
         private readonly ResolveErrorProps $errorResolver,
     ) {}
@@ -138,6 +139,10 @@ class Middleware implements HttpMiddleware
             value: Header::INERTIA,
         );
 
+        if ($response->status->isRedirect()) {
+            $this->reflash();
+        }
+
         if (! $request->headers->has(Header::INERTIA) || $response instanceof InertiaResponse) {
             return $response;
         }
@@ -164,6 +169,18 @@ class Middleware implements HttpMiddleware
     }
 
     /**
+     * Reflash the session data for the next request.
+     */
+    protected function reflash(): void
+    {
+        $flashed = $this->inertia->getFlashed();
+
+        if ($flashed !== []) {
+            $this->session->flash(SessionKey::FlashData->value, $flashed);
+        }
+    }
+
+    /**
      * Handle empty responses.
      */
     protected function onEmptyResponse(): Response
@@ -176,7 +193,7 @@ class Middleware implements HttpMiddleware
      */
     public function onVersionChange(Request $request): Response
     {
-        $this->session?->reflash();
+        $this->session->reflash();
 
         return $this->inertia->location($request->uri);
     }

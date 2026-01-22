@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Inertia;
 
+use BackedEnum;
 use Closure;
 use DateInterval;
 use DateTimeImmutable;
@@ -24,6 +25,7 @@ use Inertia\Support\Header;
 use Inertia\Support\PaginatorAdapter;
 use Inertia\Support\PropertyContext;
 use Inertia\Support\RenderContext;
+use Inertia\Support\SessionKey;
 use Inertia\Views\InertiaView;
 use Tempest\Http\ContentType;
 use Tempest\Http\IsResponse;
@@ -34,6 +36,7 @@ use Tempest\Http\Status;
 use Tempest\Support\Arr;
 use Tempest\Support\Arr\ArrayInterface;
 use Tempest\Support\Paginator\PaginatedData;
+use UnitEnum;
 
 use function Tempest\get;
 use function Tempest\invoke;
@@ -92,13 +95,14 @@ final class Response implements HttpResponse
                     'props' => $resolvedProps,
                     'url' => $this->getUrl(),
                     'version' => $this->version,
-                    'clearHistory' => $this->resolveClearHistory(),
+                    'clearHistory' => $this->session->consume(SessionKey::ClearHistory->value, $this->clearHistory),
                     'encryptHistory' => $this->encryptHistory,
                 ],
                 $this->resolveMergeProps(),
                 $this->resolveDeferredProps(),
                 $this->resolveCacheDirections(),
                 $this->resolveScrollProps(),
+                $this->resolveFlashData(),
             );
 
             return $this->resolveBody($page);
@@ -153,6 +157,18 @@ final class Response implements HttpResponse
     public function cache(string|array $cacheFor): self
     {
         $this->cacheFor = is_array($cacheFor) ? $cacheFor : [$cacheFor];
+
+        return $this;
+    }
+
+    /**
+     * Add flash data to the response.
+     *
+     * @param  array<string, mixed>  $key
+     */
+    public function flash(BackedEnum|UnitEnum|string|array $key, mixed $value = null): self
+    {
+        inertia()->flash($key, $value);
 
         return $this;
     }
@@ -478,6 +494,18 @@ final class Response implements HttpResponse
     }
 
     /**
+     * Resolve flash data from the session.
+     *
+     * @return array<string, mixed>
+     */
+    private function resolveFlashData(): array
+    {
+        $flash = inertia()->getFlashed();
+
+        return $flash !== [] ? ['flash' => $flash] : [];
+    }
+
+    /**
      * Determine if the request is a partial request.
      */
     public function isPartial(): bool
@@ -493,14 +521,6 @@ final class Response implements HttpResponse
     private function normalizeProps(array|ArrayInterface $props): array
     {
         return $props instanceof ArrayInterface ? $props->toArray() : $props;
-    }
-
-    /**
-     * Resolve the clear history flag from the session.
-     */
-    private function resolveClearHistory(): bool
-    {
-        return $this->session->get('inertia.clear_history', $this->clearHistory);
     }
 
     /**

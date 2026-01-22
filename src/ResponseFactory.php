@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Inertia;
 
+use BackedEnum;
 use Closure;
 use Deprecated;
 use Inertia\Configs\InertiaConfig;
@@ -17,14 +18,17 @@ use Inertia\Props\MergeProp;
 use Inertia\Props\OptionalProp;
 use Inertia\Props\ScrollProp;
 use Inertia\Support\Header;
+use Inertia\Support\SessionKey;
 use Tempest\Container\Singleton;
 use Tempest\Http\GenericResponse;
 use Tempest\Http\Request;
+use Tempest\Http\Responses\Back;
 use Tempest\Http\Responses\Redirect;
 use Tempest\Http\Session\Session;
 use Tempest\Http\Status;
 use Tempest\Support\Arr;
 use Tempest\Support\Arr\ArrayInterface;
+use UnitEnum;
 
 use function Tempest\get;
 use function Tempest\invoke;
@@ -172,7 +176,7 @@ final class ResponseFactory
      */
     public function clearHistory(): void
     {
-        $this->session->set('inertia.clear_history', true);
+        $this->session->set(SessionKey::ClearHistory->value, true);
     }
 
     /**
@@ -297,6 +301,56 @@ final class ResponseFactory
         }
 
         return $url instanceof Redirect ? $url : new Redirect($url);
+    }
+
+    /**
+     * Flash data to be included with the next response. Unlike regular props,
+     * flash data is not persisted in the browser's history state, making it
+     * ideal for one-time notifications like toasts or highlights.
+     *
+     * @param  array<string, mixed>  $key
+     */
+    public function flash(BackedEnum|UnitEnum|string|array $key, mixed $value = null): self
+    {
+        $flash = $key;
+
+        if (! is_array($key)) {
+            $key = match (true) {
+                $key instanceof BackedEnum => $key->value,
+                $key instanceof UnitEnum => $key->name,
+                default => $key,
+            };
+
+            $flash = [$key => $value];
+        }
+
+        $this->session->flash(
+            SessionKey::FlashData->value,
+            [
+                ...$this->getFlashed(),
+                ...$flash,
+            ],
+        );
+
+        return $this;
+    }
+
+    /**
+     * Create a new redirect response to the previous location.
+     */
+    public function back(?string $fallback = null): Back
+    {
+        return new Back($fallback);
+    }
+
+    /**
+     * Retrieve the flashed data from the session.
+     *
+     * @return array<string, mixed>
+     */
+    public function getFlashed(): array
+    {
+        return $this->session->get(SessionKey::FlashData->value) ?? [];
     }
 
     /**
