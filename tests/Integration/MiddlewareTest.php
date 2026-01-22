@@ -15,7 +15,6 @@ use Inertia\Tests\TestCase;
 use Inertia\Views\InertiaView;
 use LogicException;
 use Tempest\Http\ContentType;
-use Tempest\Http\Request;
 use Tempest\Http\Session\Session;
 use Tempest\Http\Status;
 use Tempest\Router\Exceptions\ControllerActionHadNoReturn;
@@ -165,10 +164,9 @@ final class MiddlewareTest extends TestCase
     public function test_validation_errors_are_registered_as_of_default(): void
     {
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
         $this->assertInstanceOf(Middleware::class, $middleware);
 
-        $sharedData = $middleware->share($request);
+        $sharedData = $middleware->share();
 
         $this->assertArrayHasKey('errors', $sharedData);
         $this->assertInstanceOf(AlwaysProp::class, $sharedData['errors']);
@@ -177,10 +175,9 @@ final class MiddlewareTest extends TestCase
     public function test_validation_errors_can_be_empty(): void
     {
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
         $this->assertInstanceOf(Middleware::class, $middleware);
 
-        $sharedData = $middleware->share($request);
+        $sharedData = $middleware->share();
         $errors = $sharedData['errors']();
 
         $this->assertEmpty($errors);
@@ -205,10 +202,9 @@ final class MiddlewareTest extends TestCase
         $session->set(Session::VALIDATION_ERRORS, $validationErrors);
 
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
         $this->assertInstanceOf(Middleware::class, $middleware);
 
-        $sharedData = $middleware->share($request);
+        $sharedData = $middleware->share();
         $errors = $sharedData['errors']();
 
         $this->assertSame('Email must be a valid email address', $errors['email']);
@@ -234,10 +230,9 @@ final class MiddlewareTest extends TestCase
         $session->set(Session::VALIDATION_ERRORS, $validationErrors);
 
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
         $this->assertInstanceOf(Middleware::class, $middleware);
 
-        $sharedData = $middleware->share($request);
+        $sharedData = $middleware->share();
         $errors = $sharedData['errors']();
 
         $this->assertSame(
@@ -270,13 +265,12 @@ final class MiddlewareTest extends TestCase
         $validationErrors = [
             'email' => [new Rules\IsNotEmptyString()],
         ];
-        $this->assertInstanceOf(\Tempest\Http\Session\Session::class, $session);
+        $this->assertInstanceOf(Session::class, $session);
         $session->set(Session::VALIDATION_ERRORS, $validationErrors);
 
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
-        $this->assertInstanceOf(\Inertia\Middleware\Middleware::class, $middleware);
-        $sharedData = $middleware->share($request);
+        $this->assertInstanceOf(Middleware::class, $middleware);
+        $sharedData = $middleware->share();
         $errors = $sharedData['errors']();
 
         $this->assertIsArray($errors);
@@ -298,13 +292,12 @@ final class MiddlewareTest extends TestCase
         $validationErrors = [
             'email' => [new Rules\IsNotEmptyString()],
         ];
-        $this->assertInstanceOf(\Tempest\Http\Session\Session::class, $session);
+        $this->assertInstanceOf(Session::class, $session);
         $session->set(Session::VALIDATION_ERRORS, $validationErrors);
 
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
-        $this->assertInstanceOf(\Inertia\Middleware\Middleware::class, $middleware);
-        $sharedData = $middleware->share($request);
+        $this->assertInstanceOf(Middleware::class, $middleware);
+        $sharedData = $middleware->share();
         $errors = $sharedData['errors']();
 
         $this->assertIsArray($errors);
