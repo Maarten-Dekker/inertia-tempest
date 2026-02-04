@@ -580,7 +580,7 @@ final class Response implements HttpResponse
      */
     private function getUrl(): string
     {
-        if ($this->urlResolver instanceof Closure) {
+        if ($this->urlResolver) {
             return invoke($this->urlResolver, ['request' => $this->request]);
         }
 
