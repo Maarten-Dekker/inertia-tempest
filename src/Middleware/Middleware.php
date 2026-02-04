@@ -115,7 +115,8 @@ class Middleware implements HttpMiddleware
         $this->inertia->share($this->share($request));
         $this->inertia->setRootView($this->rootView());
 
-        if (($urlResolver = $this->urlResolver()) instanceof Closure) {
+        $urlResolver = $this->urlResolver();
+        if ($urlResolver) {
             $this->inertia->resolveUrlUsing($urlResolver);
         }
 
