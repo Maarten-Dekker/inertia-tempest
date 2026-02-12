@@ -1,21 +1,22 @@
 php-version = "8.4.0"
 
 [source]
-paths = ["src", "tests"]
+workspace = "."
+paths = ["src/", "tests/"]
 includes = ["vendor"]
 excludes = []
 
 [formatter]
+preset = "default"
 space-after-logical-not-unary-prefix-operator = true
 space-before-arrow-function-parameter-list-parenthesis = true
 always-break-named-arguments-list = true
 
 [linter]
-integrations = ["tempest", "phpunit"]
+integrations = ["phpunit", "tempest"]
 
 [linter.rules]
 literal-named-argument = { enabled = false }
-return-type = { ignore-arrow-function = true }
 no-boolean-flag-parameter = { enabled = false }
 assertion-style = { style = "$this"}
 class-name = { enabled = false}
@@ -30,5 +31,13 @@ kan-defect = { enabled = false }
 cyclomatic-complexity = { enabled = false }
 yoda-conditions = { enabled = false }
 no-redundant-file = { enabled = false }
+no-isset = { enabled = false }
 
 [analyzer]
+plugins = []
+analyze-dead-code = true
+memoize-properties = true
+check-missing-override = true
+check-missing-type-hints = true
+register-super-globals = true
+check-use-statements = true

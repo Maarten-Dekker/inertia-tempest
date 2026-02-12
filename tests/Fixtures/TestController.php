@@ -121,7 +121,7 @@ final class TestController
     #[Get('/numeric-version-test')]
     public function numericVersion(): Response
     {
-        inertia()->version(1597347897973);
+        inertia()->version(1_597_347_897_973);
 
         return inertia()->render('User/Edit');
     }

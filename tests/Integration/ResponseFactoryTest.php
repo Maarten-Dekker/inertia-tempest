@@ -19,6 +19,7 @@ use Inertia\Support\ScrollMetadata;
 use Inertia\Support\SessionKey;
 use Inertia\Tests\Fixtures\TestController;
 use Inertia\Tests\TestCase;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use Tempest\Http\ContentType;
 use Tempest\Http\Response;
 use Tempest\Http\Responses\Redirect;
@@ -213,12 +214,9 @@ final class ResponseFactoryTest extends TestCase
         $this->assertSame([], inertia()->getShared());
     }
 
+    #[IgnoreDeprecations]
     public function test_can_create_lazy_prop(): void
     {
-        $this->expectUserDeprecationMessage('Method '
-        . ResponseFactory::class
-        . '::lazy() is deprecated, Use `optional` instead.');
-
         $lazyProp = $this->factory->lazy(static fn (): string => 'A lazy value');
 
         $this->assertInstanceOf(LazyProp::class, $lazyProp);
