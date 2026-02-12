@@ -17,7 +17,6 @@ final class ScrollPropTest extends TestCase
 {
     private PaginatedData $users;
 
-    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();

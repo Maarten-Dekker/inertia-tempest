@@ -26,7 +26,6 @@ use function Tempest\Router\uri;
 
 final class MiddlewareTest extends TestCase
 {
-    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
@@ -94,7 +93,7 @@ final class MiddlewareTest extends TestCase
 
     public function test_the_version_can_be_a_number(): void
     {
-        $version = 1597347897973;
+        $version = 1_597_347_897_973;
 
         $response = $this->http->get(
             uri: uri([TestController::class, 'numericVersion']),

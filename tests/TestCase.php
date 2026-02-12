@@ -30,7 +30,6 @@ abstract class TestCase extends IntegrationTest
         'clearHistory' => false,
     ];
 
-    #[Override]
     protected function setUp(): void
     {
         $this->discoveryLocations[] = new DiscoveryLocation(

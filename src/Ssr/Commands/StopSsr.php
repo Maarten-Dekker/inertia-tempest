@@ -45,7 +45,7 @@ final readonly class StopSsr
         }
 
         for ($i = 0; $i < 10; $i++) {
-            usleep(200000);
+            usleep(200_000);
 
             if (($this->checkSsrCommand)(silent: true)->value === ExitCode::ERROR->value) {
                 if (! $silent) {

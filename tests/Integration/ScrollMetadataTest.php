@@ -18,7 +18,6 @@ final class ScrollMetadataTest extends TestCase
 {
     private array $users;
 
-    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
