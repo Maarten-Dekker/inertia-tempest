@@ -7,37 +7,25 @@ namespace Inertia\Tests\Integration;
 use Inertia\Configs\InertiaConfig;
 use Inertia\Support\PaginatorAdapter;
 use Inertia\Support\ScrollMetadata;
-use Inertia\Tests\Fixtures\CreateUserTable;
 use Inertia\Tests\Fixtures\User;
-use Inertia\Tests\Fixtures\UserSeeder;
 use Inertia\Tests\TestCase;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\PreCondition;
+use PHPUnit\Framework\Attributes\Test;
 use Tempest\Support\Paginator\Paginator;
 
 final class ScrollMetadataTest extends TestCase
 {
     private array $users;
 
-    protected function setUp(): void
+    #[PreCondition]
+    protected function configure(): void
     {
-        parent::setUp();
-
-        $this->database->setup();
-
-        $seeder = $this->container->get(UserSeeder::class);
-        $this->assertInstanceOf(UserSeeder::class, $seeder);
-        $seeder->run(null);
-
         $this->users = User::all();
     }
 
-    #[\Override]
-    protected function migrateDatabase(): void
-    {
-        $this->database->migrate(CreateUserTable::class);
-    }
-
-    public function test_extract_metadata_from_tempest_paginator(): void
+    #[Test]
+    public function extract_metadata_from_tempest_paginator(): void
     {
         $this->assertCount(40, $this->users);
 
@@ -90,7 +78,8 @@ final class ScrollMetadataTest extends TestCase
         );
     }
 
-    public function test_extract_metadata_when_laravel_adapter_is_used(): void
+    #[Test]
+    public function extract_metadata_when_laravel_adapter_is_used(): void
     {
         $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(laravel_pagination: true));
 
@@ -151,7 +140,8 @@ final class ScrollMetadataTest extends TestCase
         );
     }
 
-    public function test_throws_exception_if_not_a_paginator(): void
+    #[Test]
+    public function throws_exception_if_not_a_paginator(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('The given value is not a supported Tempest or Laravel paginator instance.');

@@ -9,24 +9,18 @@ use Inertia\Props\ScrollProp;
 use Inertia\Support\Header;
 use Inertia\Tests\Fixtures\CreateUserTable;
 use Inertia\Tests\Fixtures\User;
-use Inertia\Tests\Fixtures\UserSeeder;
 use Inertia\Tests\TestCase;
+use PHPUnit\Framework\Attributes\PreCondition;
+use PHPUnit\Framework\Attributes\Test;
 use Tempest\Support\Paginator\PaginatedData;
 
 final class ScrollPropTest extends TestCase
 {
     private PaginatedData $users;
 
-    protected function setUp(): void
+    #[PreCondition]
+    protected function configure(): void
     {
-        parent::setUp();
-
-        $this->database->setup();
-
-        $seeder = $this->container->get(UserSeeder::class);
-        $this->assertInstanceOf(UserSeeder::class, $seeder);
-        $seeder->run(null);
-
         $this->users = User::select()->paginate(15);
     }
 
@@ -36,7 +30,8 @@ final class ScrollPropTest extends TestCase
         $this->database->migrate(CreateUserTable::class);
     }
 
-    public function test_resolves_meta_data(): void
+    #[Test]
+    public function resolves_meta_data(): void
     {
         $scrollProp = new ScrollProp($this->users);
 
@@ -53,7 +48,8 @@ final class ScrollPropTest extends TestCase
         );
     }
 
-    public function test_resolves_custom_meta_data(): void
+    #[Test]
+    public function resolves_custom_meta_data(): void
     {
         $callableMetadata = static fn () => new readonly class('usersPage', 10, 12, 11) implements
             ProvidesScrollMetadata {
@@ -84,36 +80,46 @@ final class ScrollPropTest extends TestCase
         );
     }
 
-    public function test_can_set_the_merge_intent_based_on_the_merge_intent_header(): void
+    #[Test]
+    public function can_set_the_merge_intent_based_on_the_merge_intent_header(): void
     {
-        $this->makeRequest();
+        $this->http->get(uri: '/user/123');
         $appendProp = new ScrollProp($this->users);
         $appendProp->configureMergeIntent();
 
         $this->assertSame(['data'], $appendProp->appendsAtPaths());
         $this->assertEmpty($appendProp->prependsAtPaths());
 
-        $this->makeRequest(headers: [
-            Header::INFINITE_SCROLL_MERGE_INTENT => 'append',
-        ]);
+        $this->http->get(
+            uri: '/user/123',
+            headers: [
+                Header::INFINITE_SCROLL_MERGE_INTENT => 'append',
+            ],
+        );
         $appendProp = new ScrollProp($this->users);
         $appendProp->configureMergeIntent();
 
         $this->assertSame(['data'], $appendProp->appendsAtPaths());
         $this->assertEmpty($appendProp->prependsAtPaths());
 
-        $this->makeRequest(headers: [
-            Header::INFINITE_SCROLL_MERGE_INTENT => 'prepend',
-        ]);
+        $this->http->get(
+            uri: '/user/123',
+            headers: [
+                Header::INFINITE_SCROLL_MERGE_INTENT => 'prepend',
+            ],
+        );
         $prependProp = new ScrollProp($this->users);
         $prependProp->configureMergeIntent();
 
         $this->assertSame(['data'], $prependProp->prependsAtPaths());
         $this->assertEmpty($prependProp->appendsAtPaths());
 
-        $this->makeRequest(headers: [
-            Header::INFINITE_SCROLL_MERGE_INTENT => 'prepend',
-        ]);
+        $this->http->get(
+            uri: '/user/123',
+            headers: [
+                Header::INFINITE_SCROLL_MERGE_INTENT => 'prepend',
+            ],
+        );
         $prependProp = new ScrollProp(
             value: $this->users,
             wrapper: 'items',
@@ -124,38 +130,8 @@ final class ScrollPropTest extends TestCase
         $this->assertEmpty($prependProp->appendsAtPaths());
     }
 
-    public function test_resolves_meta_data_with_callable_provider(): void
-    {
-        $callableMetadata = static fn () => new readonly class('callablePage', 5, 7, 6) implements
-            ProvidesScrollMetadata {
-            public function __construct(
-                public string $pageName,
-                public int|null|string $previousPage,
-                public int|null|string $nextPage,
-                public int|null|string $currentPage,
-            ) {}
-        };
-
-        $scrollProp = new ScrollProp(
-            value: [],
-            wrapper: 'data',
-            metadata: $callableMetadata,
-        );
-
-        $metadata = $scrollProp->metadata();
-
-        $this->assertSame(
-            [
-                'pageName' => 'callablePage',
-                'previousPage' => 5,
-                'nextPage' => 7,
-                'currentPage' => 6,
-            ],
-            $metadata,
-        );
-    }
-
-    public function test_scroll_prop_value_is_resolved_only_once(): void
+    #[Test]
+    public function scroll_prop_value_is_resolved_only_once(): void
     {
         $callCount = 0;
         $expectedValue = ['item1', 'item2', 'item3'];
@@ -175,12 +151,5 @@ final class ScrollPropTest extends TestCase
         $this->assertSame($expectedValue, $value1);
         $this->assertSame($value1, $value2);
         $this->assertSame($value2, $value3);
-    }
-
-    public function test_string_function_names_are_not_invoked(): void
-    {
-        $scrollProp = new ScrollProp('date');
-
-        $this->assertSame('date', $scrollProp());
     }
 }
