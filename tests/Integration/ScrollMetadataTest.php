@@ -8,6 +8,7 @@ use Inertia\Configs\InertiaConfig;
 use Inertia\Support\PaginatorAdapter;
 use Inertia\Support\ScrollMetadata;
 use Inertia\Tests\Fixtures\User;
+use Inertia\Tests\Fixtures\UserSeeder;
 use Inertia\Tests\TestCase;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\PreCondition;
@@ -16,11 +17,21 @@ use Tempest\Support\Paginator\Paginator;
 
 final class ScrollMetadataTest extends TestCase
 {
+    private static bool $dbInitialized = false;
+
     private array $users;
 
     #[PreCondition]
     protected function configure(): void
     {
+        if (! self::$dbInitialized) {
+            $this->database->setup();
+
+            new UserSeeder()->run(null);
+
+            self::$dbInitialized = true;
+        }
+
         $this->users = User::all();
     }
 

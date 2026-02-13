@@ -9,6 +9,7 @@ use Inertia\Props\ScrollProp;
 use Inertia\Support\Header;
 use Inertia\Tests\Fixtures\CreateUserTable;
 use Inertia\Tests\Fixtures\User;
+use Inertia\Tests\Fixtures\UserSeeder;
 use Inertia\Tests\TestCase;
 use PHPUnit\Framework\Attributes\PreCondition;
 use PHPUnit\Framework\Attributes\Test;
@@ -16,11 +17,21 @@ use Tempest\Support\Paginator\PaginatedData;
 
 final class ScrollPropTest extends TestCase
 {
+    private static bool $dbInitialized = false;
+
     private PaginatedData $users;
 
     #[PreCondition]
     protected function configure(): void
     {
+        if (! self::$dbInitialized) {
+            $this->database->setup();
+
+            new UserSeeder()->run(null);
+
+            self::$dbInitialized = true;
+        }
+
         $this->users = User::select()->paginate(15);
     }
 
