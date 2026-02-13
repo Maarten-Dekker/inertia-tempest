@@ -30,13 +30,19 @@ final class TestController
         return inertia()->render('User/Edit');
     }
 
-    #[Get('/basic-render-with-example-middleware-test', middleware: [ExampleMiddleware::class])]
-    public function basicRenderWithExampleMiddleware(): Response
+    #[Get('/basic-render-with-root-view-property', middleware: [RootViewPropertyMiddleware::class])]
+    public function basicRenderWithRootViewPropertyMiddleware(): Response
     {
         return inertia()->render('User/Edit');
     }
 
-    #[Get('/version-test-with-helper', middleware: [ExampleMiddleware::class])]
+    #[Get('/basic-render-with-root-view-method', middleware: [RootViewMethodMiddleware::class])]
+    public function basicRenderWithRootViewMethodMiddleware(): Response
+    {
+        return inertia()->render('User/Edit');
+    }
+
+    #[Get('/version-test-with-helper', middleware: [RootViewMethodMiddleware::class])]
     public function versionCanBeAClosure(): Response
     {
         inertia()->version(static fn () => 'test-version-from-closure');
@@ -112,7 +118,7 @@ final class TestController
         self::$voidActionCalled = true;
     }
 
-    #[Get('/custom-empty-response', middleware: [ExampleMiddleware::class])]
+    #[Get('/custom-empty-response', middleware: [RootViewMethodMiddleware::class])]
     public function customEmptyResponseAction(): void
     {
         // This action intentionally returns nothing.

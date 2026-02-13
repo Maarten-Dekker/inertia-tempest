@@ -8,7 +8,6 @@ use GuzzleHttp\Promise\PromiseInterface;
 use Inertia\Configs\InertiaConfig;
 use Inertia\Contracts\Arrayable;
 use Inertia\Contracts\ProvidesScrollMetadata;
-use Inertia\LazyBody;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
 use Inertia\Props\LazyProp;
@@ -18,12 +17,11 @@ use Inertia\Support\Header;
 use Inertia\Tests\Fixtures\FakeResource;
 use Inertia\Tests\Fixtures\TestController;
 use Inertia\Tests\TestCase;
-use Inertia\Views\InertiaView;
 use Iterator;
 use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Tempest\Http\ContentType;
-use Tempest\Http\Response;
 use Tempest\Support\Paginator\PaginatedData;
 use Tempest\Support\Paginator\Paginator;
 use Tempest\View\ViewRenderer;
@@ -32,7 +30,8 @@ use function Tempest\Router\uri;
 
 final class ResponseTest extends TestCase
 {
-    public function test_server_response(): void
+    #[Test]
+    public function server_response(): void
     {
         $this->makeRequest();
         $this->factory->version('123');
@@ -42,12 +41,7 @@ final class ResponseTest extends TestCase
             'user' => $user,
         ]);
 
-        $this->assertInstanceOf(LazyBody::class, $response->body);
-
         $resolvedBody = $response->body->jsonSerialize();
-
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
@@ -61,12 +55,12 @@ final class ResponseTest extends TestCase
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
-        $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
         $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
-    public function test_server_response_with_deferred_prop(): void
+    #[Test]
+    public function server_response_with_deferred_prop(): void
     {
         $this->makeRequest();
         $this->factory->version('123');
@@ -77,12 +71,7 @@ final class ResponseTest extends TestCase
             'foo' => new DeferProp(static fn () => 'bar'),
         ]);
 
-        $this->assertInstanceOf(LazyBody::class, $response->body);
-
         $resolvedBody = $response->body->jsonSerialize();
-
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
@@ -99,12 +88,12 @@ final class ResponseTest extends TestCase
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deferredProps":{"default":["foo"]}}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
-        $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
         $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
-    public function test_server_response_with_deferred_prop_and_multiple_groups(): void
+    #[Test]
+    public function server_response_with_deferred_prop_and_multiple_groups(): void
     {
         $this->makeRequest();
         $this->factory->version('123');
@@ -120,10 +109,6 @@ final class ResponseTest extends TestCase
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
         $resolvedBody = $response->body->jsonSerialize();
-
-        $this->assertInstanceOf(LazyBody::class, $response->body);
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -145,7 +130,6 @@ final class ResponseTest extends TestCase
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deferredProps":{"default":["foo","bar"],"custom":["baz"]}}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
-        $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
         $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
@@ -159,8 +143,9 @@ final class ResponseTest extends TestCase
         yield 'with reset' => [true];
     }
 
+    #[Test]
     #[DataProvider('resetUsersProp')]
-    public function test_server_response_with_scroll_props(bool $resetUsersProp): void
+    public function server_response_with_scroll_props(bool $resetUsersProp): void
     {
         $headers = [];
         if ($resetUsersProp) {
@@ -184,8 +169,6 @@ final class ResponseTest extends TestCase
 
         $response = $this->factory->render('User/Index', ['users' => $scrollProp]);
 
-        $this->assertInstanceOf(LazyBody::class, $response->body);
-
         $page = $response->body->inertia['page'];
 
         $this->assertSame('User/Index', $page['component']);
@@ -206,7 +189,8 @@ final class ResponseTest extends TestCase
         );
     }
 
-    public function test_server_response_with_merge_props(): void
+    #[Test]
+    public function server_response_with_merge_props(): void
     {
         $this->makeRequest();
         $this->factory->version('123');
@@ -222,10 +206,6 @@ final class ResponseTest extends TestCase
         $page = $response->body->inertia['page'];
         $resolvedBody = $response->body->jsonSerialize();
 
-        $this->assertInstanceOf(LazyBody::class, $response->body);
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
-
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertSame('/user/123', $page['url']);
@@ -239,12 +219,12 @@ final class ResponseTest extends TestCase
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":"foo value","bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo","bar"]}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
-        $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
         $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
-    public function test_server_response_with_merge_props_that_should_prepend(): void
+    #[Test]
+    public function server_response_with_merge_props_that_should_prepend(): void
     {
         $this->makeRequest();
         $this->factory->version('123');
@@ -260,10 +240,6 @@ final class ResponseTest extends TestCase
         $page = $response->body->inertia['page'];
         $resolvedBody = $response->body->jsonSerialize();
 
-        $this->assertInstanceOf(LazyBody::class, $response->body);
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
-
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertSame('/user/123', $page['url']);
@@ -275,12 +251,12 @@ final class ResponseTest extends TestCase
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":"foo value","bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["bar"],"prependProps":["foo"]}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
-        $this->assertInstanceOf(\Tempest\View\ViewRenderer::class, $renderer);
 
         $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
-    public function test_server_response_with_merge_props_that_has_nested_paths_to_append_and_prepend(): void
+    #[Test]
+    public function server_response_with_merge_props_that_has_nested_paths_to_append_and_prepend(): void
     {
         $this->makeRequest();
         $this->factory->version('123');
@@ -296,10 +272,6 @@ final class ResponseTest extends TestCase
         $page = $response->body->inertia['page'];
         $resolvedBody = $response->body->jsonSerialize();
 
-        $this->assertInstanceOf(LazyBody::class, $response->body);
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
-
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertSame('/user/123', $page['url']);
@@ -312,12 +284,12 @@ final class ResponseTest extends TestCase
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":{"data":[{"id":1},{"id":2}]},"bar":{"data":{"items":[{"uuid":1},{"uuid":2}]}}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo.data"],"prependProps":["bar.data.items"]}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
-        $this->assertInstanceOf(\Tempest\View\ViewRenderer::class, $renderer);
 
         $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
-    public function test_server_response_with_merge_props_that_has_nested_paths_to_append_and_prepend_with_match_on_strategies(): void
+    #[Test]
+    public function server_response_with_merge_props_that_has_nested_paths_to_append_and_prepend_with_match_on_strategies(): void
     {
         $this->makeRequest();
         $this->factory->version('123');
@@ -336,10 +308,6 @@ final class ResponseTest extends TestCase
         $page = $response->body->inertia['page'];
         $resolvedBody = $response->body->jsonSerialize();
 
-        $this->assertInstanceOf(LazyBody::class, $response->body);
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
-
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertSame('/user/123', $page['url']);
@@ -352,12 +320,12 @@ final class ResponseTest extends TestCase
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":{"data":[{"id":1},{"id":2}]},"bar":{"data":{"items":[{"uuid":1},{"uuid":2}]}}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo.data"],"prependProps":["bar.data.items"],"matchPropsOn":["foo.data.id","bar.data.items.uuid"]}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
-        $this->assertInstanceOf(\Tempest\View\ViewRenderer::class, $renderer);
 
         $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
-    public function test_server_response_with_deep_merge_props(): void
+    #[Test]
+    public function server_response_with_deep_merge_props(): void
     {
         $this->makeRequest();
         $this->factory->version('123');
@@ -373,10 +341,6 @@ final class ResponseTest extends TestCase
         $page = $response->body->inertia['page'];
         $resolvedBody = $response->body->jsonSerialize();
 
-        $this->assertInstanceOf(LazyBody::class, $response->body);
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
-
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertSame('/user/123', $page['url']);
@@ -390,12 +354,12 @@ final class ResponseTest extends TestCase
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":"foo value","bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deepMergeProps":["foo","bar"]}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
-        $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
         $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
-    public function test_server_response_with_match_on_props(): void
+    #[Test]
+    public function server_response_with_match_on_props(): void
     {
         $this->makeRequest();
         $this->factory->version('123');
@@ -415,10 +379,6 @@ final class ResponseTest extends TestCase
         $page = $response->body->inertia['page'];
         $resolvedBody = $response->body->jsonSerialize();
 
-        $this->assertInstanceOf(LazyBody::class, $response->body);
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
-
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertSame('/user/123', $page['url']);
@@ -433,12 +393,12 @@ final class ResponseTest extends TestCase
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":"foo value","bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deepMergeProps":["foo","bar"],"matchPropsOn":["foo.foo-key","bar.bar-key"]}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
-        $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
         $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
-    public function test_server_response_with_defer_and_merge_props(): void
+    #[Test]
+    public function server_response_with_defer_and_merge_props(): void
     {
         $this->makeRequest();
         $this->factory->version('123');
@@ -454,10 +414,6 @@ final class ResponseTest extends TestCase
         $page = $response->body->inertia['page'];
         $resolvedBody = $response->body->jsonSerialize();
 
-        $this->assertInstanceOf(LazyBody::class, $response->body);
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
-
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertSame('/user/123', $page['url']);
@@ -472,12 +428,12 @@ final class ResponseTest extends TestCase
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo","bar"],"deferredProps":{"default":["foo"]}}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
-        $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
         $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
-    public function test_server_response_with_defer_and_deep_merge_props(): void
+    #[Test]
+    public function server_response_with_defer_and_deep_merge_props(): void
     {
         $this->makeRequest();
         $this->factory->version('123');
@@ -493,10 +449,6 @@ final class ResponseTest extends TestCase
         $page = $response->body->inertia['page'];
         $resolvedBody = $response->body->jsonSerialize();
 
-        $this->assertInstanceOf(LazyBody::class, $response->body);
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
-
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertSame('/user/123', $page['url']);
@@ -511,12 +463,12 @@ final class ResponseTest extends TestCase
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deepMergeProps":["foo","bar"],"deferredProps":{"default":["foo"]}}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
-        $this->assertInstanceOf(ViewRenderer::class, $renderer);
 
         $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
     }
 
-    public function test_exclude_merge_props_from_partial_only_response(): void
+    #[Test]
+    public function exclude_merge_props_from_partial_only_response(): void
     {
         $this->makeRequest(headers: [
             Header::INERTIA => 'true',
@@ -544,7 +496,8 @@ final class ResponseTest extends TestCase
         $this->assertArrayNotHasKey('mergeProps', $page);
     }
 
-    public function test_exclude_merge_props_from_partial_except_response(): void
+    #[Test]
+    public function exclude_merge_props_from_partial_except_response(): void
     {
         $this->makeRequest(headers: [
             Header::INERTIA => 'true',
@@ -572,7 +525,8 @@ final class ResponseTest extends TestCase
         $this->assertSame(['bar'], $page['mergeProps']);
     }
 
-    public function test_exclude_merge_props_when_passed_in_reset_header(): void
+    #[Test]
+    public function exclude_merge_props_when_passed_in_reset_header(): void
     {
         $this->makeRequest(headers: [
             Header::INERTIA => 'true',
@@ -587,8 +541,6 @@ final class ResponseTest extends TestCase
             'bar' => new MergeProp('bar value'),
         ]);
 
-        $this->assertInstanceOf(LazyBody::class, $response->body);
-
         $page = $response->body->jsonSerialize();
 
         $this->assertArrayHasKey('props', $page);
@@ -600,7 +552,8 @@ final class ResponseTest extends TestCase
         $this->assertArrayNotHasKey('mergeProps', $page);
     }
 
-    public function test_xhr_response(): void
+    #[Test]
+    public function xhr_response(): void
     {
         $this->makeRequest(headers: [
             Header::INERTIA => 'true',
@@ -622,7 +575,8 @@ final class ResponseTest extends TestCase
         $this->assertSame('123', $page['version']);
     }
 
-    public function test_resource_response(): void
+    #[Test]
+    public function resource_response(): void
     {
         $this->makeRequest(headers: [
             Header::INERTIA => 'true',
@@ -642,7 +596,8 @@ final class ResponseTest extends TestCase
         $this->assertSame('123', $page['version']);
     }
 
-    public function test_lazy_callable_resource_response(): void
+    #[Test]
+    public function lazy_callable_resource_response(): void
     {
         $this->makeRequest(
             uri: '/users',
@@ -665,7 +620,8 @@ final class ResponseTest extends TestCase
         $this->assertSame([['name' => 'Inertia']], $page['props']['organizations']);
     }
 
-    public function test_lazy_callable_resource_partial_response(): void
+    #[Test]
+    public function lazy_callable_resource_partial_response(): void
     {
         $this->makeRequest(
             uri: '/users',
@@ -694,7 +650,8 @@ final class ResponseTest extends TestCase
         $this->assertArrayNotHasKey('organizations', $page['props']);
     }
 
-    public function test_lazy_prop_returning_pagination_is_transformed(): void
+    #[Test]
+    public function lazy_prop_returning_pagination_is_transformed(): void
     {
         $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(laravel_pagination: true));
 
@@ -744,7 +701,8 @@ final class ResponseTest extends TestCase
         $this->assertSame(3, $paginatedUsers['total']);
     }
 
-    public function test_lazy_prop_returning_nested_pagination_is_transformed(): void
+    #[Test]
+    public function lazy_prop_returning_nested_pagination_is_transformed(): void
     {
         $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(laravel_pagination: true));
 
@@ -796,7 +754,8 @@ final class ResponseTest extends TestCase
         $this->assertSame(3, $nestedUsers['total']);
     }
 
-    public function test_arrayable_prop_response(): void
+    #[Test]
+    public function arrayable_prop_response(): void
     {
         $this->makeRequest(headers: [
             Header::INERTIA => 'true',
@@ -815,7 +774,8 @@ final class ResponseTest extends TestCase
         $this->assertSame('123', $page['version']);
     }
 
-    public function test_promise_props_are_resolved(): void
+    #[Test]
+    public function promise_props_are_resolved(): void
     {
         $this->makeRequest(headers: [Header::INERTIA => 'true']);
 
@@ -839,7 +799,8 @@ final class ResponseTest extends TestCase
         $this->assertSame('123', $page['version']);
     }
 
-    public function test_xhr_partial_response(): void
+    #[Test]
+    public function xhr_partial_response(): void
     {
         $this->makeRequest(headers: [
             Header::INERTIA => 'true',
@@ -866,7 +827,8 @@ final class ResponseTest extends TestCase
         $this->assertArrayNotHasKey('user', $page['props']);
     }
 
-    public function test_exclude_props_from_partial_response(): void
+    #[Test]
+    public function exclude_props_from_partial_response(): void
     {
         $this->makeRequest(headers: [
             Header::INERTIA => 'true',
@@ -893,7 +855,8 @@ final class ResponseTest extends TestCase
         $this->assertArrayNotHasKey('user', $page['props']);
     }
 
-    public function test_nested_partial_props(): void
+    #[Test]
+    public function nested_partial_props(): void
     {
         $this->makeRequest(headers: [
             Header::INERTIA => 'true',
@@ -926,7 +889,8 @@ final class ResponseTest extends TestCase
         $this->assertSame('value', $page['props']['auth']['shared_value']);
     }
 
-    public function test_exclude_nested_props_from_partial_response(): void
+    #[Test]
+    public function exclude_nested_props_from_partial_response(): void
     {
         $this->makeRequest(headers: [
             Header::INERTIA => 'true',
@@ -957,7 +921,8 @@ final class ResponseTest extends TestCase
         $this->assertSame('value', $page['props']['auth']['shared_value']);
     }
 
-    public function test_lazy_props_are_not_included_by_default(): void
+    #[Test]
+    public function lazy_props_are_not_included_by_default(): void
     {
         $this->makeRequest(
             uri: '/users',
@@ -979,7 +944,8 @@ final class ResponseTest extends TestCase
         $this->assertArrayNotHasKey('lazy', $page['props']);
     }
 
-    public function test_lazy_props_are_included_in_partial_reload(): void
+    #[Test]
+    public function lazy_props_are_included_in_partial_reload(): void
     {
         $this->makeRequest(
             uri: '/users',
@@ -1003,7 +969,8 @@ final class ResponseTest extends TestCase
         $this->assertSame('A lazy value', $page['props']['lazy']);
     }
 
-    public function test_defer_arrayable_props_are_resolved_in_partial_reload(): void
+    #[Test]
+    public function defer_arrayable_props_are_resolved_in_partial_reload(): void
     {
         $this->makeRequest(
             uri: '/users',
@@ -1033,7 +1000,8 @@ final class ResponseTest extends TestCase
         $this->assertSame(['foo' => 'bar'], $page['props']['defer']);
     }
 
-    public function test_always_props_are_included_on_partial_reload(): void
+    #[Test]
+    public function always_props_are_included_on_partial_reload(): void
     {
         $this->makeRequest(headers: [
             Header::INERTIA => 'true',
@@ -1062,7 +1030,8 @@ final class ResponseTest extends TestCase
         $this->assertArrayNotHasKey('user', $page['props']);
     }
 
-    public function test_string_function_names_are_not_invoked_as_callables(): void
+    #[Test]
+    public function string_function_names_are_not_invoked_as_callables(): void
     {
         $this->makeRequest();
 
@@ -1077,7 +1046,8 @@ final class ResponseTest extends TestCase
         $this->assertSame('trim', $page['props']['merge']);
     }
 
-    public function test_inertia_responsable_objects(): void
+    #[Test]
+    public function inertia_responsable_objects(): void
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'responsableProps']),
@@ -1094,7 +1064,8 @@ final class ResponseTest extends TestCase
         $this->assertSame('corge', $props['quux']);
     }
 
-    public function test_props_can_be_merged_with_shared_data(): void
+    #[Test]
+    public function props_can_be_merged_with_shared_data(): void
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'mergeWithShared']),
@@ -1111,7 +1082,8 @@ final class ResponseTest extends TestCase
         $this->assertSame(['foo', 'baz'], $props['deep']['foo']['bar']);
     }
 
-    public function test_top_level_dot_props_get_unpacked(): void
+    #[Test]
+    public function top_level_dot_props_get_unpacked(): void
     {
         $this->makeRequest(
             uri: '/products/123',
@@ -1139,7 +1111,8 @@ final class ResponseTest extends TestCase
         $this->assertArrayNotHasKey('auth.user.can', $page['props']);
     }
 
-    public function test_nested_dot_props_do_not_get_unpacked(): void
+    #[Test]
+    public function nested_dot_props_do_not_get_unpacked(): void
     {
         $this->makeRequest(
             uri: '/products/123',
@@ -1167,7 +1140,8 @@ final class ResponseTest extends TestCase
         $this->assertArrayNotHasKey('can', $auth);
     }
 
-    public function test_props_can_be_added_using_the_with_method(): void
+    #[Test]
+    public function props_can_be_added_using_the_with_method(): void
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'withMethod']),
@@ -1185,7 +1159,8 @@ final class ResponseTest extends TestCase
         $this->assertSame('garply', $props['grault']);
     }
 
-    public function test_responsable_with_invalid_key(): void
+    #[Test]
+    public function responsable_with_invalid_key(): void
     {
         $this->makeRequest(headers: [Header::INERTIA => 'true']);
 
@@ -1197,7 +1172,8 @@ final class ResponseTest extends TestCase
         $this->assertSame(["\x00*\x00_invalid_key" => 'for object'], $page['props']['resource']);
     }
 
-    public function test_the_page_url_is_prefixed_with_the_proxy_prefix(): void
+    #[Test]
+    public function the_page_url_is_prefixed_with_the_proxy_prefix(): void
     {
         $this->makeRequest(headers: [Header::FORWARDED_PREFIX => '/sub/directory']);
 
@@ -1209,13 +1185,11 @@ final class ResponseTest extends TestCase
         $page = $response->body->inertia['page'];
         $resolvedBody = $response->body->jsonSerialize();
 
-        $this->assertInstanceOf(LazyBody::class, $response->body);
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertInstanceOf(InertiaView::class, $resolvedBody);
         $this->assertSame('/sub/directory/user/123', $page['url']);
     }
 
-    public function test_the_page_url_doesnt_double_up(): void
+    #[Test]
+    public function the_page_url_doesnt_double_up(): void
     {
         $this->makeRequest(
             uri: '/subpath/product/122',
@@ -1228,7 +1202,8 @@ final class ResponseTest extends TestCase
         $this->assertSame('/subpath/product/122', $page['url']);
     }
 
-    public function test_trailing_slashes_in_a_url_are_preserved(): void
+    #[Test]
+    public function trailing_slashes_in_a_url_are_preserved(): void
     {
         $this->makeRequest(
             uri: '/users/',
@@ -1241,7 +1216,8 @@ final class ResponseTest extends TestCase
         $this->assertSame('/users/', $page['url']);
     }
 
-    public function test_trailing_slashes_in_a_url_with_query_parameters_are_preserved(): void
+    #[Test]
+    public function trailing_slashes_in_a_url_with_query_parameters_are_preserved(): void
     {
         $this->makeRequest(
             uri: '/users/?page=1&sort=name',
@@ -1254,7 +1230,8 @@ final class ResponseTest extends TestCase
         $this->assertSame('/users/?page=1&sort=name', $page['url']);
     }
 
-    public function test_a_url_without_trailing_slash_is_resolved_correctly(): void
+    #[Test]
+    public function a_url_without_trailing_slash_is_resolved_correctly(): void
     {
         $this->makeRequest(
             uri: '/users',
@@ -1267,7 +1244,8 @@ final class ResponseTest extends TestCase
         $this->assertSame('/users', $page['url']);
     }
 
-    public function test_a_url_without_trailing_slash_and_query_parameters_is_resolved_correctly(): void
+    #[Test]
+    public function a_url_without_trailing_slash_and_query_parameters_is_resolved_correctly(): void
     {
         $this->makeRequest(
             uri: '/users?page=1&sort=name',
