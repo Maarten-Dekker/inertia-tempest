@@ -143,6 +143,7 @@ final class ResponseTest extends TestCase
         yield 'with reset' => [true];
     }
 
+    #[Test]
     #[DataProvider('resetUsersProp')]
     public function server_response_with_scroll_props(bool $resetUsersProp): void
     {

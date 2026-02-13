@@ -101,12 +101,9 @@ final class ScrollPropTest extends TestCase
         $this->assertSame(['data'], $appendProp->appendsAtPaths());
         $this->assertEmpty($appendProp->prependsAtPaths());
 
-        $this->http->get(
-            uri: '/user/123',
-            headers: [
-                Header::INFINITE_SCROLL_MERGE_INTENT => 'append',
-            ],
-        );
+        $this->makeRequest(headers: [
+            Header::INFINITE_SCROLL_MERGE_INTENT => 'append',
+        ]);
         $appendProp = new ScrollProp($this->users);
         $appendProp->configureMergeIntent();
 
