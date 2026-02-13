@@ -83,7 +83,7 @@ final class ScrollPropTest extends TestCase
     #[Test]
     public function can_set_the_merge_intent_based_on_the_merge_intent_header(): void
     {
-        $this->http->get(uri: '/user/123');
+        $this->makeRequest();
         $appendProp = new ScrollProp($this->users);
         $appendProp->configureMergeIntent();
 
@@ -102,24 +102,18 @@ final class ScrollPropTest extends TestCase
         $this->assertSame(['data'], $appendProp->appendsAtPaths());
         $this->assertEmpty($appendProp->prependsAtPaths());
 
-        $this->http->get(
-            uri: '/user/123',
-            headers: [
-                Header::INFINITE_SCROLL_MERGE_INTENT => 'prepend',
-            ],
-        );
+        $this->makeRequest(headers: [
+            Header::INFINITE_SCROLL_MERGE_INTENT => 'prepend',
+        ]);
         $prependProp = new ScrollProp($this->users);
         $prependProp->configureMergeIntent();
 
         $this->assertSame(['data'], $prependProp->prependsAtPaths());
         $this->assertEmpty($prependProp->appendsAtPaths());
 
-        $this->http->get(
-            uri: '/user/123',
-            headers: [
-                Header::INFINITE_SCROLL_MERGE_INTENT => 'prepend',
-            ],
-        );
+        $this->makeRequest(headers: [
+            Header::INFINITE_SCROLL_MERGE_INTENT => 'prepend',
+        ]);
         $prependProp = new ScrollProp(
             value: $this->users,
             wrapper: 'items',
