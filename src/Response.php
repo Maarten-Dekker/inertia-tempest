@@ -87,6 +87,8 @@ final class Response implements HttpResponse
     ) {
         $this->body = new LazyBody(function (): array|null|InertiaView {
             $this->props = $this->normalizeProps($this->props);
+            $this->props = $this->resolveInertiaPropsProviders($this->props);
+
             $resolvedProps = $this->resolveProperties($this->props);
 
             $page = array_merge(
@@ -181,7 +183,6 @@ final class Response implements HttpResponse
      */
     public function resolveProperties(array $props): array
     {
-        $props = $this->resolveInertiaPropsProviders($props);
         $props = $this->resolvePartialProperties($props);
         $props = $this->resolveAlways($props);
 

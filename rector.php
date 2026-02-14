@@ -10,6 +10,7 @@ use Rector\Config\RectorConfig;
 use Rector\Php70\Rector\StaticCall\StaticCallOnNonStaticToInstanceCallRector;
 use Rector\Php74\Rector\Closure\ClosureToArrowFunctionRector;
 use Rector\Php74\Rector\Property\RestoreDefaultNullToNullableTypePropertyRector;
+use Rector\Php81\Rector\Array_\ArrayToFirstClassCallableRector;
 use Rector\PHPUnit\Set\PHPUnitSetList;
 use Rector\TypeDeclaration\Rector\ArrowFunction\AddArrowFunctionReturnTypeRector;
 use Rector\TypeDeclaration\Rector\Closure\ClosureReturnTypeRector;
@@ -45,4 +46,5 @@ return RectorConfig::configure()
         StaticCallOnNonStaticToInstanceCallRector::class,
         NullableCompareToNullRector::class,
         ExplicitBoolCompareRector::class,
+        ArrayToFirstClassCallableRector::class,
     ]);
