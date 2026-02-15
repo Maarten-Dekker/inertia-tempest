@@ -1287,6 +1287,63 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
+    public function deferred_props_from_provides_inertia_properties_with_multiple_groups(): void
+    {
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'user' => ['name' => 'Jonathan'],
+                new class implements ProvidesInertiaProperties {
+                    public function toInertiaProperties(RenderContext $context): iterable
+                    {
+                        return [
+                            'foo' => new DeferProp(static fn () => 'foo value', 'default'),
+                            'bar' => new DeferProp(static fn () => 'bar value', 'custom'),
+                        ];
+                    }
+                },
+            ],
+        );
+
+        $page = $response->body->inertia['page'];
+
+        $this->assertSame('Jonathan', $page['props']['user']['name']);
+        $this->assertArrayNotHasKey('foo', $page['props']);
+        $this->assertArrayNotHasKey('bar', $page['props']);
+        $this->assertSame(['default' => ['foo'], 'custom' => ['bar']], $page['deferredProps']);
+    }
+
+    #[Test]
+    public function deferred_props_from_provides_inertia_properties_can_be_loaded_via_partial_request(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::PARTIAL_COMPONENT => 'User/Edit',
+            Header::PARTIAL_ONLY => 'foo',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'user' => ['name' => 'Jonathan'],
+                new class implements ProvidesInertiaProperties {
+                    public function toInertiaProperties(RenderContext $context): iterable
+                    {
+                        return [
+                            'foo' => new DeferProp(static fn () => 'bar', 'default'),
+                        ];
+                    }
+                },
+            ],
+        );
+
+        $page = $response->body;
+
+        $this->assertSame('bar', $page['props']['foo']);
+        $this->assertArrayNotHasKey('user', $page['props']);
+    }
+
+    #[Test]
     public function merge_props_from_provides_inertia_properties_are_included_in_merge_props_metadata(): void
     {
         $response = new Response('User/Edit', [
