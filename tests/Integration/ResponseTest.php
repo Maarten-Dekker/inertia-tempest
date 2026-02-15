@@ -7,13 +7,16 @@ namespace Inertia\Tests\Integration;
 use GuzzleHttp\Promise\PromiseInterface;
 use Inertia\Configs\InertiaConfig;
 use Inertia\Contracts\Arrayable;
+use Inertia\Contracts\ProvidesInertiaProperties;
 use Inertia\Contracts\ProvidesScrollMetadata;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
 use Inertia\Props\LazyProp;
 use Inertia\Props\MergeProp;
 use Inertia\Props\ScrollProp;
+use Inertia\Response;
 use Inertia\Support\Header;
+use Inertia\Support\RenderContext;
 use Inertia\Tests\Fixtures\FakeResource;
 use Inertia\Tests\Fixtures\TestController;
 use Inertia\Tests\TestCase;
@@ -1256,5 +1259,78 @@ final class ResponseTest extends TestCase
         $page = $response->body;
 
         $this->assertSame('/users?page=1&sort=name', $page['url']);
+    }
+
+    #[Test]
+    public function deferred_props_from_provides_inertia_properties_are_included_in_deferred_props_metadata(): void
+    {
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'user' => ['name' => 'Jonathan'],
+                new class implements ProvidesInertiaProperties {
+                    public function toInertiaProperties(RenderContext $context): iterable
+                    {
+                        return [
+                            'foo' => new DeferProp(static fn () => 'bar', 'default'),
+                        ];
+                    }
+                },
+            ],
+        );
+
+        $page = $response->body->inertia['page'];
+
+        $this->assertSame('Jonathan', $page['props']['user']['name']);
+        $this->assertArrayNotHasKey('foo', $page['props']);
+        $this->assertSame(['default' => ['foo']], $page['deferredProps']);
+    }
+
+    #[Test]
+    public function merge_props_from_provides_inertia_properties_are_included_in_merge_props_metadata(): void
+    {
+        $response = new Response('User/Edit', [
+            'user' => ['name' => 'Jonathan'],
+            new class implements ProvidesInertiaProperties {
+                public function toInertiaProperties(RenderContext $context): iterable
+                {
+                    return [
+                        'foo' => new MergeProp('foo value'),
+                    ];
+                }
+            },
+        ]);
+
+        $page = $response->body->inertia['page'];
+
+        $this->assertSame('Jonathan', $page['props']['user']['name']);
+        $this->assertSame('foo value', $page['props']['foo']);
+        $this->assertSame(['foo'], $page['mergeProps']);
+    }
+
+    #[Test]
+    public function deferred_merge_props_from_provides_inertia_properties_include_both_metadata(): void
+    {
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'user' => ['name' => 'Jonathan'],
+                new class implements ProvidesInertiaProperties {
+                    public function toInertiaProperties(RenderContext $context): iterable
+                    {
+                        return [
+                            'foo' => new DeferProp(static fn () => 'foo value', 'default')->merge(),
+                        ];
+                    }
+                },
+            ],
+        );
+
+        $page = $response->body->inertia['page'];
+
+        $this->assertSame('Jonathan', $page['props']['user']['name']);
+        $this->assertArrayNotHasKey('foo', $page['props']);
+        $this->assertSame(['default' => ['foo']], $page['deferredProps']);
+        $this->assertSame(['foo'], $page['mergeProps']);
     }
 }
