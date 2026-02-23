@@ -179,4 +179,17 @@ final class MergePropTest extends TestCase
 
         $this->assertSame(['key', 'anotherKey'], $mergeProp->matchesOn());
     }
+
+    #[Test]
+    public function is_onceable(): void
+    {
+        $mergeProp = new MergeProp(static fn () => [])
+            ->once()
+            ->as('custom-key')
+            ->until(60);
+
+        $this->assertTrue($mergeProp->shouldResolveOnce());
+        $this->assertSame('custom-key', $mergeProp->getKey());
+        $this->assertNotNull($mergeProp->expiresAt());
+    }
 }

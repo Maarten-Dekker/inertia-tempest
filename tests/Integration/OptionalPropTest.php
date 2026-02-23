@@ -26,4 +26,17 @@ final class OptionalPropTest extends TestCase
 
         $this->assertInstanceOf(Request::class, $optionalProp());
     }
+
+    #[Test]
+    public function is_onceable(): void
+    {
+        $optionalProp = new OptionalProp(static fn () => 'value')
+            ->once()
+            ->as('custom-key')
+            ->until(60);
+
+        $this->assertTrue($optionalProp->shouldResolveOnce());
+        $this->assertSame('custom-key', $optionalProp->getKey());
+        $this->assertNotNull($optionalProp->expiresAt());
+    }
 }

@@ -13,6 +13,7 @@ use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
 use Inertia\Props\LazyProp;
 use Inertia\Props\MergeProp;
+use Inertia\Props\OnceProp;
 use Inertia\Props\OptionalProp;
 use Inertia\Props\ScrollProp;
 use Inertia\Support\Facade;
@@ -123,6 +124,11 @@ class Inertia extends Facade
                 callback: $callback,
                 group: $group,
             );
+    }
+
+    public static function once(callable $callback): OnceProp
+    {
+        return static::instance()->once($callback);
     }
 
     public static function always(mixed $value): AlwaysProp

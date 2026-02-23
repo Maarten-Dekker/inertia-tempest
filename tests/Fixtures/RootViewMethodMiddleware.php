@@ -37,4 +37,16 @@ final class RootViewMethodMiddleware extends Middleware
     {
         return 'welcome';
     }
+
+    #[Override]
+    public function shareOnce(): array
+    {
+        return [
+            'permissions' => static fn () => ['admin' => true],
+            'settings' => $this->inertia
+                ->once(static fn () => ['theme' => 'dark'])
+                ->as('app-settings')
+                ->until(60),
+        ];
+    }
 }

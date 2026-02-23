@@ -14,6 +14,7 @@ use Inertia\Contracts\Arrayable;
 use Inertia\Contracts\IgnoreFirstLoad;
 use Inertia\Contracts\InvokableProp;
 use Inertia\Contracts\Mergeable;
+use Inertia\Contracts\Onceable;
 use Inertia\Contracts\ProvidesInertiaProperties;
 use Inertia\Contracts\ProvidesInertiaProperty;
 use Inertia\Props\AlwaysProp;
@@ -104,6 +105,7 @@ final class Response implements HttpResponse
                 $this->resolveDeferredProps(),
                 $this->resolveCacheDirections(),
                 $this->resolveScrollProps(),
+                $this->resolveOnceProps(),
                 $this->resolveFlashData(),
             );
 
@@ -184,6 +186,7 @@ final class Response implements HttpResponse
     public function resolveProperties(array $props): array
     {
         $props = $this->resolvePartialProperties($props);
+        $props = $this->resolveOnceProperties($props);
         $props = $this->resolveAlways($props);
 
         return $this->resolvePropertyInstances($props);
@@ -229,8 +232,8 @@ final class Response implements HttpResponse
             return array_filter($props, static fn ($prop) => ! $prop instanceof IgnoreFirstLoad);
         }
 
-        $only = $this->parsePartialHeader(Header::PARTIAL_ONLY);
-        $except = $this->parsePartialHeader(Header::PARTIAL_EXCEPT);
+        $only = $this->parseHeaderAsArray(Header::PARTIAL_ONLY);
+        $except = $this->parseHeaderAsArray(Header::PARTIAL_EXCEPT);
 
         if ($only !== []) {
             $newProps = [];
@@ -253,6 +256,49 @@ final class Response implements HttpResponse
         }
 
         return $props;
+    }
+
+    /**
+     *  Resolve properties that should only be resolved once.
+     *
+     * @param array<string, mixed> $props
+     * @return array<string, mixed>
+     */
+    public function resolveOnceProperties(array $props): array
+    {
+        $isInertia = (bool) $this->request->headers->get(Header::INERTIA);
+        $isPartial = $this->isPartial();
+
+        if (! $isInertia || $isPartial) {
+            return $props;
+        }
+
+        $exceptOnceProps = $this->parseHeaderAsArray(Header::EXCEPT_ONCE_PROPS);
+
+        if ($exceptOnceProps === []) {
+            return $props;
+        }
+
+        return array_filter(
+            $props,
+            static function (mixed $prop, string $key) use ($exceptOnceProps): bool {
+                if (! $prop instanceof Onceable) {
+                    return true;
+                }
+
+                if (! $prop->shouldResolveOnce()) {
+                    return true;
+                }
+
+                if ($prop->shouldBeRefreshed()) {
+                    return true;
+                }
+
+                $identifier = $prop->getKey() ?? $key;
+                return ! in_array($identifier, $exceptOnceProps, true);
+            },
+            ARRAY_FILTER_USE_BOTH,
+        );
     }
 
     /**
@@ -356,36 +402,32 @@ final class Response implements HttpResponse
     }
 
     /**
-     * Get the props that should be reset based on the request headers.
-     *
-     * @return array<int, string>
-     */
-    public function getResetProps(): array
-    {
-        return array_filter(explode(',', $this->request->headers->get(Header::RESET) ?? ''));
-    }
-
-    /**
      * Resolve merge props configuration for client-side prop merging.
      *
      * @return array<string, mixed>
      */
     public function getMergePropsForRequest(bool $rejectResetProps = true): array
     {
-        $resetProps = $rejectResetProps ? $this->getResetProps() : [];
-        $onlyProps = $this->parsePartialHeader(Header::PARTIAL_ONLY);
-        $exceptProps = $this->parsePartialHeader(Header::PARTIAL_EXCEPT);
+        $props = array_filter($this->props, static fn ($prop) => $prop instanceof Mergeable && $prop->shouldMerge());
 
-        return Arr\filter(
-            $this->props,
-            static fn ($prop, $key) => (
-                $prop instanceof Mergeable
-                && $prop->shouldMerge()
-                && ! in_array($key, $resetProps, true)
-                && ($onlyProps === [] || in_array($key, $onlyProps, true))
-                && ! in_array($key, $exceptProps, true)
-            ),
-        );
+        if ($rejectResetProps) {
+            $resetProps = $this->parseHeaderAsArray(Header::RESET);
+            if ($resetProps !== []) {
+                $props = array_diff_key($props, array_flip($resetProps));
+            }
+        }
+
+        $onlyProps = $this->parseHeaderAsArray(Header::PARTIAL_ONLY);
+        if ($onlyProps !== []) {
+            $props = array_intersect_key($props, array_flip($onlyProps));
+        }
+
+        $exceptProps = $this->parseHeaderAsArray(Header::PARTIAL_EXCEPT);
+        if ($exceptProps !== []) {
+            return array_diff_key($props, array_flip($exceptProps));
+        }
+
+        return $props;
     }
 
     /**
@@ -452,10 +494,20 @@ final class Response implements HttpResponse
             return [];
         }
 
-        $groupedProps = [];
+        $exceptOnceProps = $this->parseHeaderAsArray(Header::EXCEPT_ONCE_PROPS);
 
+        $groupedProps = [];
         foreach ($this->props as $key => $prop) {
             if (! $prop instanceof DeferProp) {
+                continue;
+            }
+
+            if (
+                $prop instanceof Onceable
+                && $prop->shouldResolveOnce()
+                && ! $prop->shouldBeRefreshed()
+                && in_array($prop->getKey() ?? $key, $exceptOnceProps, true)
+            ) {
                 continue;
             }
 
@@ -473,7 +525,7 @@ final class Response implements HttpResponse
      */
     public function resolveScrollProps(): array
     {
-        $resetProps = $this->getResetProps();
+        $resetProps = $this->parseHeaderAsArray(Header::RESET);
         $scrollPropsResult = [];
 
         foreach ($this->getMergePropsForRequest(false) as $key => $prop) {
@@ -492,6 +544,40 @@ final class Response implements HttpResponse
         }
 
         return ['scrollProps' => $scrollPropsResult];
+    }
+
+    /**
+     * Resolve props that should only be resolved once.
+     *
+     * @return array<string, array<int, string>>
+     */
+    public function resolveOnceProps(): array
+    {
+        $props = array_filter(
+            $this->props,
+            static fn ($prop) => $prop instanceof Onceable && $prop->shouldResolveOnce(),
+        );
+
+        $only = $this->parseHeaderAsArray(Header::PARTIAL_ONLY);
+        if ($only !== []) {
+            $props = array_intersect_key($props, array_flip($only));
+        }
+
+        $except = $this->parseHeaderAsArray(Header::PARTIAL_EXCEPT);
+        if ($except !== []) {
+            $props = array_diff_key($props, array_flip($except));
+        }
+
+        $mapped = [];
+        foreach ($props as $key => $prop) {
+            /** @var Onceable $prop */
+            $mapped[$prop->getKey() ?? $key] = [
+                'prop' => $key,
+                'expiresAt' => $prop->expiresAt(),
+            ];
+        }
+
+        return $mapped !== [] ? ['onceProps' => $mapped] : [];
     }
 
     /**
@@ -586,7 +672,6 @@ final class Response implements HttpResponse
         }
 
         $url = $this->request->uri;
-
         $prefix = $this->request->headers->get(Header::FORWARDED_PREFIX);
 
         if ($prefix) {
@@ -598,11 +683,11 @@ final class Response implements HttpResponse
     }
 
     /**
-     * Parses an Inertia header that contains a comma-separated list of prop keys.
+     * Parses a comma-separated request header into an array of strings.
      *
      * @return string[]
      */
-    private function parsePartialHeader(string $name): array
+    private function parseHeaderAsArray(string $name): array
     {
         $headerValue = $this->request->headers->get($name) ?? '';
 

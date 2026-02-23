@@ -374,6 +374,41 @@ final class MiddlewareTest extends TestCase
     }
 
     #[Test]
+    public function middleware_share_once(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'basicRenderWithRootViewMethodMiddleware']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $page = $response->body;
+
+        $this->assertSame(['admin' => true], $page['props']['permissions']);
+        $this->assertSame(['theme' => 'dark'], $page['props']['settings']);
+        $this->assertSame(['prop' => 'permissions', 'expiresAt' => null], $page['onceProps']['permissions']);
+        $this->assertSame('settings', $page['onceProps']['app-settings']['prop']);
+        $this->assertNotNull($page['onceProps']['app-settings']['expiresAt']);
+    }
+
+    #[Test]
+    public function middleware_share_and_share_once_are_merged(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'basicRenderWithRootViewMethodMiddleware']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $page = $response->body;
+
+        $this->assertSame(['message' => null], $page['props']['flash']);
+        $this->assertSame(['admin' => true], $page['props']['permissions']);
+        $this->assertSame(['theme' => 'dark'], $page['props']['settings']);
+        $this->assertSame(['prop' => 'permissions', 'expiresAt' => null], $page['onceProps']['permissions']);
+        $this->assertSame('settings', $page['onceProps']['app-settings']['prop']);
+        $this->assertNotNull($page['onceProps']['app-settings']['expiresAt']);
+    }
+
+    #[Test]
     public function flash_data_is_preserved_on_non_inertia_redirect(): void
     {
         $firstResponse = $this->http->get(uri: uri([TestController::class, 'actionWithRedirect']));

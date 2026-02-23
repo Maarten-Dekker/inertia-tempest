@@ -231,6 +231,14 @@ final class ResponseFactoryTest extends TestCase
     }
 
     #[Test]
+    public function response_factory_once_creates_working_once_prop(): void
+    {
+        $once = $this->factory->once(static fn () => ['theme' => 'dark']);
+
+        $this->assertSame(['theme' => 'dark'], $once());
+    }
+
+    #[Test]
     public function will_accept_arrayable_props(): void
     {
         $response = $this->http->get(
