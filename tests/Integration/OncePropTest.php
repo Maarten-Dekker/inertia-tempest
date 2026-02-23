@@ -12,7 +12,7 @@ use Tempest\Http\Request;
 final class OncePropTest extends TestCase
 {
     #[Test]
-    public function test_can_invoke_with_a_callback(): void
+    public function can_invoke_with_a_callback(): void
     {
         $onceProp = new OnceProp(static fn () => 'A once prop value');
 
@@ -20,7 +20,7 @@ final class OncePropTest extends TestCase
     }
 
     #[Test]
-    public function test_can_resolve_bindings_when_invoked(): void
+    public function can_resolve_bindings_when_invoked(): void
     {
         $onceProp = new OnceProp(static fn (Request $request) => $request);
 

@@ -6,11 +6,12 @@ namespace Inertia\Props;
 
 use Inertia\Contracts\IgnoreFirstLoad;
 use Inertia\Contracts\InvokableProp;
+use Inertia\Contracts\Onceable;
 use Inertia\Traits\ResolvesCallables;
 use Inertia\Traits\ResolvesOnce;
 use Override;
 
-class OptionalProp implements IgnoreFirstLoad, InvokableProp
+class OptionalProp implements IgnoreFirstLoad, Onceable, InvokableProp
 {
     use ResolvesCallables;
     use ResolvesOnce;

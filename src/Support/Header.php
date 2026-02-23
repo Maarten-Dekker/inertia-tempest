@@ -49,12 +49,12 @@ final readonly class Header
     /**
      * Header for specifying the merge intent when paginating on infinite scroll.
      */
-    public const string INFINITE_SCROLL_MERGE_INTENT = 'X-Inertia-Infinite-Scroll-Merge-Intent';
+    public const string INFINITE_SCROLL_MERGE_INTENT = 'x-inertia-infinite-scroll-merge-intent';
 
     /**
      * Header specifying which once props to exclude from the response.
      */
-    public const string EXCEPT_ONCE_PROPS = 'X-Inertia-Except-Once-Props';
+    public const string EXCEPT_ONCE_PROPS = 'x-inertia-except-once-props';
 
     /**
      * Header for forwarded prefix.

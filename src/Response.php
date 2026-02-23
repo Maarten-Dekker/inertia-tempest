@@ -408,11 +408,7 @@ final class Response implements HttpResponse
      */
     public function getMergePropsForRequest(bool $rejectResetProps = true): array
     {
-        $props = array_filter(
-            $this->props,
-            static fn ($prop) => $prop instanceof Mergeable && $prop->shouldMerge(),
-            ARRAY_FILTER_USE_BOTH,
-        );
+        $props = array_filter($this->props, static fn ($prop) => $prop instanceof Mergeable && $prop->shouldMerge());
 
         if ($rejectResetProps) {
             $resetProps = $this->parseHeaderAsArray(Header::RESET);
@@ -560,7 +556,6 @@ final class Response implements HttpResponse
         $props = array_filter(
             $this->props,
             static fn ($prop) => $prop instanceof Onceable && $prop->shouldResolveOnce(),
-            ARRAY_FILTER_USE_BOTH,
         );
 
         $only = $this->parseHeaderAsArray(Header::PARTIAL_ONLY);

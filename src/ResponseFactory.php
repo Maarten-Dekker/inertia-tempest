@@ -257,9 +257,9 @@ final class ResponseFactory
     /**
      * Create a once property.
      */
-    public function once(callable $value): OnceProp
+    public function once(callable $callback): OnceProp
     {
-        return new OnceProp($value);
+        return new OnceProp($callback);
     }
 
     /**

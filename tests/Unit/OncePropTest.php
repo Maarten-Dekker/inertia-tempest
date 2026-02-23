@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
 final class OncePropTest extends TestCase
 {
     #[Test]
-    public function test_can_set_custom_key(): void
+    public function can_set_custom_key(): void
     {
         $onceProp = new OnceProp(static fn () => 'value');
 
