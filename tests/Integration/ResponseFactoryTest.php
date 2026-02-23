@@ -214,8 +214,7 @@ final class ResponseFactoryTest extends TestCase
         $this->assertSame([], inertia()->getShared());
     }
 
-    #[Test]
-    public function can_create_deferred_prop(): void
+    public function test_can_create_deferred_prop(): void
     {
         $deferredProp = $this->factory->defer(static fn (): string => 'A deferred value');
 
@@ -228,6 +227,14 @@ final class ResponseFactoryTest extends TestCase
         $deferredProp = $this->factory->defer(static fn (): string => 'A deferred value', 'foo');
 
         $this->assertSame('foo', $deferredProp->group());
+    }
+
+    #[Test]
+    public function test_response_factory_once_creates_working_once_prop(): void
+    {
+        $once = $this->factory->once(static fn () => ['theme' => 'dark']);
+
+        $this->assertSame(['theme' => 'dark'], $once());
     }
 
     #[Test]

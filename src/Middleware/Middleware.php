@@ -6,6 +6,7 @@ namespace Inertia\Middleware;
 
 use Closure;
 use Inertia\LazyBody;
+use Inertia\Props\OnceProp;
 use Inertia\Response as InertiaResponse;
 use Inertia\ResponseFactory;
 use Inertia\Support\Header;
@@ -85,6 +86,16 @@ class Middleware implements HttpMiddleware
     }
 
     /**
+     * Define the props that are shared once and remembered across navigations.
+     *
+     * @return array<string, callable|OnceProp>
+     */
+    public function shareOnce(): array
+    {
+        return [];
+    }
+
+    /**
      * Sets the root template loaded on the first page visit.
      *
      * @see https://inertiajs.com/server-side-setup#root-template
@@ -113,6 +124,15 @@ class Middleware implements HttpMiddleware
     {
         $this->inertia->version($this->version(...));
         $this->inertia->share($this->share($request));
+
+        foreach ($this->shareOnce() as $key => $value) {
+            if ($value instanceof OnceProp) {
+                $this->inertia->share($key, $value);
+            } else {
+                $this->inertia->shareOnce($key, $value);
+            }
+        }
+
         $this->inertia->setRootView($this->rootView());
 
         $urlResolver = $this->urlResolver();

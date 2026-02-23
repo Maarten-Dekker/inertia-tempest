@@ -15,6 +15,7 @@ use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
 use Inertia\Props\LazyProp;
 use Inertia\Props\MergeProp;
+use Inertia\Props\OnceProp;
 use Inertia\Props\OptionalProp;
 use Inertia\Props\ScrollProp;
 use Inertia\Support\Header;
@@ -251,6 +252,29 @@ final class ResponseFactory
             wrapper: $wrapper,
             metadata: $metadata,
         );
+    }
+
+    /**
+     * Create a once property.
+     */
+    public function once(callable $value): OnceProp
+    {
+        return new OnceProp($value);
+    }
+
+    /**
+     * Create and share a once property.
+     */
+    public function shareOnce(string $key, callable $callback): OnceProp
+    {
+        $prop = new OnceProp($callback);
+
+        $this->share(
+            key: $key,
+            value: $prop,
+        );
+
+        return $prop;
     }
 
     /**

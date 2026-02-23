@@ -6,14 +6,17 @@ namespace Inertia\Props;
 
 use Inertia\Contracts\InvokableProp;
 use Inertia\Contracts\Mergeable;
+use Inertia\Contracts\Onceable;
 use Inertia\Traits\MergesProps;
 use Inertia\Traits\ResolvesCallables;
+use Inertia\Traits\ResolvesOnce;
 use Override;
 
-class MergeProp implements Mergeable, InvokableProp
+class MergeProp implements Mergeable, Onceable, InvokableProp
 {
     use MergesProps;
     use ResolvesCallables;
+    use ResolvesOnce;
 
     /**
      * Create a new merge property instance. Merge properties are combined

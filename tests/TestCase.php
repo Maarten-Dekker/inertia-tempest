@@ -61,6 +61,7 @@ abstract class TestCase extends IntegrationTest
             uri: $uri,
             headers: $headers,
         );
+
         $this->container->singleton(Request::class, static fn () => $request);
 
         return $request;

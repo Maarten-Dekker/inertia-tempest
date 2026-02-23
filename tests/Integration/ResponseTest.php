@@ -9,6 +9,7 @@ use Inertia\Configs\InertiaConfig;
 use Inertia\Contracts\Arrayable;
 use Inertia\Contracts\ProvidesInertiaProperties;
 use Inertia\Contracts\ProvidesScrollMetadata;
+use Inertia\Inertia;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
 use Inertia\Props\LazyProp;
@@ -24,6 +25,8 @@ use Iterator;
 use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use Tempest\DateTime\DateTime;
+use Tempest\DateTime\Duration;
 use Tempest\Http\ContentType;
 use Tempest\Support\Paginator\PaginatedData;
 use Tempest\Support\Paginator\Paginator;
@@ -576,6 +579,29 @@ final class ResponseTest extends TestCase
         $this->assertSame('Jonathan', $page['props']['user']->name);
         $this->assertSame('/user/123', $page['url']);
         $this->assertSame('123', $page['version']);
+    }
+
+    #[Test]
+    public function xhr_response_with_deferred_props_includes_deferred_metadata(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'user' => ['name' => 'Jonathan'],
+                'results' => new DeferProp(static fn () => ['data' => ['item1', 'item2']], 'default'),
+            ],
+        );
+
+        $page = $response->body->jsonSerialize();
+
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertSame('Jonathan', $page['props']['user']['name']);
+        $this->assertArrayNotHasKey('results', $page['props']);
+        $this->assertSame(['default' => ['results']], $page['deferredProps']);
     }
 
     #[Test]
@@ -1163,6 +1189,302 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
+    public function once_props_are_always_resolved_on_initial_page_load(): void
+    {
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => inertia()->once(static fn () => 'bar'),
+            ],
+        );
+
+        $page = $response->body->inertia['page'];
+
+        $this->assertSame('bar', $page['props']['foo']);
+        $this->assertSame(['foo' => ['prop' => 'foo', 'expiresAt' => null]], $page['onceProps']);
+    }
+
+    #[Test]
+    public function fresh_once_props_are_included_on_initial_page_load(): void
+    {
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => inertia()->once(static fn () => 'bar')->fresh(),
+            ],
+        );
+
+        $page = $response->body->inertia['page'];
+
+        $this->assertArrayHasKey('onceProps', $page);
+        $this->assertSame(['foo' => ['prop' => 'foo', 'expiresAt' => null]], $page['onceProps']);
+    }
+
+    #[Test]
+    public function once_props_are_resolved_with_a_custom_key_and_ttl_value(): void
+    {
+        $clock = $this->clock();
+        $clock->setNow('2025-01-01 12:00:00');
+
+        $expiresAt = DateTime::now()
+            ->plus(Duration::minute())
+            ->getTimestamp()
+            ->getMilliseconds();
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => inertia()->once(static fn () => 'bar')->as('baz')->until(Duration::minute()),
+            ],
+        );
+
+        $page = $response->body->inertia['page'];
+
+        $this->assertSame('bar', $page['props']['foo']);
+        $this->assertSame(['baz' => ['prop' => 'foo', 'expiresAt' => $expiresAt]], $page['onceProps']);
+    }
+
+    #[Test]
+    public function once_props_are_not_resolved_on_subsequent_requests_when_they_are_in_the_once_props_header(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::EXCEPT_ONCE_PROPS => 'foo',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => inertia()->once(static fn () => 'bar'),
+            ],
+        );
+
+        $page = $response->body->jsonSerialize();
+
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertArrayNotHasKey('foo', $page['props']);
+        $this->assertSame(['foo' => ['prop' => 'foo', 'expiresAt' => null]], $page['onceProps']);
+    }
+
+    #[Test]
+    public function once_props_are_resolved_on_subsequent_requests_when_the_once_props_header_is_missing(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => inertia()->once(static fn () => 'bar'),
+            ],
+        );
+
+        $page = $response->body->jsonSerialize();
+
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertSame('bar', $page['props']['foo']);
+        $this->assertSame(['foo' => ['prop' => 'foo', 'expiresAt' => null]], $page['onceProps']);
+    }
+
+    #[Test]
+    public function once_props_are_resolved_on_subsequent_requests_when_they_are_not_in_the_once_props_header(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::EXCEPT_ONCE_PROPS => 'baz',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => inertia()->once(static fn () => 'bar'),
+            ],
+        );
+
+        $page = $response->body->jsonSerialize();
+
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertSame('bar', $page['props']['foo']);
+        $this->assertSame(['foo' => ['prop' => 'foo', 'expiresAt' => null]], $page['onceProps']);
+    }
+
+    #[Test]
+    public function once_props_are_resolved_on_partial_requests_without_only_or_except(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::PARTIAL_COMPONENT => 'User/Edit',
+            Header::PARTIAL_ONLY => 'foo',
+            Header::EXCEPT_ONCE_PROPS => 'foo',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => inertia()->once(static fn () => 'bar'),
+            ],
+        );
+
+        $page = $response->body->jsonSerialize();
+
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertSame('bar', $page['props']['foo']);
+        $this->assertSame(['foo' => ['prop' => 'foo', 'expiresAt' => null]], $page['onceProps']);
+    }
+
+    #[Test]
+    public function once_props_are_resolved_on_partial_requests_when_included_in_only_headers(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::PARTIAL_COMPONENT => 'User/Edit',
+            Header::PARTIAL_ONLY => 'foo',
+            Header::EXCEPT_ONCE_PROPS => 'foo',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => inertia()->once(static fn () => 'bar'),
+                'baz' => inertia()->once(static fn () => 'qux'),
+            ],
+        );
+
+        $page = $response->body->jsonSerialize();
+
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertSame('bar', $page['props']['foo']);
+        $this->assertArrayNotHasKey('baz', $page['props']);
+        $this->assertSame(['foo' => ['prop' => 'foo', 'expiresAt' => null]], $page['onceProps']);
+    }
+
+    #[Test]
+    public function once_props_are_not_resolved_on_partial_requests_when_excluded_in_except_headers(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::PARTIAL_COMPONENT => 'User/Edit',
+            Header::PARTIAL_EXCEPT => 'foo',
+            Header::EXCEPT_ONCE_PROPS => 'foo',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => inertia()->once(static fn () => 'bar'),
+                'baz' => inertia()->once(static fn () => 'qux'),
+            ],
+        );
+
+        $page = $response->body->jsonSerialize();
+
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertArrayNotHasKey('foo', $page['props']);
+        $this->assertSame('qux', $page['props']['baz']);
+        $this->assertSame(['baz' => ['prop' => 'baz', 'expiresAt' => null]], $page['onceProps']);
+    }
+
+    #[Test]
+    public function fresh_props_are_resolved_even_when_in_except_once_props_header(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::EXCEPT_ONCE_PROPS => 'foo',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => inertia()->once(static fn () => 'bar')->fresh(),
+            ],
+        );
+
+        $page = $response->body->jsonSerialize();
+
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertSame('bar', $page['props']['foo']);
+        $this->assertSame(['foo' => ['prop' => 'foo', 'expiresAt' => null]], $page['onceProps']);
+    }
+
+    #[Test]
+    public function fresh_props_are_not_excluded_while_once_props_are_excluded(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::EXCEPT_ONCE_PROPS => 'foo,baz',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => inertia()->once(static fn () => 'bar')->fresh(),
+                'baz' => inertia()->once(static fn () => 'qux'),
+            ],
+        );
+
+        $page = $response->body->jsonSerialize();
+
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertSame('bar', $page['props']['foo']);
+        $this->assertArrayNotHasKey('baz', $page['props']);
+        $this->assertSame(
+            [
+                'foo' => ['prop' => 'foo', 'expiresAt' => null],
+                'baz' => ['prop' => 'baz', 'expiresAt' => null],
+            ],
+            $page['onceProps'],
+        );
+    }
+
+    #[Test]
+    public function defer_props_that_are_once_and_already_loaded_are_excluded(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::EXCEPT_ONCE_PROPS => 'defer',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'defer' => inertia()->defer(static fn () => 'value')->once(),
+            ],
+        );
+
+        $page = $response->body->jsonSerialize();
+
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertArrayNotHasKey('defer', $page['props']);
+        $this->assertArrayNotHasKey('deferredProps', $page);
+        $this->assertSame(['defer' => ['prop' => 'defer', 'expiresAt' => null]], $page['onceProps']);
+    }
+
+    #[Test]
+    public function defer_props_that_are_once_and_already_loaded_not_excluded_when_explicitly_requested(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::PARTIAL_COMPONENT => 'User/Edit',
+            Header::PARTIAL_ONLY => 'defer',
+            Header::EXCEPT_ONCE_PROPS => 'defer',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'defer' => inertia()->defer(static fn () => 'value')->once(),
+            ],
+        );
+
+        $page = $response->body->jsonSerialize();
+
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertSame('value', $page['props']['defer']);
+        $this->assertSame(['defer' => ['prop' => 'defer', 'expiresAt' => null]], $page['onceProps']);
+    }
+
+    #[Test]
     public function responsable_with_invalid_key(): void
     {
         $this->makeRequest(headers: [Header::INERTIA => 'true']);
@@ -1186,7 +1508,6 @@ final class ResponseTest extends TestCase
         ]);
 
         $page = $response->body->inertia['page'];
-        $resolvedBody = $response->body->jsonSerialize();
 
         $this->assertSame('/sub/directory/user/123', $page['url']);
     }
@@ -1363,6 +1684,31 @@ final class ResponseTest extends TestCase
         $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertSame('foo value', $page['props']['foo']);
         $this->assertSame(['foo'], $page['mergeProps']);
+    }
+
+    #[Test]
+    public function once_props_from_provides_inertia_properties_are_included_in_once_props_metadata(): void
+    {
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'user' => ['name' => 'Jonathan'],
+                new class implements ProvidesInertiaProperties {
+                    public function toInertiaProperties(RenderContext $context): iterable
+                    {
+                        return [
+                            'foo' => Inertia::once(static fn () => 'bar'),
+                        ];
+                    }
+                },
+            ],
+        );
+
+        $page = $response->body->inertia['page'];
+
+        $this->assertSame('Jonathan', $page['props']['user']['name']);
+        $this->assertSame('bar', $page['props']['foo']);
+        $this->assertSame(['foo' => ['prop' => 'foo', 'expiresAt' => null]], $page['onceProps']);
     }
 
     #[Test]

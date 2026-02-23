@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Inertia\Props;
 
-use Inertia\Contracts\IgnoreFirstLoad;
 use Inertia\Contracts\InvokableProp;
+use Inertia\Contracts\Onceable;
 use Inertia\Traits\ResolvesCallables;
 use Inertia\Traits\ResolvesOnce;
 use Override;
 
-class OptionalProp implements IgnoreFirstLoad, InvokableProp
+class OnceProp implements Onceable, InvokableProp
 {
     use ResolvesCallables;
     use ResolvesOnce;
@@ -21,13 +21,12 @@ class OptionalProp implements IgnoreFirstLoad, InvokableProp
     private $callback;
 
     /**
-     * Create a new optional property instance. Optional properties are only
-     * included when explicitly requested via partial reloads, reducing
-     * initial payload size and improving performance.
+     * Create a new once property instance.
      */
     public function __construct(callable $callback)
     {
         $this->callback = $callback;
+        $this->once = true;
     }
 
     /**

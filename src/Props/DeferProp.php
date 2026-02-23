@@ -7,14 +7,17 @@ namespace Inertia\Props;
 use Inertia\Contracts\IgnoreFirstLoad;
 use Inertia\Contracts\InvokableProp;
 use Inertia\Contracts\Mergeable;
+use Inertia\Contracts\Onceable;
 use Inertia\Traits\MergesProps;
 use Inertia\Traits\ResolvesCallables;
+use Inertia\Traits\ResolvesOnce;
 use Override;
 
-final class DeferProp implements IgnoreFirstLoad, Mergeable, InvokableProp
+final class DeferProp implements IgnoreFirstLoad, Mergeable, Onceable, InvokableProp
 {
     use MergesProps;
     use ResolvesCallables;
+    use ResolvesOnce;
 
     /**
      * @var callable
