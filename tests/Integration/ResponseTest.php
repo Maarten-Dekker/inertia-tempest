@@ -18,12 +18,17 @@ use Inertia\Props\ScrollProp;
 use Inertia\Response;
 use Inertia\Support\Header;
 use Inertia\Support\RenderContext;
+use Inertia\Tests\Fixtures\CreateUserTable;
 use Inertia\Tests\Fixtures\FakeResource;
 use Inertia\Tests\Fixtures\TestController;
+use Inertia\Tests\Fixtures\User;
+use Inertia\Tests\Fixtures\UserSeeder;
 use Inertia\Tests\TestCase;
 use Iterator;
 use Mockery;
+use Override;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\PreCondition;
 use PHPUnit\Framework\Attributes\Test;
 use Tempest\DateTime\DateTime;
 use Tempest\DateTime\Duration;
@@ -36,6 +41,26 @@ use function Tempest\Router\uri;
 
 final class ResponseTest extends TestCase
 {
+    private static bool $dbInitialized = false;
+
+    #[PreCondition]
+    protected function configure(): void
+    {
+        if (! self::$dbInitialized) {
+            $this->database->setup();
+
+            new UserSeeder()->run(null);
+
+            self::$dbInitialized = true;
+        }
+    }
+
+    #[Override]
+    protected function migrateDatabase(): void
+    {
+        $this->database->migrate(CreateUserTable::class);
+    }
+
     #[Test]
     public function server_response(): void
     {
@@ -193,6 +218,63 @@ final class ResponseTest extends TestCase
             ],
             $page['scrollProps'],
         );
+    }
+
+    #[Test]
+    public function deferred_scroll_prop_is_excluded_from_initial_request(): void
+    {
+        $response = new Response(
+            component: 'Users/Index',
+            props: [
+                'users' => new ScrollProp(static fn () => User::select()->paginate(15))->defer(),
+            ],
+        );
+
+        $page = $response->body->inertia['page'];
+
+        $this->assertArrayNotHasKey('users', $page['props']);
+        $this->assertSame(['default' => ['users']], $page['deferredProps']);
+        $this->assertArrayNotHasKey('scrollProps', $page);
+    }
+
+    #[Test]
+    public function deferred_scroll_prop_is_resolved_on_partial_request(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::PARTIAL_COMPONENT => 'User/Edit',
+            Header::PARTIAL_ONLY => 'users',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'users' => new ScrollProp(static fn () => User::select()->paginate(15))->defer(),
+            ],
+        );
+
+        $page = $response->body->jsonSerialize();
+
+        $this->assertArrayHasKey('scrollProps', $page);
+        $this->assertArrayHasKey('users', $page['props']);
+        $this->assertCount(15, $page['props']['users']->data);
+        $this->assertContains('users.data', $page['mergeProps']);
+    }
+
+    #[Test]
+    public function deferred_scroll_prop_can_have_custom_group(): void
+    {
+        $response = new Response(
+            component: 'Users/Index',
+            props: [
+                'users' => new ScrollProp(static fn () => User::select()->paginate(15))->defer('custom-group'),
+            ],
+        );
+
+        $page = $response->body->inertia['page'];
+
+        $this->assertArrayNotHasKey('users', $page['props']);
+        $this->assertSame(['custom-group' => ['users']], $page['deferredProps']);
     }
 
     #[Test]

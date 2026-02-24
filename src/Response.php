@@ -11,6 +11,7 @@ use DateTimeImmutable;
 use GuzzleHttp\Promise\PromiseInterface;
 use Inertia\Configs\InertiaConfig;
 use Inertia\Contracts\Arrayable;
+use Inertia\Contracts\Deferrable;
 use Inertia\Contracts\IgnoreFirstLoad;
 use Inertia\Contracts\InvokableProp;
 use Inertia\Contracts\Mergeable;
@@ -18,7 +19,6 @@ use Inertia\Contracts\Onceable;
 use Inertia\Contracts\ProvidesInertiaProperties;
 use Inertia\Contracts\ProvidesInertiaProperty;
 use Inertia\Props\AlwaysProp;
-use Inertia\Props\DeferProp;
 use Inertia\Props\ScrollProp;
 use Inertia\Ssr\Contracts\Gateway;
 use Inertia\Ssr\Response as SsrResponse;
@@ -229,7 +229,12 @@ final class Response implements HttpResponse
     public function resolvePartialProperties(array $props): array
     {
         if (! $this->isPartial()) {
-            return array_filter($props, static fn ($prop) => ! $prop instanceof IgnoreFirstLoad);
+            return array_filter(
+                $props,
+                static fn ($prop) => (
+                    ! $prop instanceof IgnoreFirstLoad && ! ($prop instanceof Deferrable && $prop->shouldDefer())
+                ),
+            );
         }
 
         $only = $this->parseHeaderAsArray(Header::PARTIAL_ONLY);
@@ -281,22 +286,7 @@ final class Response implements HttpResponse
 
         return array_filter(
             $props,
-            static function (mixed $prop, string $key) use ($exceptOnceProps): bool {
-                if (! $prop instanceof Onceable) {
-                    return true;
-                }
-
-                if (! $prop->shouldResolveOnce()) {
-                    return true;
-                }
-
-                if ($prop->shouldBeRefreshed()) {
-                    return true;
-                }
-
-                $identifier = $prop->getKey() ?? $key;
-                return ! in_array($identifier, $exceptOnceProps, true);
-            },
+            fn (mixed $prop, string $key) => ! $this->isExcludedOnce($prop, $key, $exceptOnceProps),
             ARRAY_FILTER_USE_BOTH,
         );
     }
@@ -498,16 +488,15 @@ final class Response implements HttpResponse
 
         $groupedProps = [];
         foreach ($this->props as $key => $prop) {
-            if (! $prop instanceof DeferProp) {
+            if (! $prop instanceof Deferrable) {
                 continue;
             }
 
-            if (
-                $prop instanceof Onceable
-                && $prop->shouldResolveOnce()
-                && ! $prop->shouldBeRefreshed()
-                && in_array($prop->getKey() ?? $key, $exceptOnceProps, true)
-            ) {
+            if (! $prop->shouldDefer()) {
+                continue;
+            }
+
+            if ($this->isExcludedOnce($prop, $key, $exceptOnceProps)) {
                 continue;
             }
 
@@ -526,10 +515,15 @@ final class Response implements HttpResponse
     public function resolveScrollProps(): array
     {
         $resetProps = $this->parseHeaderAsArray(Header::RESET);
-        $scrollPropsResult = [];
+        $isPartial = $this->isPartial();
 
+        $scrollPropsResult = [];
         foreach ($this->getMergePropsForRequest(false) as $key => $prop) {
             if (! $prop instanceof ScrollProp) {
+                continue;
+            }
+
+            if (! $isPartial && $prop->shouldDefer()) {
                 continue;
             }
 
@@ -539,11 +533,7 @@ final class Response implements HttpResponse
             ];
         }
 
-        if ($scrollPropsResult === []) {
-            return [];
-        }
-
-        return ['scrollProps' => $scrollPropsResult];
+        return $scrollPropsResult === [] ? [] : ['scrollProps' => $scrollPropsResult];
     }
 
     /**
@@ -608,6 +598,26 @@ final class Response implements HttpResponse
     private function normalizeProps(array|ArrayInterface $props): array
     {
         return $props instanceof ArrayInterface ? $props->toArray() : $props;
+    }
+
+    /**
+     * Determines if a prop should be excluded because it has already been resolved once.
+     */
+    private function isExcludedOnce(mixed $prop, string $key, array $exceptOnceProps): bool
+    {
+        if (! $prop instanceof Onceable) {
+            return false;
+        }
+
+        if (! $prop->shouldResolveOnce()) {
+            return false;
+        }
+
+        if ($prop->shouldBeRefreshed()) {
+            return false;
+        }
+
+        return in_array($prop->getKey() ?? $key, $exceptOnceProps, true);
     }
 
     /**

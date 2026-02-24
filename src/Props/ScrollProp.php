@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Inertia\Props;
 
+use Inertia\Contracts\Deferrable;
 use Inertia\Contracts\InvokableProp;
 use Inertia\Contracts\Mergeable;
 use Inertia\Contracts\ProvidesScrollMetadata;
 use Inertia\Support\Header;
 use Inertia\Support\ScrollMetadata;
+use Inertia\Traits\DefersProps;
 use Inertia\Traits\MergesProps;
 use Inertia\Traits\ResolvesCallables;
 use Override;
@@ -22,8 +24,9 @@ use function Tempest\get;
  * This class provides functionality for handling pagination data with merge capabilities,
  * allowing paginated content to be appended or prepended during client-side navigation.
  */
-final class ScrollProp implements Mergeable, InvokableProp
+final class ScrollProp implements Deferrable, Mergeable, InvokableProp
 {
+    use DefersProps;
     use MergesProps;
     use ResolvesCallables;
 
