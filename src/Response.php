@@ -286,9 +286,7 @@ final class Response implements HttpResponse
 
         return array_filter(
             $props,
-            function (mixed $prop, string $key) use ($exceptOnceProps): bool {
-                return ! $this->isExcludedOnce($prop, $key, $exceptOnceProps);
-            },
+            fn (mixed $prop, string $key) => ! $this->isExcludedOnce($prop, $key, $exceptOnceProps),
             ARRAY_FILTER_USE_BOTH,
         );
     }

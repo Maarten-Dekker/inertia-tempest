@@ -18,13 +18,17 @@ use Inertia\Props\ScrollProp;
 use Inertia\Response;
 use Inertia\Support\Header;
 use Inertia\Support\RenderContext;
+use Inertia\Tests\Fixtures\CreateUserTable;
 use Inertia\Tests\Fixtures\FakeResource;
 use Inertia\Tests\Fixtures\TestController;
 use Inertia\Tests\Fixtures\User;
+use Inertia\Tests\Fixtures\UserSeeder;
 use Inertia\Tests\TestCase;
 use Iterator;
 use Mockery;
+use Override;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\PreCondition;
 use PHPUnit\Framework\Attributes\Test;
 use Tempest\DateTime\DateTime;
 use Tempest\DateTime\Duration;
@@ -37,6 +41,26 @@ use function Tempest\Router\uri;
 
 final class ResponseTest extends TestCase
 {
+    private static bool $dbInitialized = false;
+
+    #[PreCondition]
+    protected function configure(): void
+    {
+        if (! self::$dbInitialized) {
+            $this->database->setup();
+
+            new UserSeeder()->run(null);
+
+            self::$dbInitialized = true;
+        }
+    }
+
+    #[Override]
+    protected function migrateDatabase(): void
+    {
+        $this->database->migrate(CreateUserTable::class);
+    }
+
     #[Test]
     public function server_response(): void
     {
