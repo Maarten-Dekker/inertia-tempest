@@ -220,7 +220,8 @@ final class ResponseTest extends TestCase
         );
     }
 
-    public function test_deferred_scroll_prop_is_excluded_from_initial_request(): void
+    #[Test]
+    public function deferred_scroll_prop_is_excluded_from_initial_request(): void
     {
         $response = new Response(
             component: 'Users/Index',
