@@ -30,9 +30,9 @@
     ]
   },
   "require": {
-    "php": "^8.4",
+    "php": "^8.5",
     "ext-json": "*",
-    "tempest/framework": "^2.4"
+    "tempest/framework": "^3.0"
   },
   "require-dev": {
     "ext-pdo_sqlite": "*",
