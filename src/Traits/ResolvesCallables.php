@@ -6,7 +6,7 @@ namespace Inertia\Traits;
 
 use Closure;
 
-use function Tempest\invoke;
+use function Tempest\Container\invoke;
 
 trait ResolvesCallables
 {
