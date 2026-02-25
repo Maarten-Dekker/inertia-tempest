@@ -13,6 +13,7 @@ use Rector\Php74\Rector\Property\RestoreDefaultNullToNullableTypePropertyRector;
 use Rector\Php81\Rector\Array_\ArrayToFirstClassCallableRector;
 use Rector\PHPUnit\Set\PHPUnitSetList;
 use Rector\TypeDeclaration\Rector\ArrowFunction\AddArrowFunctionReturnTypeRector;
+use Tempest\Upgrade\Set\TempestSetList;
 use Rector\TypeDeclaration\Rector\Closure\ClosureReturnTypeRector;
 use Rector\TypeDeclaration\Rector\StmtsAwareInterface\DeclareStrictTypesRector;
 
@@ -22,9 +23,10 @@ return RectorConfig::configure()
         __DIR__ . '/src',
         __DIR__ . '/tests',
     ])
-    ->withPhpSets(php84: true)
+    ->withPhpSets(php85: true)
     ->withSets([
         PHPUnitSetList::PHPUNIT_120,
+        TempestSetList::TEMPEST_30,
     ])
     ->withRules([
         DeclareStrictTypesRector::class,
