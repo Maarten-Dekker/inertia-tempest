@@ -18,7 +18,6 @@ use Inertia\Props\ScrollProp;
 use Inertia\Response;
 use Inertia\Support\Header;
 use Inertia\Support\RenderContext;
-use Inertia\Tests\Fixtures\CreateUserTable;
 use Inertia\Tests\Fixtures\FakeResource;
 use Inertia\Tests\Fixtures\TestController;
 use Inertia\Tests\Fixtures\User;
@@ -53,12 +52,6 @@ final class ResponseTest extends TestCase
 
             self::$dbInitialized = true;
         }
-    }
-
-    #[Override]
-    protected function migrateDatabase(): void
-    {
-        $this->database->migrate(CreateUserTable::class);
     }
 
     #[Test]
@@ -1093,7 +1086,7 @@ final class ResponseTest extends TestCase
         );
 
         $deferProp = new DeferProp(static fn (): Arrayable => new class implements Arrayable {
-            #[\Override]
+            #[Override]
             public function toArray(): array
             {
                 return ['foo' => 'bar'];

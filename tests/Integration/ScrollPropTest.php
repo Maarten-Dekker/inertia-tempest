@@ -7,7 +7,6 @@ namespace Inertia\Tests\Integration;
 use Inertia\Contracts\ProvidesScrollMetadata;
 use Inertia\Props\ScrollProp;
 use Inertia\Support\Header;
-use Inertia\Tests\Fixtures\CreateUserTable;
 use Inertia\Tests\Fixtures\User;
 use Inertia\Tests\Fixtures\UserSeeder;
 use Inertia\Tests\TestCase;
@@ -33,12 +32,6 @@ final class ScrollPropTest extends TestCase
         }
 
         $this->users = User::select()->paginate(15);
-    }
-
-    #[\Override]
-    protected function migrateDatabase(): void
-    {
-        $this->database->migrate(CreateUserTable::class);
     }
 
     #[Test]
