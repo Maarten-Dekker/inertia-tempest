@@ -41,11 +41,6 @@ trait IsResponse
 
     private(set) ?View $view = null;
 
-    protected function getBody(): View|string|array|Generator|JsonSerializable|null
-    {
-        return $this->body;
-    }
-
     public function getHeader(string $name): ?Header
     {
         return $this->headers[$name] ?? null;
@@ -122,7 +117,12 @@ trait IsResponse
         return $this;
     }
 
-    public function setBody(View|string|array|Generator|null $body): self
+    protected function getBody(): View|string|array|Generator|JsonSerializable|null
+    {
+        return $this->body;
+    }
+
+    public function setBody(View|string|array|Generator|JsonSerializable|null $body): self
     {
         $this->body = $body;
 

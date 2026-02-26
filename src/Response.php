@@ -50,6 +50,11 @@ final class Response implements HttpResponse
     use IsResponse;
 
     /**
+     * Tracks whether the body has been resolved to prevent duplicate resolution.
+     */
+    private bool $bodyResolved = false;
+
+    /**
      * The view data.
      *
      * @var array<string, mixed>
@@ -172,8 +177,9 @@ final class Response implements HttpResponse
      */
     protected function getBody(): View|string|array|Generator|JsonSerializable|null
     {
-        if ($this->bodyValue === null) {
+        if (! $this->bodyResolved) {
             $this->resolveBody();
+            $this->bodyResolved = true;
         }
 
         return $this->bodyValue;
