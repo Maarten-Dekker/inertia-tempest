@@ -400,10 +400,9 @@ final class ResponseFactoryTest extends TestCase
             ],
         );
 
+        $page = $response->body;
         $session = $this->container->get(Session::class);
         $session->cleanup();
-
-        $page = $response->body;
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']);

@@ -8,6 +8,7 @@ use BackedEnum;
 use Closure;
 use DateInterval;
 use DateTimeImmutable;
+use Generator;
 use GuzzleHttp\Promise\PromiseInterface;
 use Inertia\Configs\InertiaConfig;
 use Inertia\Contracts\Arrayable;
@@ -27,9 +28,10 @@ use Inertia\Support\PaginatorAdapter;
 use Inertia\Support\PropertyContext;
 use Inertia\Support\RenderContext;
 use Inertia\Support\SessionKey;
+use Inertia\Traits\IsResponse;
 use Inertia\Views\InertiaView;
+use JsonSerializable;
 use Tempest\Http\ContentType;
-use Tempest\Http\IsResponse;
 use Tempest\Http\Method;
 use Tempest\Http\Request;
 use Tempest\Http\Response as HttpResponse;
@@ -37,6 +39,7 @@ use Tempest\Http\Status;
 use Tempest\Support\Arr;
 use Tempest\Support\Arr\ArrayInterface;
 use Tempest\Support\Paginator\PaginatedData;
+use Tempest\View\View;
 use UnitEnum;
 
 use function Tempest\get;
@@ -86,31 +89,8 @@ final class Response implements HttpResponse
         private readonly bool $encryptHistory = false,
         private readonly ?Closure $urlResolver = null,
     ) {
-        $this->body = new LazyBody(function (): array|null|InertiaView {
-            $this->props = $this->normalizeProps($this->props);
-            $this->props = $this->resolveInertiaPropsProviders($this->props);
-
-            $resolvedProps = $this->resolveProperties($this->props);
-
-            $page = array_merge(
-                [
-                    'component' => $this->component,
-                    'props' => $resolvedProps,
-                    'url' => $this->getUrl(),
-                    'version' => $this->version,
-                    'clearHistory' => $this->session->consume(SessionKey::ClearHistory->value, $this->clearHistory),
-                    'encryptHistory' => $this->encryptHistory,
-                ],
-                $this->resolveMergeProps(),
-                $this->resolveDeferredProps(),
-                $this->resolveCacheDirections(),
-                $this->resolveScrollProps(),
-                $this->resolveOnceProps(),
-                $this->resolveFlashData(),
-            );
-
-            return $this->resolveBody($page);
-        });
+        $this->props = $this->normalizeProps($this->props);
+        $this->checkVersionMismatch();
     }
 
     /**
@@ -122,11 +102,11 @@ final class Response implements HttpResponse
     {
         if ($key instanceof ProvidesInertiaProperties) {
             $this->props[] = $key;
-            return $this;
+        } elseif (is_array($key)) {
+            $this->props = array_merge($this->props, $key);
+        } else {
+            $this->props[$key] = $value;
         }
-
-        $data = is_array($key) ? $key : [$key => $value];
-        $this->props = array_merge($this->props, $data);
 
         return $this;
     }
@@ -136,9 +116,11 @@ final class Response implements HttpResponse
      */
     public function withViewData(string|array $key, mixed $value = null): self
     {
-        $data = is_array($key) ? $key : [$key => $value];
-
-        $this->viewData = array_merge($this->viewData, $data);
+        if (is_array($key)) {
+            $this->viewData = array_merge($this->viewData, $key);
+        } else {
+            $this->viewData[$key] = $value;
+        }
 
         return $this;
     }
@@ -178,6 +160,26 @@ final class Response implements HttpResponse
     }
 
     /**
+     * Determine if the request is a partial request.
+     */
+    public function isPartial(): bool
+    {
+        return $this->request->headers->get(Header::PARTIAL_COMPONENT) === $this->component;
+    }
+
+    /**
+     * Resolve the response body lazily on first access.
+     */
+    protected function getBody(): View|string|array|Generator|JsonSerializable|null
+    {
+        if ($this->bodyValue === null) {
+            $this->resolveBody();
+        }
+
+        return $this->bodyValue;
+    }
+
+    /**
      * Resolve the properties for the response.
      *
      * @param array<array-key, mixed> $props
@@ -186,8 +188,8 @@ final class Response implements HttpResponse
     public function resolveProperties(array $props): array
     {
         $props = $this->resolvePartialProperties($props);
-        $props = $this->resolveOnceProperties($props);
-        $props = $this->resolveAlways($props);
+        $props = $this->filterOnceProps($props);
+        $props = $this->resolveAlwaysProps($props);
 
         return $this->resolvePropertyInstances($props);
     }
@@ -269,7 +271,7 @@ final class Response implements HttpResponse
      * @param array<string, mixed> $props
      * @return array<string, mixed>
      */
-    public function resolveOnceProperties(array $props): array
+    public function filterOnceProps(array $props): array
     {
         $isInertia = (bool) $this->request->headers->get(Header::INERTIA);
         $isPartial = $this->isPartial();
@@ -297,7 +299,7 @@ final class Response implements HttpResponse
      * @param array<string, mixed> $props
      * @return array<string, mixed>
      */
-    public function resolveAlways(array $props): array
+    public function resolveAlwaysProps(array $props): array
     {
         $always = array_filter($this->props, static fn ($prop) => $prop instanceof AlwaysProp);
 
@@ -370,33 +372,11 @@ final class Response implements HttpResponse
     }
 
     /**
-     * Resolve the cache directions for the response.
-     *
-     * @return array<string, mixed>
-     */
-    public function resolveCacheDirections(): array
-    {
-        if ($this->cacheFor === []) {
-            return [];
-        }
-
-        return [
-            'cache' => array_map(static function ($value): int {
-                if ($value instanceof DateInterval) {
-                    return new DateTimeImmutable('@0')->add($value)->getTimestamp();
-                }
-
-                return intval($value);
-            }, $this->cacheFor),
-        ];
-    }
-
-    /**
      * Resolve merge props configuration for client-side prop merging.
      *
      * @return array<string, mixed>
      */
-    public function getMergePropsForRequest(bool $rejectResetProps = true): array
+    public function resolveMergeableProps(bool $rejectResetProps = true): array
     {
         $props = array_filter($this->props, static fn ($prop) => $prop instanceof Mergeable && $prop->shouldMerge());
 
@@ -427,7 +407,7 @@ final class Response implements HttpResponse
      */
     public function resolveMergeProps(): array
     {
-        $mergeableProps = $this->getMergePropsForRequest();
+        $mergeableProps = $this->resolveMergeableProps();
 
         $appendProps = [];
         $prependProps = [];
@@ -437,9 +417,7 @@ final class Response implements HttpResponse
         foreach ($mergeableProps as $key => $prop) {
             if ($prop->shouldDeepMerge()) {
                 $deepMergeProps[] = $key;
-            }
-
-            if (! $prop->shouldDeepMerge()) {
+            } else {
                 if ($prop->appendsAtRoot()) {
                     $appendProps[] = $key;
                 } else {
@@ -518,7 +496,7 @@ final class Response implements HttpResponse
         $isPartial = $this->isPartial();
 
         $scrollPropsResult = [];
-        foreach ($this->getMergePropsForRequest(false) as $key => $prop) {
+        foreach ($this->resolveMergeableProps(false) as $key => $prop) {
             if (! $prop instanceof ScrollProp) {
                 continue;
             }
@@ -541,7 +519,7 @@ final class Response implements HttpResponse
      *
      * @return array<string, array<int, string>>
      */
-    public function resolveOnceProps(): array
+    public function resolveOncePropsMetadata(): array
     {
         $props = array_filter(
             $this->props,
@@ -571,6 +549,81 @@ final class Response implements HttpResponse
     }
 
     /**
+     * Resolve the cache directions for the response.
+     *
+     * @return array<string, mixed>
+     */
+    public function resolveCacheDirections(): array
+    {
+        if ($this->cacheFor === []) {
+            return [];
+        }
+
+        return [
+            'cache' => array_map(static fn ($value): int => $value instanceof DateInterval
+                ? new DateTimeImmutable('@0')->add($value)->getTimestamp()
+                : intval($value), $this->cacheFor),
+        ];
+    }
+
+    /**
+     * Build the full page object and set the response body.
+     */
+    private function resolveBody(): void
+    {
+        $this->props = $this->resolveInertiaPropsProviders($this->props);
+        $resolvedProps = $this->resolveProperties($this->props);
+
+        $page = array_merge(
+            [
+                'component' => $this->component,
+                'props' => $resolvedProps,
+                'url' => $this->resolveUrl(),
+                'version' => $this->version,
+                'clearHistory' => $this->session->consume(SessionKey::ClearHistory->value, $this->clearHistory),
+                'encryptHistory' => $this->encryptHistory,
+            ],
+            $this->resolveMergeProps(),
+            $this->resolveDeferredProps(),
+            $this->resolveCacheDirections(),
+            $this->resolveScrollProps(),
+            $this->resolveOncePropsMetadata(),
+            $this->resolveFlashData(),
+        );
+
+        $this->setBody($this->resolveHttpBody($page));
+    }
+
+    /**
+     * Resolve the body of the response, either as JSON or a full view.
+     *
+     * @param array<string, mixed> $page The complete Inertia page object
+     * @return array<string, mixed>|null|InertiaView
+     */
+    private function resolveHttpBody(array $page): array|null|InertiaView
+    {
+        if (! $this->request->headers->has(Header::INERTIA)) {
+            $ssr = $this->ssr($page);
+
+            return new InertiaView(
+                path: $this->rootView,
+                inertia: ['page' => $page] + $this->viewData,
+                ssrHead: $ssr?->head,
+                ssrBody: $ssr?->body,
+            );
+        }
+
+        if ($this->status === Status::CONFLICT) {
+            return null;
+        }
+
+        $this->addHeader(Header::INERTIA, 'true');
+        $this->setContentType(ContentType::JSON);
+
+        return $page;
+    }
+
+    /**
      * Resolve flash data from the session.
      *
      * @return array<string, mixed>
@@ -583,15 +636,30 @@ final class Response implements HttpResponse
     }
 
     /**
-     * Determine if the request is a partial request.
+     * Check for asset version mismatch and set conflict status eagerly.
      */
-    public function isPartial(): bool
+    private function checkVersionMismatch(): void
     {
-        return $this->request->headers->get(Header::PARTIAL_COMPONENT) === $this->component;
+        if (! $this->request->headers->has(Header::INERTIA)) {
+            return;
+        }
+
+        $inertiaVersion = $this->request->headers->get(Header::VERSION);
+
+        if (
+            $this->request->method === Method::GET
+            && $inertiaVersion !== null
+            && $inertiaVersion !== ''
+            && $inertiaVersion !== '0'
+            && $inertiaVersion !== $this->version
+        ) {
+            $this->setStatus(Status::CONFLICT);
+            $this->addHeader(Header::LOCATION, $this->request->uri);
+        }
     }
 
     /**
-     * Normalize the props to an array.
+     * Normalize the props to a plain array.
      *
      * @return array<string, mixed>
      */
@@ -621,61 +689,9 @@ final class Response implements HttpResponse
     }
 
     /**
-     * Resolve the body of the response, either as JSON or a full view.
-     *
-     * @param array<string, mixed> $page The complete Inertia page object
-     * @return array<string, mixed>|null|InertiaView
-     */
-    private function resolveBody(array $page): array|null|InertiaView
-    {
-        if (! $this->request->headers->has(Header::INERTIA)) {
-            $ssr = $this->ssr($page);
-
-            return new InertiaView(
-                path: $this->rootView,
-                inertia: ['page' => $page] + $this->viewData,
-                ssrHead: $ssr?->head,
-                ssrBody: $ssr?->body,
-            );
-        }
-
-        $inertiaVersion = $this->request->headers->get(Header::VERSION);
-
-        if (
-            $this->request->method === Method::GET
-            && $inertiaVersion !== null
-            && $inertiaVersion !== ''
-            && $inertiaVersion !== '0'
-            && $inertiaVersion !== $this->version
-        ) {
-            $this->setStatus(Status::CONFLICT);
-            $this->addHeader(Header::LOCATION, $this->request->uri);
-
-            return null;
-        }
-
-        $this->addHeader(Header::INERTIA, 'true');
-        $this->setContentType(ContentType::JSON);
-
-        return $page;
-    }
-
-    /**
-     * Perform server-side rendering if enabled.
-     */
-    private function ssr(array $page): ?SsrResponse
-    {
-        if (! $this->config->ssr->enabled) {
-            return null;
-        }
-
-        return $this->gateway->dispatch($page);
-    }
-
-    /**
      * Get the URL from the request while preserving the trailing slash.
      */
-    private function getUrl(): string
+    private function resolveUrl(): string
     {
         if ($this->urlResolver) {
             return invoke($this->urlResolver, ['request' => $this->request]);
@@ -690,6 +706,18 @@ final class Response implements HttpResponse
         }
 
         return $url;
+    }
+
+    /**
+     * Perform server-side rendering if enabled.
+     */
+    private function ssr(array $page): ?SsrResponse
+    {
+        if (! $this->config->ssr->enabled) {
+            return null;
+        }
+
+        return $this->gateway->dispatch($page);
     }
 
     /**
