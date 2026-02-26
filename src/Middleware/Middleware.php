@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Inertia\Middleware;
 
 use Closure;
-use Inertia\LazyBody;
 use Inertia\Props\OnceProp;
 use Inertia\Response as InertiaResponse;
 use Inertia\ResponseFactory;
@@ -148,11 +147,6 @@ class Middleware implements HttpMiddleware
             } else {
                 throw $controllerActionHadNoReturn;
             }
-        }
-
-        if ($response->body instanceof LazyBody) {
-            $resolvedBody = $response->body->jsonSerialize();
-            $response = $response->setBody($resolvedBody);
         }
 
         $response = $response->addHeader(
