@@ -6,21 +6,37 @@ namespace Inertia\Tests\Integration;
 
 use Inertia\Props\OptionalProp;
 use Inertia\Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 use Tempest\Http\Request;
 
 final class OptionalPropTest extends TestCase
 {
-    public function test_can_invoke(): void
+    #[Test]
+    public function can_invoke(): void
     {
         $optionalProp = new OptionalProp(static fn (): string => 'An optional value');
 
         $this->assertSame('An optional value', $optionalProp());
     }
 
-    public function test_can_resolve_bindings_when_invoked(): void
+    #[Test]
+    public function can_resolve_bindings_when_invoked(): void
     {
         $optionalProp = new OptionalProp(static fn (Request $request): Request => $request);
 
         $this->assertInstanceOf(Request::class, $optionalProp());
+    }
+
+    #[Test]
+    public function is_onceable(): void
+    {
+        $optionalProp = new OptionalProp(static fn () => 'value')
+            ->once()
+            ->as('custom-key')
+            ->until(60);
+
+        $this->assertTrue($optionalProp->shouldResolveOnce());
+        $this->assertSame('custom-key', $optionalProp->getKey());
+        $this->assertNotNull($optionalProp->expiresAt());
     }
 }

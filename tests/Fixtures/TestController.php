@@ -8,6 +8,7 @@ use Inertia\Middleware\EncryptHistoryMiddleware;
 use Inertia\Middleware\Middleware;
 use Inertia\Response;
 use Tempest\Http\Request;
+use Tempest\Http\Responses\Back;
 use Tempest\Http\Responses\Redirect;
 use Tempest\Router\Get;
 use Tempest\Router\Put;
@@ -29,13 +30,19 @@ final class TestController
         return inertia()->render('User/Edit');
     }
 
-    #[Get('/basic-render-with-example-middleware-test', middleware: [ExampleMiddleware::class])]
-    public function basicRenderWithExampleMiddleware(): Response
+    #[Get('/basic-render-with-root-view-property', middleware: [RootViewPropertyMiddleware::class])]
+    public function basicRenderWithRootViewPropertyMiddleware(): Response
     {
         return inertia()->render('User/Edit');
     }
 
-    #[Get('/version-test-with-helper', middleware: [ExampleMiddleware::class])]
+    #[Get('/basic-render-with-root-view-method', middleware: [RootViewMethodMiddleware::class])]
+    public function basicRenderWithRootViewMethodMiddleware(): Response
+    {
+        return inertia()->render('User/Edit');
+    }
+
+    #[Get('/version-test-with-helper', middleware: [RootViewMethodMiddleware::class])]
     public function versionCanBeAClosure(): Response
     {
         inertia()->version(static fn () => 'test-version-from-closure');
@@ -111,7 +118,7 @@ final class TestController
         self::$voidActionCalled = true;
     }
 
-    #[Get('/custom-empty-response', middleware: [ExampleMiddleware::class])]
+    #[Get('/custom-empty-response', middleware: [RootViewMethodMiddleware::class])]
     public function customEmptyResponseAction(): void
     {
         // This action intentionally returns nothing.
@@ -120,7 +127,7 @@ final class TestController
     #[Get('/numeric-version-test')]
     public function numericVersion(): Response
     {
-        inertia()->version(1597347897973);
+        inertia()->version(1_597_347_897_973);
 
         return inertia()->render('User/Edit');
     }
@@ -255,5 +262,49 @@ final class TestController
             ->with(['foo' => 'bar', 'baz' => 'qux'])
             ->with(['quux' => 'corge'])
             ->with(new ExampleInertiaPropsProvider(['grault' => 'garply']));
+    }
+
+    #[Get('/flash-test', middleware: [Middleware::class])]
+    public function flashTest(): Back
+    {
+        return inertia()->flash(['message' => 'Success!'])->back();
+    }
+
+    #[Get('/flash-render-test', middleware: [Middleware::class])]
+    public function flashRenderTest(): Response
+    {
+        return inertia()
+            ->flash('type', 'success')
+            ->render('User/Edit', ['user' => 'Jonathan'])
+            ->flash(['message' => 'User updated!']);
+    }
+
+    #[Get('/no-flash-test', middleware: [Middleware::class])]
+    public function noFlashTest(): Response
+    {
+        return inertia()->render('User/Edit', ['user' => 'Jonathan']);
+    }
+
+    #[Get('/multiple-flash-test', middleware: [Middleware::class])]
+    public function multipleFlashTest(): Response
+    {
+        inertia()->flash('foo', 'value1');
+        inertia()->flash('bar', 'value2');
+
+        return inertia()->render('User/Show');
+    }
+
+    #[Get('/action')]
+    public function actionWithRedirect(): Redirect
+    {
+        inertia()->flash('message', 'Success!');
+
+        return new Redirect('/dashboard');
+    }
+
+    #[Get('/dashboard', middleware: [Middleware::class])]
+    public function dashboard(): Response
+    {
+        return inertia()->render('Dashboard');
     }
 }
