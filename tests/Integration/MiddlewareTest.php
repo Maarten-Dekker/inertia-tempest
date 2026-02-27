@@ -9,13 +9,11 @@ use Inertia\Configs\ValidationConfig;
 use Inertia\Middleware\Middleware;
 use Inertia\Props\AlwaysProp;
 use Inertia\Support\Header;
-use Inertia\Tests\Fixtures\ExampleMiddleware;
 use Inertia\Tests\Fixtures\TestController;
 use Inertia\Tests\TestCase;
-use Inertia\Views\InertiaView;
 use LogicException;
+use PHPUnit\Framework\Attributes\Test;
 use Tempest\Http\ContentType;
-use Tempest\Http\Request;
 use Tempest\Http\Session\Session;
 use Tempest\Http\Status;
 use Tempest\Router\Exceptions\ControllerActionHadNoReturn;
@@ -26,15 +24,8 @@ use function Tempest\Router\uri;
 
 final class MiddlewareTest extends TestCase
 {
-    #[\Override]
-    protected function setUp(): void
-    {
-        parent::setUp();
-        ExampleMiddleware::$runCount = 0;
-        TestController::$voidActionCalled = false;
-    }
-
-    public function test_no_response_value_by_default_means_automatically_redirecting_back_for_inertia_requests(): void
+    #[Test]
+    public function no_response_value_by_default_means_automatically_redirecting_back_for_inertia_requests(): void
     {
         $response = $this->http->put(
             uri: uri([TestController::class, 'voidPutAction']),
@@ -50,7 +41,8 @@ final class MiddlewareTest extends TestCase
         $this->assertTrue(TestController::$voidActionCalled, 'The controller action was not called.');
     }
 
-    public function test_no_response_value_can_be_customized_by_overriding_the_middleware_method(): void
+    #[Test]
+    public function no_response_value_can_be_customized_by_overriding_the_middleware_method(): void
     {
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('An empty Inertia response was returned.');
@@ -64,7 +56,8 @@ final class MiddlewareTest extends TestCase
         );
     }
 
-    public function test_no_response_means_no_response_for_non_inertia_requests(): void
+    #[Test]
+    public function no_response_means_no_response_for_non_inertia_requests(): void
     {
         $this->expectException(ControllerActionHadNoReturn::class);
 
@@ -76,7 +69,8 @@ final class MiddlewareTest extends TestCase
         );
     }
 
-    public function test_the_version_is_optional(): void
+    #[Test]
+    public function the_version_is_optional(): void
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'basicRender']),
@@ -92,9 +86,10 @@ final class MiddlewareTest extends TestCase
         $this->assertSame('User/Edit', $page['component']);
     }
 
-    public function test_the_version_can_be_a_number(): void
+    #[Test]
+    public function the_version_can_be_a_number(): void
     {
-        $version = 1597347897973;
+        $version = 1_597_347_897_973;
 
         $response = $this->http->get(
             uri: uri([TestController::class, 'numericVersion']),
@@ -111,7 +106,8 @@ final class MiddlewareTest extends TestCase
         $this->assertSame('User/Edit', $page['component']);
     }
 
-    public function test_the_version_can_be_a_string(): void
+    #[Test]
+    public function the_version_can_be_a_string(): void
     {
         $version = 'foo-version';
 
@@ -130,7 +126,8 @@ final class MiddlewareTest extends TestCase
         $this->assertSame('User/Edit', $page['component']);
     }
 
-    public function test_it_will_instruct_inertia_to_reload_on_a_version_mismatch(): void
+    #[Test]
+    public function it_will_instruct_inertia_to_reload_on_a_version_mismatch(): void
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'stringVersion']),
@@ -145,10 +142,11 @@ final class MiddlewareTest extends TestCase
         $this->assertEmpty($response->body);
     }
 
-    public function test_the_url_can_be_resolved_with_a_custom_resolver(): void
+    #[Test]
+    public function the_url_can_be_resolved_with_a_custom_resolver(): void
     {
         $response = $this->http->get(
-            uri: uri([TestController::class, 'basicRenderWithExampleMiddleware']),
+            uri: uri([TestController::class, 'basicRenderWithRootViewMethodMiddleware']),
             headers: [
                 Header::INERTIA => 'true',
             ],
@@ -162,31 +160,30 @@ final class MiddlewareTest extends TestCase
         $this->assertSame('/my-custom-url', $page['url']);
     }
 
-    public function test_validation_errors_are_registered_as_of_default(): void
+    #[Test]
+    public function validation_errors_are_registered_as_of_default(): void
     {
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
-        $this->assertInstanceOf(Middleware::class, $middleware);
 
-        $sharedData = $middleware->share($request);
+        $sharedData = $middleware->share();
 
         $this->assertArrayHasKey('errors', $sharedData);
         $this->assertInstanceOf(AlwaysProp::class, $sharedData['errors']);
     }
 
-    public function test_validation_errors_can_be_empty(): void
+    #[Test]
+    public function validation_errors_can_be_empty(): void
     {
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
-        $this->assertInstanceOf(Middleware::class, $middleware);
 
-        $sharedData = $middleware->share($request);
+        $sharedData = $middleware->share();
         $errors = $sharedData['errors']();
 
         $this->assertEmpty($errors);
     }
 
-    public function test_validation_errors_returns_single_error(): void
+    #[Test]
+    public function validation_errors_returns_single_error(): void
     {
         $this->container->singleton(
             InertiaConfig::class,
@@ -201,20 +198,18 @@ final class MiddlewareTest extends TestCase
         $validationErrors = [
             'email' => [new rules\IsEmail(), new Rules\HasLength(min: 50)],
         ];
-        $this->assertInstanceOf(Session::class, $session);
         $session->set(Session::VALIDATION_ERRORS, $validationErrors);
 
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
-        $this->assertInstanceOf(Middleware::class, $middleware);
 
-        $sharedData = $middleware->share($request);
+        $sharedData = $middleware->share();
         $errors = $sharedData['errors']();
 
         $this->assertSame('Email must be a valid email address', $errors['email']);
     }
 
-    public function test_validation_errors_returns_multiple_errors(): void
+    #[Test]
+    public function validation_errors_returns_multiple_errors(): void
     {
         $this->container->singleton(
             InertiaConfig::class,
@@ -230,14 +225,11 @@ final class MiddlewareTest extends TestCase
             'email' => [new Rules\IsEmail(), new Rules\HasLength(min: 50)],
             'name' => [new Rules\HasLength(min: 50)],
         ];
-        $this->assertInstanceOf(Session::class, $session);
         $session->set(Session::VALIDATION_ERRORS, $validationErrors);
 
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
-        $this->assertInstanceOf(Middleware::class, $middleware);
 
-        $sharedData = $middleware->share($request);
+        $sharedData = $middleware->share();
         $errors = $sharedData['errors']();
 
         $this->assertSame(
@@ -256,7 +248,8 @@ final class MiddlewareTest extends TestCase
         );
     }
 
-    public function test_validation_errors_are_localized_when_config_is_true(): void
+    #[Test]
+    public function validation_errors_are_localized_when_config_is_true(): void
     {
         $this->container->singleton(
             InertiaConfig::class,
@@ -270,13 +263,10 @@ final class MiddlewareTest extends TestCase
         $validationErrors = [
             'email' => [new Rules\IsNotEmptyString()],
         ];
-        $this->assertInstanceOf(\Tempest\Http\Session\Session::class, $session);
         $session->set(Session::VALIDATION_ERRORS, $validationErrors);
 
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
-        $this->assertInstanceOf(\Inertia\Middleware\Middleware::class, $middleware);
-        $sharedData = $middleware->share($request);
+        $sharedData = $middleware->share();
         $errors = $sharedData['errors']();
 
         $this->assertIsArray($errors);
@@ -284,7 +274,8 @@ final class MiddlewareTest extends TestCase
         $this->assertSame('email must not be empty', $errors['email']);
     }
 
-    public function test_validation_errors_are_generic_when_config_is_false(): void
+    #[Test]
+    public function validation_errors_are_generic_when_config_is_false(): void
     {
         $this->container->singleton(
             InertiaConfig::class,
@@ -298,13 +289,11 @@ final class MiddlewareTest extends TestCase
         $validationErrors = [
             'email' => [new Rules\IsNotEmptyString()],
         ];
-        $this->assertInstanceOf(\Tempest\Http\Session\Session::class, $session);
         $session->set(Session::VALIDATION_ERRORS, $validationErrors);
 
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
-        $this->assertInstanceOf(\Inertia\Middleware\Middleware::class, $middleware);
-        $sharedData = $middleware->share($request);
+
+        $sharedData = $middleware->share();
         $errors = $sharedData['errors']();
 
         $this->assertIsArray($errors);
@@ -312,10 +301,10 @@ final class MiddlewareTest extends TestCase
         $this->assertSame('Value must not be empty', $errors['email']);
     }
 
-    public function test_default_validation_errors_can_be_overwritten(): void
+    #[Test]
+    public function default_validation_errors_can_be_overwritten(): void
     {
         $session = $this->container->get(Session::class);
-        $this->assertInstanceOf(Session::class, $session);
         $session->set(Session::VALIDATION_ERRORS, ['name' => ['This should be overwritten.']]);
 
         $response = $this->http->get(
@@ -333,25 +322,26 @@ final class MiddlewareTest extends TestCase
         $this->assertSame('foo', $page['props']['errors']);
     }
 
-    public function test_middleware_can_change_the_root_view_via_a_property(): void
+    #[Test]
+    public function middleware_can_change_the_root_view_via_a_property(): void
     {
-        $response = $this->http->get(uri: uri([TestController::class, 'basicRenderWithExampleMiddleware']));
+        $response = $this->http->get(uri: uri([TestController::class, 'basicRenderWithRootViewPropertyMiddleware']));
 
         $response->assertStatus(Status::OK);
-        $this->assertInstanceOf(InertiaView::class, $response->body);
-        $this->assertSame('welcome', $response->body->path);
+        $response->assertView('welcome');
     }
 
-    public function test_middleware_can_change_the_root_view_by_overriding_the_rootview_method(): void
+    #[Test]
+    public function middleware_can_change_the_root_view_by_overriding_the_rootview_method(): void
     {
-        $response = $this->http->get(uri: uri([TestController::class, 'basicRenderWithExampleMiddleware']));
+        $response = $this->http->get(uri: uri([TestController::class, 'basicRenderWithRootViewMethodMiddleware']));
 
         $response->assertStatus(Status::OK);
-        $this->assertInstanceOf(InertiaView::class, $response->body);
-        $this->assertSame('welcome', $response->body->path);
+        $response->assertView('welcome');
     }
 
-    public function test_determine_the_version_by_a_hash_of_the_vite_manifest(): void
+    #[Test]
+    public function determine_the_version_by_a_hash_of_the_vite_manifest(): void
     {
         $manifestPath = root_path('public/build/manifest.json');
         $directoryPath = dirname($manifestPath);
@@ -369,7 +359,6 @@ final class MiddlewareTest extends TestCase
             $page = $response->body->inertia['page'];
 
             $response->assertStatus(Status::OK);
-            $this->assertInstanceOf(InertiaView::class, $response->body);
             $this->assertSame(hash_file('xxh128', $manifestPath), $page['version']);
         } finally {
             unlink($manifestPath);
@@ -377,12 +366,55 @@ final class MiddlewareTest extends TestCase
         }
     }
 
-    public function test_extended_middleware_only_runs_once(): void
+    #[Test]
+    public function middleware_share_once(): void
     {
-        $this->container->singleton(Middleware::class, fn () => $this->container->get(ExampleMiddleware::class));
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'basicRenderWithRootViewMethodMiddleware']),
+            headers: [Header::INERTIA => 'true'],
+        );
 
-        $this->http->get(uri: uri([TestController::class, 'basicRender']));
+        $page = $response->body;
 
-        $this->assertSame(1, ExampleMiddleware::$runCount);
+        $this->assertSame(['admin' => true], $page['props']['permissions']);
+        $this->assertSame(['theme' => 'dark'], $page['props']['settings']);
+        $this->assertSame(['prop' => 'permissions', 'expiresAt' => null], $page['onceProps']['permissions']);
+        $this->assertSame('settings', $page['onceProps']['app-settings']['prop']);
+        $this->assertNotNull($page['onceProps']['app-settings']['expiresAt']);
+    }
+
+    #[Test]
+    public function middleware_share_and_share_once_are_merged(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'basicRenderWithRootViewMethodMiddleware']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $page = $response->body;
+
+        $this->assertSame('Jonathan', $page['props']['user']['name']);
+        $this->assertSame(['admin' => true], $page['props']['permissions']);
+        $this->assertSame(['theme' => 'dark'], $page['props']['settings']);
+        $this->assertSame(['prop' => 'permissions', 'expiresAt' => null], $page['onceProps']['permissions']);
+        $this->assertSame('settings', $page['onceProps']['app-settings']['prop']);
+        $this->assertNotNull($page['onceProps']['app-settings']['expiresAt']);
+    }
+
+    #[Test]
+    public function flash_data_is_preserved_on_non_inertia_redirect(): void
+    {
+        $firstResponse = $this->http->get(uri: uri([TestController::class, 'actionWithRedirect']));
+
+        $firstResponse->assertRedirect('/dashboard');
+
+        $secondResponse = $this->http->get(
+            uri: uri([TestController::class, 'dashboard']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $page = $secondResponse->body;
+
+        $this->assertSame('Success!', $page['flash']['message']);
     }
 }

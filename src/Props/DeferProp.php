@@ -4,17 +4,23 @@ declare(strict_types=1);
 
 namespace Inertia\Props;
 
+use Inertia\Contracts\Deferrable;
 use Inertia\Contracts\IgnoreFirstLoad;
 use Inertia\Contracts\InvokableProp;
 use Inertia\Contracts\Mergeable;
+use Inertia\Contracts\Onceable;
+use Inertia\Traits\DefersProps;
 use Inertia\Traits\MergesProps;
+use Inertia\Traits\ResolvesCallables;
+use Inertia\Traits\ResolvesOnce;
 use Override;
 
-use function Tempest\invoke;
-
-final class DeferProp implements IgnoreFirstLoad, Mergeable, InvokableProp
+final class DeferProp implements Deferrable, IgnoreFirstLoad, Mergeable, Onceable, InvokableProp
 {
+    use DefersProps;
     use MergesProps;
+    use ResolvesCallables;
+    use ResolvesOnce;
 
     /**
      * @var callable
@@ -26,21 +32,10 @@ final class DeferProp implements IgnoreFirstLoad, Mergeable, InvokableProp
      * from the initial page load and only evaluated when requested by the
      * frontend, improving initial page performance.
      */
-    public function __construct(
-        callable $callback,
-        private readonly string $group = 'default',
-    ) {
-        $this->callback = $callback;
-    }
-
-    /**
-     * Get the defer group for this property. Properties with the same group
-     * are loaded together in a single request, allowing for efficient
-     * batching of related deferred data.
-     */
-    public function group(): ?string
+    public function __construct(callable $callback, string $group = 'default')
     {
-        return $this->group;
+        $this->callback = $callback;
+        $this->defer($group);
     }
 
     /**
@@ -49,6 +44,6 @@ final class DeferProp implements IgnoreFirstLoad, Mergeable, InvokableProp
     #[Override]
     public function __invoke(): mixed
     {
-        return invoke($this->callback);
+        return $this->resolveCallable($this->callback);
     }
 }

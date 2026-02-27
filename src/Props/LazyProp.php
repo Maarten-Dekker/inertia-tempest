@@ -6,15 +6,16 @@ namespace Inertia\Props;
 
 use Inertia\Contracts\IgnoreFirstLoad;
 use Inertia\Contracts\InvokableProp;
+use Inertia\Traits\ResolvesCallables;
 use Override;
-
-use function Tempest\invoke;
 
 /**
  * @deprecated Use OptionalProp instead for clearer semantics.
  */
 final class LazyProp implements IgnoreFirstLoad, InvokableProp
 {
+    use ResolvesCallables;
+
     /**
      * @var callable
      */
@@ -31,6 +32,6 @@ final class LazyProp implements IgnoreFirstLoad, InvokableProp
     #[Override]
     public function __invoke(): mixed
     {
-        return invoke($this->callback);
+        return $this->resolveCallable($this->callback);
     }
 }

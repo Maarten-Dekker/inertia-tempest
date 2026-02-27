@@ -9,16 +9,11 @@ use Inertia\Middleware\Middleware;
 use LogicException;
 use Override;
 use Tempest\Discovery\SkipDiscovery;
-use Tempest\Http\Request;
 use Tempest\Http\Response;
 
 #[SkipDiscovery]
-final class ExampleMiddleware extends Middleware
+final class RootViewMethodMiddleware extends Middleware
 {
-    protected string $rootView = 'welcome';
-
-    public static int $runCount = 0;
-
     #[Override]
     protected function onEmptyResponse(): Response
     {
@@ -43,16 +38,23 @@ final class ExampleMiddleware extends Middleware
         return 'welcome';
     }
 
-    #[\Override]
-    public function share(Request $request): array
+    #[Override]
+    public function share(): array
     {
-        self::$runCount++;
-
         return [
-            ...parent::share($request),
-            'flash' => [
-                'message' => static fn () => $request->getCookie('massage'),
-            ],
+            'user' => ['name' => 'Jonathan'],
+        ];
+    }
+
+    #[Override]
+    public function shareOnce(): array
+    {
+        return [
+            'permissions' => static fn () => ['admin' => true],
+            'settings' => $this->inertia
+                ->once(static fn () => ['theme' => 'dark'])
+                ->as('app-settings')
+                ->until(60),
         ];
     }
 }

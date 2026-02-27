@@ -7,13 +7,11 @@ namespace Inertia\Tests;
 use Inertia\ResponseFactory;
 use Mockery;
 use Override;
-use Tempest\Core\Application;
 use Tempest\Discovery\DiscoveryLocation;
 use Tempest\Framework\Testing\IntegrationTest;
 use Tempest\Http\GenericRequest;
 use Tempest\Http\Method;
 use Tempest\Http\Request;
-use Tempest\Router\HttpApplication;
 
 abstract class TestCase extends IntegrationTest
 {
@@ -30,7 +28,6 @@ abstract class TestCase extends IntegrationTest
         'clearHistory' => false,
     ];
 
-    #[Override]
     protected function setUp(): void
     {
         $this->discoveryLocations[] = new DiscoveryLocation(
@@ -39,8 +36,6 @@ abstract class TestCase extends IntegrationTest
         );
 
         parent::setUp();
-
-        $this->actAsHttpApplication();
 
         $this->factory = $this->container->get(ResponseFactory::class);
     }
@@ -51,15 +46,6 @@ abstract class TestCase extends IntegrationTest
         Mockery::close();
 
         parent::tearDown();
-    }
-
-    protected function actAsHttpApplication(): HttpApplication
-    {
-        $application = new HttpApplication($this->container);
-
-        $this->container->singleton(Application::class, static fn () => $application);
-
-        return $application;
     }
 
     /**
@@ -75,6 +61,7 @@ abstract class TestCase extends IntegrationTest
             uri: $uri,
             headers: $headers,
         );
+
         $this->container->singleton(Request::class, static fn () => $request);
 
         return $request;
