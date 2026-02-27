@@ -159,22 +159,31 @@ void createInertiaApp({
 
 ## Shared Data
 
-The `Inertia\Middleware\Middleware` is the perfect place to define props that should be available on every page. This
-middleware provides a `version()` method for setting your asset version, as well as a `share()` method for defining
-shared data. To add your own shared data, you can extend the base middleware:
+The `Inertia\Middleware\Middleware` class provides several defaults out-of-the-box. By default, the following data is shared on every request:
+
+* **Errors:** Validation errors are automatically resolved and shared as `errors`.
+* **Auth:** The current authenticated user (via Tempest Auth) is shared as `auth.user`.
+
+### Customizing Shared Data
+
+To add your own shared data, you can extend the base middleware. Use `parent::share()` to keep the default error and auth logic, or overwrite it entirely.
 
 ```php
 use Inertia\Middleware\Middleware;
-use Tempest\Http\Request;
 
 class HandleInertiaRequests extends Middleware
 {
-    public function share(Request $request): array
+    public function share(): array
     {
-        return array_replace_recursive(parent::share($request), [
-            'flash' => [
-                'status' => fn() => $request->session()->get('status'),
-            ],
+        return array_replace_recursive(parent::share(), [
+            'app_name' => 'My Tempest App',
+            
+            'workspace' => $this->session->get('workspace_id'),
+
+            'statistics' => $this->inertia->defer(fn () => [
+                'total_users' => User::count(),
+                'active_projects' => Project::count(),
+            ]),
         ]);
     }
 }
