@@ -83,7 +83,8 @@ final class ResponseTest extends TestCase
         $this->assertFalse($page['encryptHistory']);
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false}';
-        $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
+        $expectedHtml =
+            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
 
         $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
@@ -114,7 +115,8 @@ final class ResponseTest extends TestCase
         $this->assertSame(['default' => ['foo']], $page['deferredProps']);
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deferredProps":{"default":["foo"]}}';
-        $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
+        $expectedHtml =
+            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
 
         $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
@@ -155,7 +157,8 @@ final class ResponseTest extends TestCase
         );
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deferredProps":{"default":["foo","bar"],"custom":["baz"]}}';
-        $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
+        $expectedHtml =
+            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
 
         $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
@@ -300,7 +303,8 @@ final class ResponseTest extends TestCase
         $this->assertSame(['foo', 'bar'], $page['mergeProps']);
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":"foo value","bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo","bar"]}';
-        $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
+        $expectedHtml =
+            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
 
         $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
@@ -331,7 +335,8 @@ final class ResponseTest extends TestCase
         $this->assertFalse($page['encryptHistory']);
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":"foo value","bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["bar"],"prependProps":["foo"]}';
-        $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
+        $expectedHtml =
+            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
 
         $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
@@ -363,7 +368,8 @@ final class ResponseTest extends TestCase
         $this->assertFalse($page['encryptHistory']);
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":{"data":[{"id":1},{"id":2}]},"bar":{"data":{"items":[{"uuid":1},{"uuid":2}]}}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo.data"],"prependProps":["bar.data.items"]}';
-        $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
+        $expectedHtml =
+            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
 
         $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
@@ -398,7 +404,8 @@ final class ResponseTest extends TestCase
         $this->assertFalse($page['encryptHistory']);
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":{"data":[{"id":1},{"id":2}]},"bar":{"data":{"items":[{"uuid":1},{"uuid":2}]}}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo.data"],"prependProps":["bar.data.items"],"matchPropsOn":["foo.data.id","bar.data.items.uuid"]}';
-        $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
+        $expectedHtml =
+            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
 
         $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
@@ -431,7 +438,8 @@ final class ResponseTest extends TestCase
         $this->assertSame(['foo', 'bar'], $page['deepMergeProps']);
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":"foo value","bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deepMergeProps":["foo","bar"]}';
-        $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
+        $expectedHtml =
+            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
 
         $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
@@ -469,7 +477,8 @@ final class ResponseTest extends TestCase
         $this->assertSame(['foo.foo-key', 'bar.bar-key'], $page['matchPropsOn']);
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":"foo value","bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deepMergeProps":["foo","bar"],"matchPropsOn":["foo.foo-key","bar.bar-key"]}';
-        $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
+        $expectedHtml =
+            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
 
         $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
@@ -503,7 +512,8 @@ final class ResponseTest extends TestCase
         $this->assertSame(['foo', 'bar'], $page['mergeProps']);
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo","bar"],"deferredProps":{"default":["foo"]}}';
-        $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
+        $expectedHtml =
+            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
 
         $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
@@ -537,7 +547,8 @@ final class ResponseTest extends TestCase
         $this->assertSame(['foo', 'bar'], $page['deepMergeProps']);
 
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deepMergeProps":["foo","bar"],"deferredProps":{"default":["foo"]}}';
-        $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
+        $expectedHtml =
+            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
 
         $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
