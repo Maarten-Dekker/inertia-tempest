@@ -9,12 +9,14 @@ use Inertia\Configs\InertiaConfig;
 use Inertia\Support\Header;
 use Inertia\Tests\Fixtures\TestController;
 use Inertia\Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 use function Tempest\Router\uri;
 
 final class HistoryTest extends TestCase
 {
-    public function test_the_history_is_not_encrypted_or_cleared_by_default(): void
+    #[Test]
+    public function the_history_is_not_encrypted_or_cleared_by_default(): void
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'basicRenderWithMiddleware']),
@@ -30,7 +32,8 @@ final class HistoryTest extends TestCase
         $this->assertFalse($page['clearHistory']);
     }
 
-    public function test_the_history_can_be_encrypted(): void
+    #[Test]
+    public function the_history_can_be_encrypted(): void
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'encryptHistory']),
@@ -45,7 +48,8 @@ final class HistoryTest extends TestCase
         $this->assertTrue($page['encryptHistory']);
     }
 
-    public function test_the_history_can_be_encrypted_via_middleware(): void
+    #[Test]
+    public function the_history_can_be_encrypted_via_middleware(): void
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'encryptHistoryWithMiddleware']),
@@ -60,7 +64,8 @@ final class HistoryTest extends TestCase
         $this->assertTrue($page['encryptHistory']);
     }
 
-    public function test_the_history_can_be_encrypted_globally(): void
+    #[Test]
+    public function the_history_can_be_encrypted_globally(): void
     {
         $this->container->singleton(
             InertiaConfig::class,
@@ -80,7 +85,8 @@ final class HistoryTest extends TestCase
         $this->assertTrue($page['encryptHistory']);
     }
 
-    public function test_the_history_can_be_encrypted_globally_and_overridden(): void
+    #[Test]
+    public function the_history_can_be_encrypted_globally_and_overridden(): void
     {
         $this->container->singleton(
             InertiaConfig::class,
@@ -100,7 +106,8 @@ final class HistoryTest extends TestCase
         $this->assertFalse($page['encryptHistory']);
     }
 
-    public function test_the_history_can_be_cleared(): void
+    #[Test]
+    public function the_history_can_be_cleared(): void
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'clearHistory']),
@@ -115,7 +122,8 @@ final class HistoryTest extends TestCase
         $this->assertTrue($page['clearHistory']);
     }
 
-    public function test_the_history_can_be_cleared_when_redirecting(): void
+    #[Test]
+    public function the_history_can_be_cleared_when_redirecting(): void
     {
         $this->http->get(
             uri: uri([TestController::class, 'clearHistoryAndRedirect']),

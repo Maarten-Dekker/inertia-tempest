@@ -6,10 +6,12 @@ namespace Inertia\Middleware;
 
 use Closure;
 use Inertia\LazyBody;
+use Inertia\Props\OnceProp;
 use Inertia\Response as InertiaResponse;
 use Inertia\ResponseFactory;
 use Inertia\Support\Header;
 use Inertia\Support\ResolveErrorProps;
+use Inertia\Support\SessionKey;
 use Override;
 use Tempest\Auth\Authentication\Authenticator;
 use Tempest\Core\Priority;
@@ -30,8 +32,8 @@ use function Tempest\root_path;
 class Middleware implements HttpMiddleware
 {
     public function __construct(
-        private readonly ResponseFactory $inertia,
-        private readonly Session $session,
+        protected readonly ResponseFactory $inertia,
+        protected readonly Session $session,
         private readonly ViteConfig $viteConfig,
         private readonly ResolveErrorProps $errorResolver,
     ) {}
@@ -84,6 +86,16 @@ class Middleware implements HttpMiddleware
     }
 
     /**
+     * Define the props that are shared once and remembered across navigations.
+     *
+     * @return array<string, callable|OnceProp>
+     */
+    public function shareOnce(): array
+    {
+        return [];
+    }
+
+    /**
      * Sets the root template loaded on the first page visit.
      *
      * @see https://inertiajs.com/server-side-setup#root-template
@@ -112,9 +124,19 @@ class Middleware implements HttpMiddleware
     {
         $this->inertia->version($this->version(...));
         $this->inertia->share($this->share($request));
+
+        foreach ($this->shareOnce() as $key => $value) {
+            if ($value instanceof OnceProp) {
+                $this->inertia->share($key, $value);
+            } else {
+                $this->inertia->shareOnce($key, $value);
+            }
+        }
+
         $this->inertia->setRootView($this->rootView());
 
-        if (($urlResolver = $this->urlResolver()) instanceof Closure) {
+        $urlResolver = $this->urlResolver();
+        if ($urlResolver) {
             $this->inertia->resolveUrlUsing($urlResolver);
         }
 
@@ -137,6 +159,10 @@ class Middleware implements HttpMiddleware
             key: 'Vary',
             value: Header::INERTIA,
         );
+
+        if ($response->status->isRedirect()) {
+            $this->reflash();
+        }
 
         if (! $request->headers->has(Header::INERTIA) || $response instanceof InertiaResponse) {
             return $response;
@@ -164,6 +190,18 @@ class Middleware implements HttpMiddleware
     }
 
     /**
+     * Reflash the session data for the next request.
+     */
+    protected function reflash(): void
+    {
+        $flashed = $this->inertia->getFlashed();
+
+        if ($flashed !== []) {
+            $this->session->flash(SessionKey::FlashData->value, $flashed);
+        }
+    }
+
+    /**
      * Handle empty responses.
      */
     protected function onEmptyResponse(): Response
@@ -176,7 +214,7 @@ class Middleware implements HttpMiddleware
      */
     public function onVersionChange(Request $request): Response
     {
-        $this->session?->reflash();
+        $this->session->reflash();
 
         return $this->inertia->location($request->uri);
     }

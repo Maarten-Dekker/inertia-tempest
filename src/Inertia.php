@@ -13,9 +13,11 @@ use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
 use Inertia\Props\LazyProp;
 use Inertia\Props\MergeProp;
+use Inertia\Props\OnceProp;
 use Inertia\Props\OptionalProp;
 use Inertia\Props\ScrollProp;
 use Inertia\Support\Facade;
+use Tempest\Http\Responses\Back;
 use Tempest\Http\Responses\Redirect;
 use Tempest\Support\Arr\ArrayInterface;
 use UnitEnum;
@@ -124,6 +126,11 @@ class Inertia extends Facade
             );
     }
 
+    public static function once(callable $callback): OnceProp
+    {
+        return static::instance()->once($callback);
+    }
+
     public static function always(mixed $value): AlwaysProp
     {
         return static::instance()->always($value);
@@ -151,8 +158,33 @@ class Inertia extends Facade
             );
     }
 
+    public static function back(?string $fallback = null): Back
+    {
+        return static::instance()->back($fallback);
+    }
+
     public static function location(string|Redirect $url): \Tempest\Http\Response
     {
         return static::instance()->location($url);
+    }
+
+    /**
+     * @param BackedEnum|UnitEnum|string|array<string, mixed> $key
+     */
+    public static function flash(array|BackedEnum|string|UnitEnum $key, mixed $value = null): \Inertia\ResponseFactory
+    {
+        return static::instance()
+            ->flash(
+                key: $key,
+                value: $value,
+            );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function getFlashed(): array
+    {
+        return static::instance()->getFlashed();
     }
 }

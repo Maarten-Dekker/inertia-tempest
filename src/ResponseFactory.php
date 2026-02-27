@@ -15,13 +15,16 @@ use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
 use Inertia\Props\LazyProp;
 use Inertia\Props\MergeProp;
+use Inertia\Props\OnceProp;
 use Inertia\Props\OptionalProp;
 use Inertia\Props\ScrollProp;
 use Inertia\Support\Header;
+use Inertia\Support\SessionKey;
 use InvalidArgumentException;
 use Tempest\Container\Singleton;
 use Tempest\Http\GenericResponse;
 use Tempest\Http\Request;
+use Tempest\Http\Responses\Back;
 use Tempest\Http\Responses\Redirect;
 use Tempest\Http\Session\Session;
 use Tempest\Http\Status;
@@ -99,7 +102,7 @@ final class ResponseFactory
      * included with every response, making it ideal for user authentication
      * state, flash messages, etc.
      *
-     * @param  string|array<array-key, mixed>|ArrayInterface<array-key, mixed> $key
+     * @param string|array<array-key, mixed>|ArrayInterface<array-key, mixed> $key
      */
     public function share(string|array|ArrayInterface|ProvidesInertiaProperties $key, mixed $value = null): void
     {
@@ -175,7 +178,7 @@ final class ResponseFactory
      */
     public function clearHistory(): void
     {
-        $this->session->set('inertia.clear_history', true);
+        $this->session->set(SessionKey::ClearHistory->value, true);
     }
 
     /**
@@ -253,6 +256,29 @@ final class ResponseFactory
     }
 
     /**
+     * Create a once property.
+     */
+    public function once(callable $callback): OnceProp
+    {
+        return new OnceProp($callback);
+    }
+
+    /**
+     * Create and share a once property.
+     */
+    public function shareOnce(string $key, callable $callback): OnceProp
+    {
+        $prop = new OnceProp($callback);
+
+        $this->share(
+            key: $key,
+            value: $prop,
+        );
+
+        return $prop;
+    }
+
+    /**
      * Create an Inertia response.
      *
      * @param array<array-key, mixed>|ArrayInterface<array-key, mixed> $props
@@ -312,6 +338,56 @@ final class ResponseFactory
         }
 
         return $url instanceof Redirect ? $url : new Redirect($url);
+    }
+
+    /**
+     * Flash data to be included with the next response. Unlike regular props,
+     * flash data is not persisted in the browser's history state, making it
+     * ideal for one-time notifications like toasts or highlights.
+     *
+     * @param BackedEnum|UnitEnum|string|array<string, mixed> $key
+     */
+    public function flash(BackedEnum|UnitEnum|string|array $key, mixed $value = null): self
+    {
+        $flash = $key;
+
+        if (! is_array($key)) {
+            $key = match (true) {
+                $key instanceof BackedEnum => $key->value,
+                $key instanceof UnitEnum => $key->name,
+                default => $key,
+            };
+
+            $flash = [$key => $value];
+        }
+
+        $this->session->flash(
+            SessionKey::FlashData->value,
+            [
+                ...$this->getFlashed(),
+                ...$flash,
+            ],
+        );
+
+        return $this;
+    }
+
+    /**
+     * Create a new redirect response to the previous location.
+     */
+    public function back(?string $fallback = null): Back
+    {
+        return new Back($fallback);
+    }
+
+    /**
+     * Retrieve the flashed data from the session.
+     *
+     * @return array<string, mixed>
+     */
+    public function getFlashed(): array
+    {
+        return $this->session->get(SessionKey::FlashData->value) ?? [];
     }
 
     /**
