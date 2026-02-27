@@ -35,8 +35,7 @@ final class DeferProp implements Deferrable, IgnoreFirstLoad, Mergeable, Onceabl
     public function __construct(callable $callback, string $group = 'default')
     {
         $this->callback = $callback;
-        $this->deferred = true;
-        $this->deferGroup = $group;
+        $this->defer($group);
     }
 
     /**
