@@ -11,6 +11,7 @@ use Inertia\Ssr\Response as SsrResponse;
 use Inertia\Tests\Fixtures\FakeClientResponse;
 use Inertia\Tests\TestCase;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
 use RuntimeException;
 use Tempest\HttpClient\HttpClient;
 
@@ -18,7 +19,8 @@ use function Tempest\root_path;
 
 final class HttpGatewayTest extends TestCase
 {
-    public function test_it_returns_null_when_ssr_is_disabled(): void
+    #[Test]
+    public function it_returns_null_when_ssr_is_disabled(): void
     {
         $this->container->singleton(
             InertiaConfig::class,
@@ -26,12 +28,12 @@ final class HttpGatewayTest extends TestCase
         );
 
         $gateway = $this->container->get(HttpGateway::class);
-        $this->assertInstanceOf(HttpGateway::class, $gateway);
 
         $this->assertNotInstanceOf(SsrResponse::class, $gateway->dispatch(self::EXAMPLE_PAGE_OBJECT));
     }
 
-    public function test_it_returns_null_when_no_bundle_file_is_detected(): void
+    #[Test]
+    public function it_returns_null_when_no_bundle_file_is_detected(): void
     {
         $this->container->singleton(
             InertiaConfig::class,
@@ -42,12 +44,12 @@ final class HttpGatewayTest extends TestCase
         );
 
         $gateway = $this->container->get(HttpGateway::class);
-        $this->assertInstanceOf(HttpGateway::class, $gateway);
 
         $this->assertNotInstanceOf(SsrResponse::class, $gateway->dispatch(self::EXAMPLE_PAGE_OBJECT));
     }
 
-    public function test_it_dispatches_the_page_when_bundle_is_detected(): void
+    #[Test]
+    public function it_dispatches_the_page_when_bundle_is_detected(): void
     {
         $bundlePath = root_path('temp-ssr-bundle.js');
         touch($bundlePath);
@@ -88,7 +90,8 @@ final class HttpGatewayTest extends TestCase
         }
     }
 
-    public function test_it_returns_null_when_the_http_request_fails(): void
+    #[Test]
+    public function it_returns_null_when_the_http_request_fails(): void
     {
         $bundlePath = root_path('temp-ssr-bundle.js');
         touch($bundlePath);
@@ -124,7 +127,8 @@ final class HttpGatewayTest extends TestCase
         }
     }
 
-    public function test_it_returns_null_when_invalid_json_is_returned(): void
+    #[Test]
+    public function it_returns_null_when_invalid_json_is_returned(): void
     {
         $bundlePath = root_path('temp-ssr-bundle.js');
         touch($bundlePath);
@@ -160,7 +164,8 @@ final class HttpGatewayTest extends TestCase
         }
     }
 
-    public function test_health_check_the_ssr_server(): void
+    #[Test]
+    public function health_check_the_ssr_server(): void
     {
         $successResponse = new FakeClientResponse(
             body: '',
@@ -184,7 +189,6 @@ final class HttpGatewayTest extends TestCase
         $this->container->singleton(HttpClient::class, static fn () => $mockClient);
 
         $gateway = $this->container->get(HttpGateway::class);
-        $this->assertInstanceOf(HttpGateway::class, $gateway);
 
         $this->assertTrue($gateway->isHealthy());
         $this->assertFalse($gateway->isHealthy());

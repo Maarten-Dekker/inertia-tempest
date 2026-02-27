@@ -13,10 +13,12 @@ use Inertia\Tests\Fixtures\FakeGateway;
 use Inertia\Tests\TestCase;
 use Inertia\Views\InertiaView;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
 
 final class DirectiveTest extends TestCase
 {
-    public function test_inertia_method_renders_the_root_element(): void
+    #[Test]
+    public function inertia_method_renders_the_root_element(): void
     {
         $view = new InertiaView(
             path: 'inertia.view.php',
@@ -31,7 +33,8 @@ final class DirectiveTest extends TestCase
         $this->assertSame($expectedHtml, (string) $view->inertia());
     }
 
-    public function test_inertia_directive_renders_the_root_element_and_script_element(): void
+    #[Test]
+    public function inertia_directive_renders_the_root_element_and_script_element(): void
     {
         $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(
             ssr: new SsrConfig(enabled: false),
@@ -49,7 +52,8 @@ final class DirectiveTest extends TestCase
         $this->assertSame($expectedHtml, (string) $view->inertia());
     }
 
-    public function test_inertia_directive_renders_server_side_rendered_content_when_enabled(): void
+    #[Test]
+    public function inertia_directive_renders_server_side_rendered_content_when_enabled(): void
     {
         $this->container->singleton(
             InertiaConfig::class,
@@ -73,7 +77,8 @@ final class DirectiveTest extends TestCase
         $this->assertSame('<p>This is some example SSR content</p>', $renderedHtml);
     }
 
-    public function test_inertia_directive_can_use_a_different_root_element_id(): void
+    #[Test]
+    public function inertia_directive_can_use_a_different_root_element_id(): void
     {
         $this->container->singleton(
             InertiaConfig::class,
@@ -89,7 +94,8 @@ final class DirectiveTest extends TestCase
         $this->assertSame($expectedHtml, (string) $view->inertia('foo'));
     }
 
-    public function test_inertia_directive_can_use_a_different_root_element_id_when_using_script_element(): void
+    #[Test]
+    public function inertia_directive_can_use_a_different_root_element_id_when_using_script_element(): void
     {
         $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(
             ssr: new SsrConfig(enabled: false),
@@ -107,7 +113,8 @@ final class DirectiveTest extends TestCase
         $this->assertSame($expectedHtml, (string) $view->inertia('foo'));
     }
 
-    public function test_inertia_head_renders_nothing_when_ssr_is_disabled(): void
+    #[Test]
+    public function inertia_head_renders_nothing_when_ssr_is_disabled(): void
     {
         $view = new InertiaView(
             path: 'inertia.view.php',
@@ -119,7 +126,8 @@ final class DirectiveTest extends TestCase
         $this->assertEmpty((string) $view->inertiaHead());
     }
 
-    public function test_inertia_head_renders_ssr_head_when_enabled(): void
+    #[Test]
+    public function inertia_head_renders_ssr_head_when_enabled(): void
     {
         $view = new InertiaView(
             path: 'inertia.view.php',
@@ -131,7 +139,8 @@ final class DirectiveTest extends TestCase
         $this->assertSame('<title inertia>Example SSR Title</title>', (string) $view->inertiaHead());
     }
 
-    public function test_the_server_side_rendering_request_is_dispatched_only_once_per_request(): void
+    #[Test]
+    public function the_server_side_rendering_request_is_dispatched_only_once_per_request(): void
     {
         $this->container->singleton(
             InertiaConfig::class,

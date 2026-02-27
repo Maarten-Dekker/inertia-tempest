@@ -30,13 +30,19 @@ final class TestController
         return inertia()->render('User/Edit');
     }
 
-    #[Get('/basic-render-with-example-middleware-test', middleware: [ExampleMiddleware::class])]
-    public function basicRenderWithExampleMiddleware(): Response
+    #[Get('/basic-render-with-root-view-property', middleware: [RootViewPropertyMiddleware::class])]
+    public function basicRenderWithRootViewPropertyMiddleware(): Response
     {
         return inertia()->render('User/Edit');
     }
 
-    #[Get('/version-test-with-helper', middleware: [ExampleMiddleware::class])]
+    #[Get('/basic-render-with-root-view-method', middleware: [RootViewMethodMiddleware::class])]
+    public function basicRenderWithRootViewMethodMiddleware(): Response
+    {
+        return inertia()->render('User/Edit');
+    }
+
+    #[Get('/version-test-with-helper', middleware: [RootViewMethodMiddleware::class])]
     public function versionCanBeAClosure(): Response
     {
         inertia()->version(static fn () => 'test-version-from-closure');
@@ -112,7 +118,7 @@ final class TestController
         self::$voidActionCalled = true;
     }
 
-    #[Get('/custom-empty-response', middleware: [ExampleMiddleware::class])]
+    #[Get('/custom-empty-response', middleware: [RootViewMethodMiddleware::class])]
     public function customEmptyResponseAction(): void
     {
         // This action intentionally returns nothing.
@@ -121,7 +127,7 @@ final class TestController
     #[Get('/numeric-version-test')]
     public function numericVersion(): Response
     {
-        inertia()->version(1597347897973);
+        inertia()->version(1_597_347_897_973);
 
         return inertia()->render('User/Edit');
     }
