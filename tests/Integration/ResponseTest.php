@@ -695,7 +695,7 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
-    public function lazy_callable_resource_response(): void
+    public function optional_callable_resource_response(): void
     {
         $this->makeRequest(
             uri: '/users',
@@ -719,7 +719,7 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
-    public function lazy_callable_resource_partial_response(): void
+    public function optional_callable_resource_partial_response(): void
     {
         $this->makeRequest(
             uri: '/users',
@@ -749,7 +749,7 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
-    public function lazy_prop_returning_pagination_is_transformed(): void
+    public function pagination_is_transformed(): void
     {
         $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(laravel_pagination: true));
 
@@ -800,7 +800,7 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
-    public function lazy_prop_returning_nested_pagination_is_transformed(): void
+    public function nested_pagination_is_transformed(): void
     {
         $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(laravel_pagination: true));
 
@@ -1020,7 +1020,7 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
-    public function lazy_props_are_not_included_by_default(): void
+    public function optional_props_are_not_included_by_default(): void
     {
         $this->makeRequest(
             uri: '/users',
@@ -1043,7 +1043,7 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
-    public function lazy_props_are_included_in_partial_reload(): void
+    public function optional_props_are_included_in_partial_reload(): void
     {
         $this->makeRequest(
             uri: '/users',
