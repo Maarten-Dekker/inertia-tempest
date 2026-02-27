@@ -14,9 +14,9 @@ final class OptionalPropTest extends TestCase
     #[Test]
     public function can_invoke(): void
     {
-        $optionalProp = new OptionalProp(static fn (): string => 'A lazy value');
+        $optionalProp = new OptionalProp(static fn (): string => 'An optional value');
 
-        $this->assertSame('A lazy value', $optionalProp());
+        $this->assertSame('An optional value', $optionalProp());
     }
 
     #[Test]

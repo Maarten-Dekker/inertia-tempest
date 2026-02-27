@@ -6,14 +6,12 @@ namespace Inertia;
 
 use BackedEnum;
 use Closure;
-use Deprecated;
 use Inertia\Configs\InertiaConfig;
 use Inertia\Contracts\ProvidesInertiaProperties;
 use Inertia\Contracts\ProvidesScrollMetadata;
 use Inertia\Exceptions\ComponentNotFoundException;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
-use Inertia\Props\LazyProp;
 use Inertia\Props\MergeProp;
 use Inertia\Props\OnceProp;
 use Inertia\Props\OptionalProp;
@@ -190,15 +188,6 @@ final class ResponseFactory
     public function encryptHistory(bool $encrypt = true): void
     {
         $this->encryptHistory = $encrypt;
-    }
-
-    /**
-     * Create a lazy property.
-     */
-    #[Deprecated(message: 'Use `optional` instead.')]
-    public function lazy(callable $callback): LazyProp
-    {
-        return new LazyProp($callback);
     }
 
     /**

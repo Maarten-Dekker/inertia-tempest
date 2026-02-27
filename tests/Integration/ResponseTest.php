@@ -12,8 +12,8 @@ use Inertia\Contracts\ProvidesScrollMetadata;
 use Inertia\Inertia;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
-use Inertia\Props\LazyProp;
 use Inertia\Props\MergeProp;
+use Inertia\Props\OptionalProp;
 use Inertia\Props\ScrollProp;
 use Inertia\Response;
 use Inertia\Support\Header;
@@ -688,7 +688,7 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
-    public function lazy_callable_resource_response(): void
+    public function optional_callable_resource_response(): void
     {
         $this->makeRequest(
             uri: '/users',
@@ -712,7 +712,7 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
-    public function lazy_callable_resource_partial_response(): void
+    public function optional_callable_resource_partial_response(): void
     {
         $this->makeRequest(
             uri: '/users',
@@ -742,7 +742,7 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
-    public function lazy_prop_returning_pagination_is_transformed(): void
+    public function pagination_is_transformed(): void
     {
         $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(laravel_pagination: true));
 
@@ -793,7 +793,7 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
-    public function lazy_prop_returning_nested_pagination_is_transformed(): void
+    public function nested_pagination_is_transformed(): void
     {
         $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(laravel_pagination: true));
 
@@ -957,7 +957,7 @@ final class ResponseTest extends TestCase
 
         $props = [
             'auth' => [
-                'user' => new LazyProp(static fn () => [
+                'user' => new OptionalProp(static fn () => [
                     'name' => 'Jonathan Reinink',
                     'email' => 'jonathan@example.com',
                 ]),
@@ -992,7 +992,7 @@ final class ResponseTest extends TestCase
 
         $props = [
             'auth' => [
-                'user' => new LazyProp(static fn () => [
+                'user' => new OptionalProp(static fn () => [
                     'name' => 'Jonathan Reinink',
                     'email' => 'jonathan@example.com',
                 ]),
@@ -1013,7 +1013,7 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
-    public function lazy_props_are_not_included_by_default(): void
+    public function optional_props_are_not_included_by_default(): void
     {
         $this->makeRequest(
             uri: '/users',
@@ -1022,42 +1022,42 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $lazyProp = new LazyProp(static fn () => 'A lazy value');
+        $optionalProp = new OptionalProp(static fn () => 'An optional value');
 
         $response = $this->factory->render('Users', [
             'users' => [],
-            'lazy' => $lazyProp,
+            'optional' => $optionalProp,
         ]);
 
         $page = $response->body;
 
         $this->assertSame([], $page['props']['users']);
-        $this->assertArrayNotHasKey('lazy', $page['props']);
+        $this->assertArrayNotHasKey('optional', $page['props']);
     }
 
     #[Test]
-    public function lazy_props_are_included_in_partial_reload(): void
+    public function optional_props_are_included_in_partial_reload(): void
     {
         $this->makeRequest(
             uri: '/users',
             headers: [
                 Header::INERTIA => 'true',
                 Header::PARTIAL_COMPONENT => 'Users',
-                Header::PARTIAL_ONLY => 'lazy',
+                Header::PARTIAL_ONLY => 'optional',
             ],
         );
 
-        $lazyProp = new LazyProp(static fn () => 'A lazy value');
+        $optionalProp = new OptionalProp(static fn () => 'An optional value');
 
         $response = $this->factory->render('Users', [
             'users' => [],
-            'lazy' => $lazyProp,
+            'optional' => $optionalProp,
         ]);
 
         $page = $response->body;
 
         $this->assertArrayNotHasKey('users', $page['props']);
-        $this->assertSame('A lazy value', $page['props']['lazy']);
+        $this->assertSame('An optional value', $page['props']['optional']);
     }
 
     #[Test]
@@ -1101,7 +1101,7 @@ final class ResponseTest extends TestCase
         ]);
 
         $props = [
-            'user' => new LazyProp(static fn () => [
+            'user' => new OptionalProp(static fn () => [
                 'name' => 'Jonathan Reinink',
                 'email' => 'jonathan@example.com',
             ]),

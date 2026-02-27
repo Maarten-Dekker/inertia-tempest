@@ -6,12 +6,10 @@ namespace Inertia;
 
 use BackedEnum;
 use Closure;
-use Deprecated;
 use Inertia\Contracts\ProvidesInertiaProperties;
 use Inertia\Contracts\ProvidesScrollMetadata;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\DeferProp;
-use Inertia\Props\LazyProp;
 use Inertia\Props\MergeProp;
 use Inertia\Props\OnceProp;
 use Inertia\Props\OptionalProp;
@@ -109,12 +107,6 @@ class Inertia extends Facade
     public static function optional(callable $callback): OptionalProp
     {
         return static::instance()->optional($callback);
-    }
-
-    #[Deprecated(message: 'Use `optional` instead.')]
-    public static function lazy(callable $callback): LazyProp
-    {
-        return static::instance()->lazy($callback);
     }
 
     public static function defer(callable $callback, string $group = 'default'): DeferProp
