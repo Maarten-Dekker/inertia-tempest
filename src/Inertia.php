@@ -141,7 +141,7 @@ class Inertia extends Facade
     /**
      * @param array<array-key, mixed>|ArrayInterface<array-key, mixed>|ProvidesInertiaProperties $props
      */
-    public static function render(string $component, array|ArrayInterface $props = []): Response
+    public static function render(string|BackedEnum|UnitEnum $component, array|ArrayInterface $props = []): Response
     {
         return static::instance()
             ->render(
