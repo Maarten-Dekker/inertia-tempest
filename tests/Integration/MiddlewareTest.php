@@ -14,7 +14,6 @@ use Inertia\Tests\TestCase;
 use LogicException;
 use PHPUnit\Framework\Attributes\Test;
 use Tempest\Http\ContentType;
-use Tempest\Http\Request;
 use Tempest\Http\Session\FormSession;
 use Tempest\Http\Status;
 use Tempest\Router\Exceptions\ControllerActionHadNoReturn;
@@ -168,9 +167,8 @@ final class MiddlewareTest extends TestCase
     public function validation_errors_are_registered_as_of_default(): void
     {
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
 
-        $sharedData = $middleware->share($request);
+        $sharedData = $middleware->share();
 
         $this->assertArrayHasKey('errors', $sharedData);
         $this->assertInstanceOf(AlwaysProp::class, $sharedData['errors']);
@@ -180,9 +178,8 @@ final class MiddlewareTest extends TestCase
     public function validation_errors_can_be_empty(): void
     {
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
 
-        $sharedData = $middleware->share($request);
+        $sharedData = $middleware->share();
         $errors = $sharedData['errors']();
 
         $this->assertEmpty($errors);
@@ -206,9 +203,8 @@ final class MiddlewareTest extends TestCase
         ]);
 
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
 
-        $sharedData = $middleware->share($request);
+        $sharedData = $middleware->share();
         $errors = $sharedData['errors']();
 
         $this->assertSame('Email must be a valid email address', $errors['email']);
@@ -233,9 +229,8 @@ final class MiddlewareTest extends TestCase
         ]);
 
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
 
-        $sharedData = $middleware->share($request);
+        $sharedData = $middleware->share();
         $errors = $sharedData['errors']();
 
         $this->assertSame(
@@ -272,8 +267,7 @@ final class MiddlewareTest extends TestCase
         ]);
 
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
-        $sharedData = $middleware->share($request);
+        $sharedData = $middleware->share();
         $errors = $sharedData['errors']();
 
         $this->assertIsArray($errors);
@@ -299,9 +293,8 @@ final class MiddlewareTest extends TestCase
         ]);
 
         $middleware = $this->container->get(Middleware::class);
-        $request = $this->container->get(Request::class);
 
-        $sharedData = $middleware->share($request);
+        $sharedData = $middleware->share();
         $errors = $sharedData['errors']();
 
         $this->assertIsArray($errors);
@@ -401,7 +394,7 @@ final class MiddlewareTest extends TestCase
 
         $page = $response->body;
 
-        $this->assertSame(['message' => null], $page['props']['flash']);
+        $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertSame(['admin' => true], $page['props']['permissions']);
         $this->assertSame(['theme' => 'dark'], $page['props']['settings']);
         $this->assertSame(['prop' => 'permissions', 'expiresAt' => null], $page['onceProps']['permissions']);

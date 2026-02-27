@@ -70,16 +70,13 @@ class Middleware implements HttpMiddleware
      *
      * @return array<string, mixed>
      */
-    public function share(Request $request): array
+    public function share(): array
     {
         return [
             'errors' => $this->inertia->always($this->errorResolver),
             'auth' => $this->inertia->always(static fn (Authenticator $auth) => [
                 'user' => $auth->current(),
             ]),
-            'flash' => [
-                'message' => fn () => $this->session->get('message'),
-            ],
         ];
     }
 
@@ -121,7 +118,7 @@ class Middleware implements HttpMiddleware
     public function __invoke(Request $request, HttpMiddlewareCallable $next): Response
     {
         $this->inertia->version($this->version(...));
-        $this->inertia->share($this->share($request));
+        $this->inertia->share($this->share());
 
         foreach ($this->shareOnce() as $key => $value) {
             if ($value instanceof OnceProp) {
