@@ -25,7 +25,7 @@ use function Tempest\root_path;
  */
 final class PageConfig
 {
-    public bool $ensure_pages_exists;
+    public bool $ensure_pages_exist;
 
     public array $paths;
 
@@ -34,12 +34,12 @@ final class PageConfig
     public bool $use_data_attribute_for_initial_page;
 
     public function __construct(
-        ?bool $ensure_pages_exists = null,
+        ?bool $ensure_pages_exist = null,
         ?array $paths = null,
         ?array $extensions = null,
         ?bool $use_data_attribute_for_initial_page = null,
     ) {
-        $this->ensure_pages_exists = $ensure_pages_exists ?? false;
+        $this->ensure_pages_exist = $ensure_pages_exist ?? false;
         $this->paths = $paths ?? [root_path('app/')];
         $this->extensions = $extensions ?? [
             'js',

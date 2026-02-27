@@ -287,7 +287,7 @@ final class ResponseFactory
             throw new InvalidArgumentException('Component argument must be of type string or a string BackedEnum');
         }
 
-        if ($this->config->pages->ensure_pages_exists) {
+        if ($this->config->pages->ensure_pages_exist) {
             $this->findComponentOrFail($component);
         }
 

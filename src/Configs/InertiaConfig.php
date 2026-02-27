@@ -24,7 +24,7 @@ final readonly class InertiaConfig
          * Server Side Rendering
          *--------------------------------------------------------------------------
          *
-         * These options configures if and how Inertia uses Server Side Rendering
+         * These options configure if and how Inertia uses Server Side Rendering
          * to pre-render the initial visits made to your application's pages.
          *
          * You can specify a custom SSR bundle path or omit it to let Inertia
