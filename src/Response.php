@@ -6,8 +6,6 @@ namespace Inertia;
 
 use BackedEnum;
 use Closure;
-use DateInterval;
-use DateTimeImmutable;
 use Generator;
 use GuzzleHttp\Promise\PromiseInterface;
 use Inertia\Configs\InertiaConfig;
