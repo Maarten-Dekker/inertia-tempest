@@ -393,7 +393,7 @@ final class MiddlewareTest extends TestCase
 
         $page = $response->body;
 
-        $this->assertSame(['message' => null], $page['props']['flash']);
+        $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertSame(['admin' => true], $page['props']['permissions']);
         $this->assertSame(['theme' => 'dark'], $page['props']['settings']);
         $this->assertSame(['prop' => 'permissions', 'expiresAt' => null], $page['onceProps']['permissions']);
