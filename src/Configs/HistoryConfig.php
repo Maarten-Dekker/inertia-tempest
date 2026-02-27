@@ -5,21 +5,17 @@ declare(strict_types=1);
 namespace Inertia\Configs;
 
 /*
- * |--------------------------------------------------------------------------
- * | History Encryption
- * |--------------------------------------------------------------------------
- * |
- * | Inertia's history encryption protects privileged page data from being
- * | exposed via the browser's back button after logout. When enabled, it
- * | encrypts the current page's state using the browser's SubtleCrypto API
- * | before storing it in the history stack. The encryption key is saved
- * | in sessionStorage. On back navigation, the data is decrypted using
- * | this key. If the key has been cleared (e.g. via `clearHistory()`),
- * | decryption fails and Inertia fetches fresh data from the server.
- * |
- * | Note: Requires a secure context (HTTPS) due to usage of `crypto.subtle`.
- * | For details, visit: https://inertiajs.com/history-encryption
- * |
+ * --------------------------------------------------------------------------
+ * History Encryption
+ * --------------------------------------------------------------------------
+ *
+ * Enable `encrypt` to encrypt page data before it is stored in the
+ * browser's history state, preventing sensitive information from
+ * being accessible after logout. Can also be enabled per-request
+ * or via the `inertia.encrypt` middleware.
+ *
+ * Note: Requires a secure context (HTTPS) due to usage of `crypto.subtle`.
+ * For details, visit: https://inertiajs.com/history-encryption
  */
 final class HistoryConfig
 {

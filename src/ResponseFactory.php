@@ -290,7 +290,7 @@ final class ResponseFactory
             throw new InvalidArgumentException('Component argument must be of type string or a string BackedEnum');
         }
 
-        if ($this->config->pages->ensure_pages_exists) {
+        if ($this->config->pages->ensure_pages_exist) {
             $this->findComponentOrFail($component);
         }
 
@@ -391,15 +391,15 @@ final class ResponseFactory
     {
         if (isset($this->componentCache[$component])) {
             if (! $this->componentCache[$component]) {
-                throw new ComponentNotFoundException($component, $this->config->pages->page_paths);
+                throw new ComponentNotFoundException($component, $this->config->pages->paths);
             }
 
             return;
         }
 
         $componentPath = str_replace('/', DIRECTORY_SEPARATOR, $component);
-        $paths = $this->config->pages->page_paths;
-        $extensions = $this->config->pages->page_extensions;
+        $paths = $this->config->pages->paths;
+        $extensions = $this->config->pages->extensions;
 
         foreach ($paths as $path) {
             foreach ($extensions as $extension) {

@@ -204,7 +204,7 @@ use function Tempest\env;
 return new InertiaConfig(
     // Enforce that page components exist on disk.
     pages: new PageConfig(
-        ensure_pages_exists: env('INERTIA_ENSURE_PAGES_EXIST', false),
+        ensure_pages_exist: env('INERTIA_ENSURE_PAGES_EXIST', false),
     ),
 
     // Enable Laravel's paginator format on the front-end.
