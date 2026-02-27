@@ -352,7 +352,7 @@ final class ResponseFactoryTest extends TestCase
     {
         $this->container->singleton(
             InertiaConfig::class,
-            static fn () => new InertiaConfig(pages: new PageConfig(ensure_pages_exists: true)),
+            static fn () => new InertiaConfig(pages: new PageConfig(ensure_pages_exist: true)),
         );
 
         $this->expectException(ComponentNotFoundException::class);
@@ -364,8 +364,8 @@ final class ResponseFactoryTest extends TestCase
     #[Test]
     public function will_not_throw_exception_if_component_does_not_exist_when_ensuring_is_disabled(): void
     {
-        $originalEnv = getenv('INERTIA_ENSURE_PAGES_EXISTS');
-        putenv('INERTIA_ENSURE_PAGES_EXISTS=false');
+        $originalEnv = getenv('INERTIA_ENSURE_PAGES_EXIST');
+        putenv('INERTIA_ENSURE_PAGES_EXIST=false');
 
         try {
             $response = $this->container->get(ResponseFactory::class)->render('foo');
@@ -373,9 +373,9 @@ final class ResponseFactoryTest extends TestCase
             $this->assertInstanceOf(Response::class, $response);
         } finally {
             if (! $originalEnv) {
-                putenv('INERTIA_ENSURE_PAGES_EXISTS');
+                putenv('INERTIA_ENSURE_PAGES_EXIST');
             } else {
-                putenv("INERTIA_ENSURE_PAGES_EXISTS={$originalEnv}");
+                putenv("INERTIA_ENSURE_PAGES_EXIST={$originalEnv}");
             }
         }
     }
