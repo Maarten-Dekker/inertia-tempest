@@ -7,12 +7,18 @@ namespace Inertia\Tests\Integration;
 use Inertia\Configs\InertiaConfig;
 use Inertia\Configs\PageConfig;
 use Inertia\Exceptions\ComponentNotFoundException;
+use Inertia\Response as InertiaResponse;
 use Inertia\ResponseFactory;
 use Inertia\Support\Header;
 use Inertia\Support\SessionKey;
+use Inertia\Tests\Enums\IntBackedEnum;
+use Inertia\Tests\Enums\StringBackedEnum;
+use Inertia\Tests\Enums\UnitEnum;
 use Inertia\Tests\Fixtures\TestController;
 use Inertia\Tests\TestCase;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\Test;
+use ReflectionProperty;
 use Tempest\Http\ContentType;
 use Tempest\Http\Response;
 use Tempest\Http\Responses\Redirect;
@@ -372,6 +378,35 @@ final class ResponseFactoryTest extends TestCase
                 putenv("INERTIA_ENSURE_PAGES_EXISTS={$originalEnv}");
             }
         }
+    }
+
+    #[Test]
+    public function render_accepts_backed_enum(): void
+    {
+        $response = $this->factory->render(StringBackedEnum::UsersIndex);
+        $this->assertInstanceOf(InertiaResponse::class, $response);
+
+        $ref = new ReflectionProperty($response, 'component');
+
+        $this->assertSame('UsersPage/Index', $ref->getValue($response));
+    }
+
+    #[Test]
+    public function render_accepts_unit_enum(): void
+    {
+        $response = $this->factory->render(UnitEnum::Index);
+        $this->assertInstanceOf(InertiaResponse::class, $response);
+
+        $ref = new ReflectionProperty($response, 'component');
+
+        $this->assertSame('Index', $ref->getValue($response));
+    }
+
+    #[Test]
+    public function render_throws_for_non_string_backed_enum(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->factory->render(IntBackedEnum::Zero);
     }
 
     #[Test]
