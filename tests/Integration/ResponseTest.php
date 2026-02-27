@@ -72,8 +72,6 @@ final class ResponseTest extends TestCase
             'user' => $user,
         ]);
 
-        $resolvedBody = $response->body->jsonSerialize();
-
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
 
@@ -87,7 +85,7 @@ final class ResponseTest extends TestCase
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
 
-        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
+        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
@@ -101,8 +99,6 @@ final class ResponseTest extends TestCase
             'user' => $user,
             'foo' => new DeferProp(static fn () => 'bar'),
         ]);
-
-        $resolvedBody = $response->body->jsonSerialize();
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
@@ -120,7 +116,7 @@ final class ResponseTest extends TestCase
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deferredProps":{"default":["foo"]}}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
 
-        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
+        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
@@ -139,7 +135,6 @@ final class ResponseTest extends TestCase
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
-        $resolvedBody = $response->body->jsonSerialize();
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -162,7 +157,7 @@ final class ResponseTest extends TestCase
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deferredProps":{"default":["foo","bar"],"custom":["baz"]}}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
 
-        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
+        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     /**
@@ -253,7 +248,7 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertArrayHasKey('scrollProps', $page);
         $this->assertArrayHasKey('users', $page['props']);
@@ -292,7 +287,6 @@ final class ResponseTest extends TestCase
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
-        $resolvedBody = $response->body->jsonSerialize();
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -308,7 +302,7 @@ final class ResponseTest extends TestCase
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":"foo value","bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo","bar"]}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
 
-        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
+        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
@@ -326,7 +320,6 @@ final class ResponseTest extends TestCase
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
-        $resolvedBody = $response->body->jsonSerialize();
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -340,7 +333,7 @@ final class ResponseTest extends TestCase
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":"foo value","bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["bar"],"prependProps":["foo"]}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
 
-        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
+        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
@@ -358,7 +351,6 @@ final class ResponseTest extends TestCase
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
-        $resolvedBody = $response->body->jsonSerialize();
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -373,7 +365,7 @@ final class ResponseTest extends TestCase
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":{"data":[{"id":1},{"id":2}]},"bar":{"data":{"items":[{"uuid":1},{"uuid":2}]}}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo.data"],"prependProps":["bar.data.items"]}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
 
-        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
+        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
@@ -394,7 +386,6 @@ final class ResponseTest extends TestCase
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
-        $resolvedBody = $response->body->jsonSerialize();
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -409,7 +400,7 @@ final class ResponseTest extends TestCase
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":{"data":[{"id":1},{"id":2}]},"bar":{"data":{"items":[{"uuid":1},{"uuid":2}]}}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo.data"],"prependProps":["bar.data.items"],"matchPropsOn":["foo.data.id","bar.data.items.uuid"]}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
 
-        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
+        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
@@ -427,7 +418,6 @@ final class ResponseTest extends TestCase
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
-        $resolvedBody = $response->body->jsonSerialize();
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -443,7 +433,7 @@ final class ResponseTest extends TestCase
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":"foo value","bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deepMergeProps":["foo","bar"]}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
 
-        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
+        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
@@ -465,7 +455,6 @@ final class ResponseTest extends TestCase
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
-        $resolvedBody = $response->body->jsonSerialize();
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -482,7 +471,7 @@ final class ResponseTest extends TestCase
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":"foo value","bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deepMergeProps":["foo","bar"],"matchPropsOn":["foo.foo-key","bar.bar-key"]}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
 
-        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
+        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
@@ -500,7 +489,6 @@ final class ResponseTest extends TestCase
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
-        $resolvedBody = $response->body->jsonSerialize();
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -517,7 +505,7 @@ final class ResponseTest extends TestCase
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo","bar"],"deferredProps":{"default":["foo"]}}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
 
-        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
+        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
@@ -535,7 +523,6 @@ final class ResponseTest extends TestCase
 
         $renderer = $this->container->get(ViewRenderer::class);
         $page = $response->body->inertia['page'];
-        $resolvedBody = $response->body->jsonSerialize();
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -552,7 +539,7 @@ final class ResponseTest extends TestCase
         $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deepMergeProps":["foo","bar"],"deferredProps":{"default":["foo"]}}';
         $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($expectedJson, ENT_QUOTES) . '"></div>';
 
-        $this->assertSame($expectedHtml, $renderer->render($resolvedBody));
+        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
@@ -572,7 +559,7 @@ final class ResponseTest extends TestCase
             'bar' => new MergeProp('bar value'),
         ]);
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
 
@@ -601,7 +588,7 @@ final class ResponseTest extends TestCase
             'bar' => new MergeProp('bar value'),
         ]);
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
 
@@ -629,7 +616,7 @@ final class ResponseTest extends TestCase
             'bar' => new MergeProp('bar value'),
         ]);
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertArrayHasKey('props', $page);
         $props = $page['props'];
@@ -653,7 +640,7 @@ final class ResponseTest extends TestCase
             'user' => $user,
         ]);
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
 
@@ -678,7 +665,7 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']['name']);
@@ -697,7 +684,7 @@ final class ResponseTest extends TestCase
         $resource = new FakeResource(['name' => 'Jonathan']);
         $response = $this->factory->render('User/Edit', ['user' => $resource]);
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
 
@@ -721,7 +708,7 @@ final class ResponseTest extends TestCase
             'organizations' => static fn () => [['name' => 'Inertia']],
         ]);
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
         $this->assertSame('User/Index', $page['component']);
@@ -749,7 +736,7 @@ final class ResponseTest extends TestCase
             'organizations' => static fn () => [['name' => 'Inertia']],
         ]);
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
         $this->assertSame('User/Index', $page['component']);
@@ -845,7 +832,7 @@ final class ResponseTest extends TestCase
         $this->factory->version('123');
         $response = $this->factory->render('User/Index', ['something' => $callable]);
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
         $this->assertSame('User/Index', $page['component']);
@@ -876,7 +863,7 @@ final class ResponseTest extends TestCase
         $resource = new FakeResource(['name' => 'Jonathan']);
         $response = $this->factory->render('User/Edit', ['user' => $resource]);
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
         $this->assertSame('User/Edit', $page['component']);
@@ -901,7 +888,7 @@ final class ResponseTest extends TestCase
         $this->factory->version('123');
         $response = $this->factory->render('User/Edit', ['user' => $promise]);
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
         $this->assertSame('User/Edit', $page['component']);
@@ -925,7 +912,7 @@ final class ResponseTest extends TestCase
             'partial' => 'partial-data',
         ]);
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
         $this->assertSame('User/Edit', $page['component']);
@@ -953,7 +940,7 @@ final class ResponseTest extends TestCase
             'partial' => 'partial-data',
         ]);
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
         $this->assertSame('User/Edit', $page['component']);
@@ -1341,7 +1328,7 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertArrayNotHasKey('foo', $page['props']);
@@ -1362,7 +1349,7 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('bar', $page['props']['foo']);
@@ -1384,7 +1371,7 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('bar', $page['props']['foo']);
@@ -1408,7 +1395,7 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('bar', $page['props']['foo']);
@@ -1433,7 +1420,7 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('bar', $page['props']['foo']);
@@ -1459,7 +1446,7 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertArrayNotHasKey('foo', $page['props']);
@@ -1482,7 +1469,7 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('bar', $page['props']['foo']);
@@ -1505,7 +1492,7 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('bar', $page['props']['foo']);
@@ -1534,7 +1521,7 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertArrayNotHasKey('defer', $page['props']);
@@ -1559,7 +1546,7 @@ final class ResponseTest extends TestCase
             ],
         );
 
-        $page = $response->body->jsonSerialize();
+        $page = $response->body;
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('value', $page['props']['defer']);
