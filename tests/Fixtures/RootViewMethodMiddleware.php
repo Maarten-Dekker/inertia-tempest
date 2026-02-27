@@ -39,6 +39,14 @@ final class RootViewMethodMiddleware extends Middleware
     }
 
     #[Override]
+    public function share(): array
+    {
+        return [
+            'user' => ['name' => 'Jonathan'],
+        ];
+    }
+
+    #[Override]
     public function shareOnce(): array
     {
         return [
