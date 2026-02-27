@@ -6,8 +6,6 @@ namespace Inertia;
 
 use BackedEnum;
 use Closure;
-use DateInterval;
-use DateTimeImmutable;
 use Generator;
 use GuzzleHttp\Promise\PromiseInterface;
 use Inertia\Configs\InertiaConfig;
@@ -64,13 +62,6 @@ final class Response implements HttpResponse
      * @var array<string, mixed>
      */
     private array $viewData = [];
-
-    /**
-     * The cache duration settings.
-     *
-     * @var array<int, mixed>
-     */
-    private array $cacheFor = [];
 
     private Request $request {
         get => $this->request ??= get(Request::class);
@@ -140,18 +131,6 @@ final class Response implements HttpResponse
     public function rootView(string $rootView): self
     {
         $this->rootView = $rootView;
-
-        return $this;
-    }
-
-    /**
-     * Set the cache duration for the response.
-     *
-     * @param string|array<int, mixed> $cacheFor
-     */
-    public function cache(string|array $cacheFor): self
-    {
-        $this->cacheFor = is_array($cacheFor) ? $cacheFor : [$cacheFor];
 
         return $this;
     }
@@ -559,24 +538,6 @@ final class Response implements HttpResponse
     }
 
     /**
-     * Resolve the cache directions for the response.
-     *
-     * @return array<string, mixed>
-     */
-    public function resolveCacheDirections(): array
-    {
-        if ($this->cacheFor === []) {
-            return [];
-        }
-
-        return [
-            'cache' => array_map(static fn ($value): int => $value instanceof DateInterval
-                ? new DateTimeImmutable('@0')->add($value)->getTimestamp()
-                : intval($value), $this->cacheFor),
-        ];
-    }
-
-    /**
      * Build the full page object and set the response body.
      */
     private function resolveBody(): void
@@ -595,7 +556,6 @@ final class Response implements HttpResponse
             ],
             $this->resolveMergeProps(),
             $this->resolveDeferredProps(),
-            $this->resolveCacheDirections(),
             $this->resolveScrollProps(),
             $this->resolveOncePropsMetadata(),
             $this->resolveFlashData(),
