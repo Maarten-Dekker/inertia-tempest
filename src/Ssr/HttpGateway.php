@@ -11,7 +11,6 @@ use Inertia\Ssr\Contracts\HasHealthCheck;
 use Override;
 use Tempest\HttpClient\HttpClient;
 use Tempest\Router\Exceptions\MatchedRouteCouldNotBeResolved;
-use Tempest\Support\Str;
 use Throwable;
 
 use function Tempest\Support\Str\ensure_starts_with;
