@@ -17,7 +17,8 @@
     }
   },
   "scripts": {
-    "test": "vendor/bin/phpunit",
+    "test": "vendor/bin/paratest",
+    "test:full": "vendor/bin/phpunit",
     "mago:lint": "vendor/bin/mago lint",
     "mago:fix": "vendor/bin/mago lint --fix",
     "mago:fmt": "vendor/bin/mago fmt",
@@ -40,7 +41,8 @@
     "mockery/mockery": "^1.6.12",
     "phpunit/phpunit": "^12.5.11",
     "rector/rector": "2.3.6",
-    "illuminate/pagination": "^12.51.0"
+    "illuminate/pagination": "^12.51.0",
+    "brianium/paratest": "^7.19.1"
   },
   "suggest": {
     "illuminate/pagination": "Required to transform paginated data into a Laravel paginator instance.",
