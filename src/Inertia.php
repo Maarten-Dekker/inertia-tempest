@@ -171,7 +171,7 @@ class Inertia extends Facade
     /**
      * @param BackedEnum|UnitEnum|string|array<string, mixed> $key
      */
-    public static function flash(array|BackedEnum|string|UnitEnum $key, mixed $value = null): \Inertia\ResponseFactory
+    public static function flash(array|BackedEnum|string|UnitEnum $key, mixed $value = null): ResponseFactory
     {
         return static::instance()
             ->flash(

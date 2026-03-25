@@ -30,9 +30,13 @@
     ]
   },
   "require": {
-    "php": "^8.4",
+    "php": "^8.5",
     "ext-json": "*",
-    "tempest/framework": "^2.4"
+    "tempest/framework": "^3.0"
+  },
+  "conflict": {
+    "guzzlehttp/psr7": "<2.0",
+    "guzzlehttp/promises": "<2.0"
   },
   "require-dev": {
     "ext-pdo_sqlite": "*",
@@ -40,7 +44,7 @@
     "mockery/mockery": "^1.6.12",
     "phpunit/phpunit": "^12.5.11",
     "rector/rector": "2.3.6",
-    "illuminate/pagination": "^12.51.0"
+    "illuminate/pagination": "^13.0"
   },
   "suggest": {
     "illuminate/pagination": "Required to transform paginated data into a Laravel paginator instance.",

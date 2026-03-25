@@ -39,8 +39,12 @@ use Tempest\Support\Arr\ArrayInterface;
 use Tempest\Support\Paginator\PaginatedData;
 use UnitEnum;
 
-use function Tempest\get;
-use function Tempest\invoke;
+use function Inertia\Support\Arr\forget_keys;
+use function Tempest\Container\get;
+use function Tempest\Container\invoke;
+use function Tempest\Support\Arr\get_by_key;
+use function Tempest\Support\Arr\set_by_key;
+use function Tempest\Support\Arr\to_array;
 
 final class Response implements HttpResponse
 {
@@ -207,7 +211,7 @@ final class Response implements HttpResponse
         foreach ($props as $key => $value) {
             if (is_numeric($key) && $value instanceof ProvidesInertiaProperties) {
                 /** @var array<string, mixed> $inertiaProps */
-                $inertiaProps = Arr\to_array($value->toInertiaProperties($renderContext));
+                $inertiaProps = to_array($value->toInertiaProperties($renderContext));
                 $newProps = array_merge($newProps, $inertiaProps);
                 continue;
             }
@@ -244,20 +248,20 @@ final class Response implements HttpResponse
             $newProps = [];
 
             foreach ($only as $key) {
-                $value = Arr\get_by_key($props, $key);
+                $value = get_by_key($props, $key);
 
                 if ($value instanceof ArrayInterface) {
                     $value = $value->toArray();
                 }
 
-                $newProps = Arr\set_by_key($newProps, $key, $value);
+                $newProps = set_by_key($newProps, $key, $value);
             }
 
             $props = $newProps;
         }
 
         if ($except !== []) {
-            Support\Arr\forget_keys($props, $except);
+            forget_keys($props, $except);
         }
 
         return $props;
@@ -360,7 +364,7 @@ final class Response implements HttpResponse
             }
 
             if ($unpackDotProps && is_string($key) && str_contains($key, '.')) {
-                $result = Arr\set_by_key($result, $key, $value);
+                $result = set_by_key($result, $key, $value);
             } else {
                 $result[$key] = $value;
             }

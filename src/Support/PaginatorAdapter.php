@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Inertia\Support;
 
+use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Contracts\Arrayable;
 use Override;
 use RuntimeException;
@@ -17,9 +18,9 @@ final readonly class PaginatorAdapter implements Arrayable
         private Request $request,
     ) {}
 
-    public function toIlluminatePaginator(): \Illuminate\Pagination\LengthAwarePaginator
+    public function toIlluminatePaginator(): LengthAwarePaginator
     {
-        $laravelPaginatorClass = \Illuminate\Pagination\LengthAwarePaginator::class;
+        $laravelPaginatorClass = LengthAwarePaginator::class;
 
         if (! class_exists($laravelPaginatorClass)) {
             throw new RuntimeException(

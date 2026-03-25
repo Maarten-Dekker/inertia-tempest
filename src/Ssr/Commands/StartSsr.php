@@ -11,8 +11,7 @@ use Symfony\Component\Process\Process;
 use Tempest\Console\ConsoleCommand;
 use Tempest\Console\ExitCode;
 use Tempest\Console\HasConsole;
-
-use function Tempest\report;
+use Tempest\Core\Exceptions\ExceptionProcessor;
 
 final readonly class StartSsr
 {
@@ -22,6 +21,7 @@ final readonly class StartSsr
         private InertiaConfig $config,
         private BundleDetector $bundleDetector,
         private StopSsr $stopSsrCommand,
+        private ExceptionProcessor $exceptionProcessor,
     ) {}
 
     /**
@@ -83,7 +83,7 @@ final readonly class StartSsr
             }
 
             $this->console->error(trim($data));
-            report(new SsrException($data));
+            $this->exceptionProcessor->process(new SsrException($data));
         }
 
         return ExitCode::SUCCESS;
