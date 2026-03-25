@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Inertia\Support;
 
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Inertia\Contracts\Arrayable;
 use Inertia\Contracts\ProvidesScrollMetadata;
 use InvalidArgumentException;
@@ -35,8 +37,8 @@ final readonly class ScrollMetadata implements Arrayable, ProvidesScrollMetadata
             );
         }
 
-        $paginatorClass = \Illuminate\Pagination\Paginator::class;
-        $lengthAwarePaginatorClass = \Illuminate\Pagination\LengthAwarePaginator::class;
+        $paginatorClass = Paginator::class;
+        $lengthAwarePaginatorClass = LengthAwarePaginator::class;
 
         if (
             class_exists($paginatorClass)

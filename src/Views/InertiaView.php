@@ -10,7 +10,7 @@ use Tempest\Support\Html\HtmlString;
 use Tempest\View\IsView;
 use Tempest\View\View;
 
-use function Tempest\get;
+use function Tempest\Container\get;
 
 final class InertiaView implements View
 {

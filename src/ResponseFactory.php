@@ -30,8 +30,11 @@ use Tempest\Support\Arr;
 use Tempest\Support\Arr\ArrayInterface;
 use UnitEnum;
 
-use function Tempest\get;
-use function Tempest\invoke;
+use function Tempest\Container\get;
+use function Tempest\Container\invoke;
+use function Tempest\Support\Arr\get_by_key;
+use function Tempest\Support\Arr\merge;
+use function Tempest\Support\Arr\set_by_key;
 
 #[Singleton]
 final class ResponseFactory
@@ -107,11 +110,11 @@ final class ResponseFactory
         if (is_array($key)) {
             $this->sharedProps = array_merge($this->sharedProps, $key);
         } elseif ($key instanceof ArrayInterface) {
-            $this->sharedProps = Arr\merge($this->sharedProps, $key->toArray());
+            $this->sharedProps = merge($this->sharedProps, $key->toArray());
         } elseif ($key instanceof ProvidesInertiaProperties) {
             $this->sharedProps = array_merge($this->sharedProps, [$key]);
         } else {
-            $this->sharedProps = Arr\set_by_key($this->sharedProps, $key, $value);
+            $this->sharedProps = set_by_key($this->sharedProps, $key, $value);
         }
     }
 
@@ -123,7 +126,7 @@ final class ResponseFactory
     public function getShared(?string $key = null, mixed $default = null): mixed
     {
         if ($key) {
-            $value = Arr\get_by_key($this->sharedProps, $key, $default);
+            $value = get_by_key($this->sharedProps, $key, $default);
 
             if ($value instanceof ArrayInterface) {
                 return $value->toArray();

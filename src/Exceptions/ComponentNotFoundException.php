@@ -6,9 +6,9 @@ namespace Inertia\Exceptions;
 
 use Exception;
 use Override;
-use Tempest\Core\HasContext;
+use Tempest\Core\ProvidesContext;
 
-final class ComponentNotFoundException extends Exception implements HasContext
+final class ComponentNotFoundException extends Exception implements ProvidesContext
 {
     public function __construct(
         private readonly string $component,

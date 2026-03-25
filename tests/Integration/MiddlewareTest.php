@@ -14,10 +14,13 @@ use Inertia\Tests\TestCase;
 use LogicException;
 use PHPUnit\Framework\Attributes\Test;
 use Tempest\Http\ContentType;
-use Tempest\Http\Session\Session;
+use Tempest\Http\Session\FormSession;
 use Tempest\Http\Status;
 use Tempest\Router\Exceptions\ControllerActionHadNoReturn;
-use Tempest\Validation\Rules;
+use Tempest\Validation\FailingRule;
+use Tempest\Validation\Rules\HasLength;
+use Tempest\Validation\Rules\IsEmail;
+use Tempest\Validation\Rules\IsNotEmptyString;
 
 use function Tempest\root_path;
 use function Tempest\Router\uri;
@@ -44,29 +47,29 @@ final class MiddlewareTest extends TestCase
     #[Test]
     public function no_response_value_can_be_customized_by_overriding_the_middleware_method(): void
     {
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('An empty Inertia response was returned.');
-
-        $this->http->get(
+        $response = $this->http->get(
             uri: uri([TestController::class, 'customEmptyResponseAction']),
             headers: [
                 Header::INERTIA => 'true',
                 'Content-Type' => 'application/json',
             ],
         );
+
+        $this->assertInstanceOf(LogicException::class, $response->throwable);
+        $this->assertSame('An empty Inertia response was returned.', $response->throwable->getMessage());
     }
 
     #[Test]
     public function no_response_means_no_response_for_non_inertia_requests(): void
     {
-        $this->expectException(ControllerActionHadNoReturn::class);
-
-        $this->http->put(
+        $response = $this->http->put(
             uri: uri([TestController::class, 'voidPutAction']),
             headers: [
                 'Content-Type' => 'application/json',
             ],
         );
+
+        $this->assertInstanceOf(ControllerActionHadNoReturn::class, $response->throwable);
     }
 
     #[Test]
@@ -193,12 +196,11 @@ final class MiddlewareTest extends TestCase
             )),
         );
 
-        $session = $this->container->get(Session::class);
+        $formSession = $this->container->get(FormSession::class);
 
-        $validationErrors = [
-            'email' => [new rules\IsEmail(), new Rules\HasLength(min: 50)],
-        ];
-        $session->set(Session::VALIDATION_ERRORS, $validationErrors);
+        $formSession->setErrors([
+            'email' => [new FailingRule(new IsEmail()), new FailingRule(new HasLength(min: 50))],
+        ]);
 
         $middleware = $this->container->get(Middleware::class);
 
@@ -219,13 +221,12 @@ final class MiddlewareTest extends TestCase
             )),
         );
 
-        $session = $this->container->get(Session::class);
+        $formSession = $this->container->get(FormSession::class);
 
-        $validationErrors = [
-            'email' => [new Rules\IsEmail(), new Rules\HasLength(min: 50)],
-            'name' => [new Rules\HasLength(min: 50)],
-        ];
-        $session->set(Session::VALIDATION_ERRORS, $validationErrors);
+        $formSession->setErrors([
+            'email' => [new FailingRule(new IsEmail()), new FailingRule(new HasLength(min: 50))],
+            'name' => [new FailingRule(new HasLength(min: 50))],
+        ]);
 
         $middleware = $this->container->get(Middleware::class);
 
@@ -259,11 +260,11 @@ final class MiddlewareTest extends TestCase
             )),
         );
 
-        $session = $this->container->get(Session::class);
-        $validationErrors = [
-            'email' => [new Rules\IsNotEmptyString()],
-        ];
-        $session->set(Session::VALIDATION_ERRORS, $validationErrors);
+        $formSession = $this->container->get(FormSession::class);
+
+        $formSession->setErrors([
+            'email' => [new FailingRule(new IsNotEmptyString())],
+        ]);
 
         $middleware = $this->container->get(Middleware::class);
         $sharedData = $middleware->share();
@@ -285,11 +286,11 @@ final class MiddlewareTest extends TestCase
             )),
         );
 
-        $session = $this->container->get(Session::class);
-        $validationErrors = [
-            'email' => [new Rules\IsNotEmptyString()],
-        ];
-        $session->set(Session::VALIDATION_ERRORS, $validationErrors);
+        $formSession = $this->container->get(FormSession::class);
+
+        $formSession->setErrors([
+            'email' => [new FailingRule(new IsNotEmptyString())],
+        ]);
 
         $middleware = $this->container->get(Middleware::class);
 
@@ -304,8 +305,8 @@ final class MiddlewareTest extends TestCase
     #[Test]
     public function default_validation_errors_can_be_overwritten(): void
     {
-        $session = $this->container->get(Session::class);
-        $session->set(Session::VALIDATION_ERRORS, ['name' => ['This should be overwritten.']]);
+        $formSession = $this->container->get(FormSession::class);
+        $formSession->setErrors(['name' => [new FailingRule(new IsNotEmptyString())]]);
 
         $response = $this->http->get(
             uri: uri([TestController::class, 'overwriteErrorsProp']),

@@ -16,7 +16,7 @@ use Inertia\Traits\ResolvesCallables;
 use Override;
 use Tempest\Http\Request;
 
-use function Tempest\get;
+use function Tempest\Container\get;
 
 /**
  * Represents a paginated property that can be merged during partial reloads.

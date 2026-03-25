@@ -6,7 +6,7 @@ use Inertia\Response;
 use Inertia\ResponseFactory;
 use Tempest\Support\Arr\ArrayInterface;
 
-use function Tempest\get;
+use function Tempest\Container\get;
 
 if (! function_exists('inertia')) {
     function inertia(?string $component = null, array|ArrayInterface $props = []): Response|ResponseFactory

@@ -6,7 +6,7 @@ namespace Inertia\Support;
 
 use RuntimeException;
 
-use function Tempest\get;
+use function Tempest\Container\get;
 
 abstract class Facade
 {

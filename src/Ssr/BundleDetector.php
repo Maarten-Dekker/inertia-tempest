@@ -6,7 +6,7 @@ namespace Inertia\Ssr;
 
 use Inertia\Configs\InertiaConfig;
 
-use function Tempest\get;
+use function Tempest\Container\get;
 use function Tempest\root_path;
 
 final class BundleDetector

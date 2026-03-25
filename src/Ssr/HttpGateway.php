@@ -11,8 +11,9 @@ use Inertia\Ssr\Contracts\HasHealthCheck;
 use Override;
 use Tempest\HttpClient\HttpClient;
 use Tempest\Router\Exceptions\MatchedRouteCouldNotBeResolved;
-use Tempest\Support\Str;
 use Throwable;
+
+use function Tempest\Support\Str\ensure_starts_with;
 
 final readonly class HttpGateway implements Gateway, HasHealthCheck
 {
@@ -95,6 +96,6 @@ final readonly class HttpGateway implements Gateway, HasHealthCheck
         $parts = parse_url($this->config->ssr->url);
         $baseUrl = "{$parts['scheme']}://{$parts['host']}:{$parts['port']}";
 
-        return $baseUrl . Str\ensure_starts_with($path, '/');
+        return $baseUrl . ensure_starts_with($path, '/');
     }
 }

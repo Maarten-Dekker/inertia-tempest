@@ -12,6 +12,7 @@ use Tempest\Http\Header;
 use Tempest\Http\Response;
 use Tempest\Http\Status;
 use Tempest\View\View;
+use UnitEnum;
 
 final class FakeClientResponse implements Response
 {
@@ -61,19 +62,13 @@ final class FakeClientResponse implements Response
     }
 
     #[Override]
-    public function flash(string $key, mixed $value): self
+    public function flash(string|UnitEnum $key, mixed $value): self
     {
         return $this;
     }
 
     #[Override]
     public function removeSession(string $name): self
-    {
-        return $this;
-    }
-
-    #[Override]
-    public function destroySession(): self
     {
         return $this;
     }

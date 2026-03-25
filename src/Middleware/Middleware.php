@@ -10,7 +10,6 @@ use Inertia\Response as InertiaResponse;
 use Inertia\ResponseFactory;
 use Inertia\Support\Header;
 use Inertia\Support\ResolveErrorProps;
-use Inertia\Support\SessionKey;
 use Override;
 use Tempest\Auth\Authentication\Authenticator;
 use Tempest\Core\Priority;
@@ -27,7 +26,7 @@ use Tempest\Vite\ViteConfig;
 
 use function Tempest\root_path;
 
-#[Priority(Priority::HIGH)]
+#[Priority(Priority::FRAMEWORK - 20)]
 class Middleware implements HttpMiddleware
 {
     public function __construct(
@@ -185,11 +184,7 @@ class Middleware implements HttpMiddleware
      */
     protected function reflash(): void
     {
-        $flashed = $this->inertia->getFlashed();
-
-        if ($flashed !== []) {
-            $this->session->flash(SessionKey::FlashData->value, $flashed);
-        }
+        $this->session->reflash();
     }
 
     /**
