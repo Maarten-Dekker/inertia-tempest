@@ -6,10 +6,13 @@ namespace Inertia\Tests\Integration;
 
 use Inertia\Contracts\ProvidesScrollMetadata;
 use Inertia\Props\ScrollProp;
+use Inertia\Response;
 use Inertia\Support\Header;
 use Inertia\Tests\Fixtures\User;
 use Inertia\Tests\Fixtures\UserSeeder;
 use Inertia\Tests\TestCase;
+use Iterator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\PreCondition;
 use PHPUnit\Framework\Attributes\Test;
 use Tempest\Support\Paginator\PaginatedData;
@@ -25,9 +28,7 @@ final class ScrollPropTest extends TestCase
     {
         if (! self::$dbInitialized) {
             $this->database->setup();
-
             new UserSeeder()->run(null);
-
             self::$dbInitialized = true;
         }
 
@@ -39,8 +40,6 @@ final class ScrollPropTest extends TestCase
     {
         $scrollProp = new ScrollProp($this->users);
 
-        $metadata = $scrollProp->metadata();
-
         $this->assertSame(
             [
                 'pageName' => 'page',
@@ -48,30 +47,25 @@ final class ScrollPropTest extends TestCase
                 'nextPage' => 2,
                 'currentPage' => 1,
             ],
-            $metadata,
+            $scrollProp->metadata(),
         );
     }
 
     #[Test]
     public function resolves_custom_meta_data(): void
     {
-        $callableMetadata = static fn () => new readonly class('usersPage', 10, 12, 11) implements
-            ProvidesScrollMetadata {
-            public function __construct(
-                public string $pageName,
-                public int|null|string $previousPage,
-                public int|null|string $nextPage,
-                public int|null|string $currentPage,
-            ) {}
-        };
-
         $scrollProp = new ScrollProp(
             value: $this->users,
             wrapper: 'data',
-            metadata: $callableMetadata,
+            metadata: static fn () => new readonly class('usersPage', 10, 12, 11) implements ProvidesScrollMetadata {
+                public function __construct(
+                    public string $pageName,
+                    public int|null|string $previousPage,
+                    public int|null|string $nextPage,
+                    public int|null|string $currentPage,
+                ) {}
+            },
         );
-
-        $metadata = $scrollProp->metadata();
 
         $this->assertSame(
             [
@@ -80,7 +74,7 @@ final class ScrollPropTest extends TestCase
                 'nextPage' => 12,
                 'currentPage' => 11,
             ],
-            $metadata,
+            $scrollProp->metadata(),
         );
     }
 
@@ -90,37 +84,27 @@ final class ScrollPropTest extends TestCase
         $this->makeRequest();
         $appendProp = new ScrollProp($this->users);
         $appendProp->configureMergeIntent();
-
         $this->assertSame(['data'], $appendProp->appendsAtPaths());
         $this->assertEmpty($appendProp->prependsAtPaths());
 
-        $this->makeRequest(headers: [
-            Header::INFINITE_SCROLL_MERGE_INTENT => 'append',
-        ]);
+        $this->makeRequest(headers: [Header::INFINITE_SCROLL_MERGE_INTENT => 'append']);
         $appendProp = new ScrollProp($this->users);
         $appendProp->configureMergeIntent();
-
         $this->assertSame(['data'], $appendProp->appendsAtPaths());
         $this->assertEmpty($appendProp->prependsAtPaths());
 
-        $this->makeRequest(headers: [
-            Header::INFINITE_SCROLL_MERGE_INTENT => 'prepend',
-        ]);
+        $this->makeRequest(headers: [Header::INFINITE_SCROLL_MERGE_INTENT => 'prepend']);
         $prependProp = new ScrollProp($this->users);
         $prependProp->configureMergeIntent();
-
         $this->assertSame(['data'], $prependProp->prependsAtPaths());
         $this->assertEmpty($prependProp->appendsAtPaths());
 
-        $this->makeRequest(headers: [
-            Header::INFINITE_SCROLL_MERGE_INTENT => 'prepend',
-        ]);
+        $this->makeRequest(headers: [Header::INFINITE_SCROLL_MERGE_INTENT => 'prepend']);
         $prependProp = new ScrollProp(
             value: $this->users,
             wrapper: 'items',
         );
         $prependProp->configureMergeIntent();
-
         $this->assertSame(['items'], $prependProp->prependsAtPaths());
         $this->assertEmpty($prependProp->appendsAtPaths());
     }
@@ -133,7 +117,6 @@ final class ScrollPropTest extends TestCase
 
         $scrollProp = new ScrollProp(value: static function () use (&$callCount, $expectedValue): array {
             $callCount++;
-
             return $expectedValue;
         });
 
@@ -141,10 +124,109 @@ final class ScrollPropTest extends TestCase
         $value2 = $scrollProp();
         $value3 = $scrollProp();
 
-        $this->assertSame(1, $callCount, 'Scroll prop value callback should only be executed once');
-
+        $this->assertSame(1, $callCount);
         $this->assertSame($expectedValue, $value1);
         $this->assertSame($value1, $value2);
         $this->assertSame($value2, $value3);
+    }
+
+    /**
+     * @return Iterator<string, array{bool}>
+     */
+    public static function resetUsersProp(): Iterator
+    {
+        yield 'no reset' => [false];
+        yield 'with reset' => [true];
+    }
+
+    #[Test]
+    #[DataProvider('resetUsersProp')]
+    public function server_response_with_scroll_props(bool $resetUsersProp): void
+    {
+        $headers = $resetUsersProp ? [Header::RESET => 'users'] : [];
+        $this->makeRequest(headers: $headers);
+
+        $scrollProp = new ScrollProp(
+            value: ['data' => [['id' => 1]]],
+            wrapper: 'data',
+            metadata: new readonly class('page', null, 2, 1) implements ProvidesScrollMetadata {
+                public function __construct(
+                    public string $pageName,
+                    public int|null|string $previousPage,
+                    public int|null|string $nextPage,
+                    public int|null|string $currentPage,
+                ) {}
+            },
+        );
+
+        $response = new Response(
+            component: 'User/Index',
+            props: ['users' => $scrollProp],
+        );
+        $page = $response->body->inertia['page'];
+
+        $this->assertSame(['data' => [['id' => 1]]], $page['props']['users']);
+        $this->assertSame(
+            [
+                'users' => [
+                    'pageName' => 'page',
+                    'previousPage' => null,
+                    'nextPage' => 2,
+                    'currentPage' => 1,
+                    'reset' => $resetUsersProp,
+                ],
+            ],
+            $page['scrollProps'],
+        );
+    }
+
+    #[Test]
+    public function deferred_scroll_prop_is_excluded_from_initial_request(): void
+    {
+        $this->makeRequest();
+        $response = new Response(
+            component: 'Users/Index',
+            props: ['users' => new ScrollProp(fn () => $this->users)->defer()],
+        );
+        $page = $response->body->inertia['page'];
+
+        $this->assertArrayNotHasKey('users', $page['props']);
+        $this->assertSame(['default' => ['users']], $page['deferredProps']);
+        $this->assertArrayNotHasKey('scrollProps', $page);
+    }
+
+    #[Test]
+    public function deferred_scroll_prop_is_resolved_on_partial_request(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::PARTIAL_COMPONENT => 'User/Edit',
+            Header::PARTIAL_ONLY => 'users',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: ['users' => new ScrollProp(fn () => $this->users)->defer()],
+        );
+        $page = $response->body;
+
+        $this->assertArrayHasKey('scrollProps', $page);
+        $this->assertArrayHasKey('users', $page['props']);
+        $this->assertCount(15, $page['props']['users']->data);
+        $this->assertContains('users.data', $page['mergeProps']);
+    }
+
+    #[Test]
+    public function deferred_scroll_prop_can_have_custom_group(): void
+    {
+        $this->makeRequest();
+        $response = new Response(
+            component: 'Users/Index',
+            props: ['users' => new ScrollProp(fn () => $this->users)->defer('custom-group')],
+        );
+        $page = $response->body->inertia['page'];
+
+        $this->assertArrayNotHasKey('users', $page['props']);
+        $this->assertSame(['custom-group' => ['users']], $page['deferredProps']);
     }
 }

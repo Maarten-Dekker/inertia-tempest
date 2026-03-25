@@ -256,9 +256,8 @@ final class TestController
     #[Get('/with-method-test')]
     public function withMethod(): Response
     {
-        $response = inertia()->render('User/Edit');
-
-        return $response
+        return inertia()
+            ->render('User/Edit')
             ->with(['foo' => 'bar', 'baz' => 'qux'])
             ->with(['quux' => 'corge'])
             ->with(new ExampleInertiaPropsProvider(['grault' => 'garply']));

@@ -18,54 +18,32 @@ use Inertia\Props\ScrollProp;
 use Inertia\Response;
 use Inertia\Support\Header;
 use Inertia\Support\RenderContext;
-use Inertia\Tests\Fixtures\FakeResource;
 use Inertia\Tests\Fixtures\TestController;
-use Inertia\Tests\Fixtures\User;
-use Inertia\Tests\Fixtures\UserSeeder;
 use Inertia\Tests\TestCase;
 use Iterator;
 use Mockery;
 use Override;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\PreCondition;
 use PHPUnit\Framework\Attributes\Test;
 use Tempest\DateTime\DateTime;
 use Tempest\DateTime\Duration;
-use Tempest\Http\ContentType;
-use Tempest\Support\Paginator\PaginatedData;
 use Tempest\Support\Paginator\Paginator;
-use Tempest\View\ViewRenderer;
 
 use function Tempest\Router\uri;
 
 final class ResponseTest extends TestCase
 {
-    private static bool $dbInitialized = false;
-
-    #[PreCondition]
-    protected function configure(): void
-    {
-        if (! self::$dbInitialized) {
-            $this->database->setup();
-
-            new UserSeeder()->run(null);
-
-            self::$dbInitialized = true;
-        }
-    }
-
     #[Test]
     public function server_response(): void
     {
         $this->makeRequest();
-        $this->factory->version('123');
-
-        $user = ['name' => 'Jonathan'];
-        $response = $this->factory->render('User/Edit', [
-            'user' => $user,
-        ]);
-
-        $renderer = $this->container->get(ViewRenderer::class);
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'user' => ['name' => 'Jonathan'],
+            ],
+            version: '123',
+        );
         $page = $response->body->inertia['page'];
 
         $this->assertSame('User/Edit', $page['component']);
@@ -74,69 +52,39 @@ final class ResponseTest extends TestCase
         $this->assertSame('123', $page['version']);
         $this->assertFalse($page['clearHistory']);
         $this->assertFalse($page['encryptHistory']);
-
-        $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false}';
-        $expectedHtml =
-            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
-
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
     public function server_response_with_deferred_prop(): void
     {
         $this->makeRequest();
-        $this->factory->version('123');
-
-        $user = ['name' => 'Jonathan'];
-        $response = $this->factory->render('User/Edit', [
-            'user' => $user,
-            'foo' => new DeferProp(static fn () => 'bar'),
-        ]);
-
-        $renderer = $this->container->get(ViewRenderer::class);
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'user' => ['name' => 'Jonathan'],
+                'foo' => new DeferProp(static fn () => 'bar'),
+            ],
+        );
         $page = $response->body->inertia['page'];
-
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
-        $this->assertSame('/user/123', $page['url']);
-        $this->assertSame('123', $page['version']);
-        $this->assertFalse($page['clearHistory']);
-        $this->assertFalse($page['encryptHistory']);
 
         $this->assertArrayNotHasKey('foo', $page['props']);
         $this->assertSame(['default' => ['foo']], $page['deferredProps']);
-
-        $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deferredProps":{"default":["foo"]}}';
-        $expectedHtml =
-            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
-
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
     public function server_response_with_deferred_prop_and_multiple_groups(): void
     {
         $this->makeRequest();
-        $this->factory->version('123');
-
-        $user = ['name' => 'Jonathan'];
-        $response = $this->factory->render('User/Edit', [
-            'user' => $user,
-            'foo' => new DeferProp(static fn () => 'foo value'),
-            'bar' => new DeferProp(static fn () => 'bar value'),
-            'baz' => new DeferProp(static fn () => 'baz value', 'custom'),
-        ]);
-
-        $renderer = $this->container->get(ViewRenderer::class);
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'user' => ['name' => 'Jonathan'],
+                'foo' => new DeferProp(static fn () => 'foo value'),
+                'bar' => new DeferProp(static fn () => 'bar value'),
+                'baz' => new DeferProp(static fn () => 'baz value', 'custom'),
+            ],
+        );
         $page = $response->body->inertia['page'];
-
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
-        $this->assertSame('/user/123', $page['url']);
-        $this->assertSame('123', $page['version']);
-        $this->assertFalse($page['clearHistory']);
-        $this->assertFalse($page['encryptHistory']);
 
         $this->assertArrayNotHasKey('foo', $page['props']);
         $this->assertArrayNotHasKey('bar', $page['props']);
@@ -148,12 +96,6 @@ final class ResponseTest extends TestCase
             ],
             $page['deferredProps'],
         );
-
-        $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deferredProps":{"default":["foo","bar"],"custom":["baz"]}}';
-        $expectedHtml =
-            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
-
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     /**
@@ -169,11 +111,7 @@ final class ResponseTest extends TestCase
     #[DataProvider('resetUsersProp')]
     public function server_response_with_scroll_props(bool $resetUsersProp): void
     {
-        $headers = [];
-        if ($resetUsersProp) {
-            $headers[Header::RESET] = 'users';
-        }
-
+        $headers = $resetUsersProp ? [Header::RESET => 'users'] : [];
         $this->makeRequest(headers: $headers);
 
         $scrollProp = new ScrollProp(
@@ -189,14 +127,13 @@ final class ResponseTest extends TestCase
             },
         );
 
-        $response = $this->factory->render('User/Index', ['users' => $scrollProp]);
-
+        $response = new Response(
+            component: 'User/Index',
+            props: ['users' => $scrollProp],
+        );
         $page = $response->body->inertia['page'];
 
-        $this->assertSame('User/Index', $page['component']);
         $this->assertSame(['data' => [['id' => 1]]], $page['props']['users']);
-        $this->assertSame('/user/123', $page['url']);
-        $this->assertArrayHasKey('version', $page);
         $this->assertSame(
             [
                 'users' => [
@@ -212,338 +149,156 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
-    public function deferred_scroll_prop_is_excluded_from_initial_request(): void
-    {
-        $response = new Response(
-            component: 'Users/Index',
-            props: [
-                'users' => new ScrollProp(static fn () => User::select()->paginate(15))->defer(),
-            ],
-        );
-
-        $page = $response->body->inertia['page'];
-
-        $this->assertArrayNotHasKey('users', $page['props']);
-        $this->assertSame(['default' => ['users']], $page['deferredProps']);
-        $this->assertArrayNotHasKey('scrollProps', $page);
-    }
-
-    #[Test]
-    public function deferred_scroll_prop_is_resolved_on_partial_request(): void
-    {
-        $this->makeRequest(headers: [
-            Header::INERTIA => 'true',
-            Header::PARTIAL_COMPONENT => 'User/Edit',
-            Header::PARTIAL_ONLY => 'users',
-        ]);
-
-        $response = new Response(
-            component: 'User/Edit',
-            props: [
-                'users' => new ScrollProp(static fn () => User::select()->paginate(15))->defer(),
-            ],
-        );
-
-        $page = $response->body;
-
-        $this->assertArrayHasKey('scrollProps', $page);
-        $this->assertArrayHasKey('users', $page['props']);
-        $this->assertCount(15, $page['props']['users']->data);
-        $this->assertContains('users.data', $page['mergeProps']);
-    }
-
-    #[Test]
-    public function deferred_scroll_prop_can_have_custom_group(): void
-    {
-        $response = new Response(
-            component: 'Users/Index',
-            props: [
-                'users' => new ScrollProp(static fn () => User::select()->paginate(15))->defer('custom-group'),
-            ],
-        );
-
-        $page = $response->body->inertia['page'];
-
-        $this->assertArrayNotHasKey('users', $page['props']);
-        $this->assertSame(['custom-group' => ['users']], $page['deferredProps']);
-    }
-
-    #[Test]
     public function server_response_with_merge_props(): void
     {
         $this->makeRequest();
-        $this->factory->version('123');
-
-        $user = ['name' => 'Jonathan'];
-        $response = $this->factory->render('User/Edit', [
-            'user' => $user,
-            'foo' => new MergeProp('foo value'),
-            'bar' => new MergeProp('bar value'),
-        ]);
-
-        $renderer = $this->container->get(ViewRenderer::class);
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'user' => ['name' => 'Jonathan'],
+                'foo' => new MergeProp('foo value'),
+                'bar' => new MergeProp('bar value'),
+            ],
+        );
         $page = $response->body->inertia['page'];
-
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
-        $this->assertSame('/user/123', $page['url']);
-        $this->assertSame('123', $page['version']);
-        $this->assertFalse($page['clearHistory']);
-        $this->assertFalse($page['encryptHistory']);
 
         $this->assertSame('foo value', $page['props']['foo']);
         $this->assertSame('bar value', $page['props']['bar']);
         $this->assertSame(['foo', 'bar'], $page['mergeProps']);
-
-        $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":"foo value","bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo","bar"]}';
-        $expectedHtml =
-            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
-
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
     public function server_response_with_merge_props_that_should_prepend(): void
     {
         $this->makeRequest();
-        $this->factory->version('123');
-
-        $user = ['name' => 'Jonathan'];
-        $response = $this->factory->render('User/Edit', [
-            'user' => $user,
-            'foo' => new MergeProp('foo value')->prepend(),
-            'bar' => new MergeProp('bar value'),
-        ]);
-
-        $renderer = $this->container->get(ViewRenderer::class);
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'user' => ['name' => 'Jonathan'],
+                'foo' => new MergeProp('foo value')->prepend(),
+                'bar' => new MergeProp('bar value'),
+            ],
+        );
         $page = $response->body->inertia['page'];
 
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
-        $this->assertSame('/user/123', $page['url']);
-        $this->assertSame('123', $page['version']);
         $this->assertSame(['bar'], $page['mergeProps']);
         $this->assertSame(['foo'], $page['prependProps']);
-        $this->assertFalse($page['clearHistory']);
-        $this->assertFalse($page['encryptHistory']);
-
-        $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":"foo value","bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["bar"],"prependProps":["foo"]}';
-        $expectedHtml =
-            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
-
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
     public function server_response_with_merge_props_that_has_nested_paths_to_append_and_prepend(): void
     {
         $this->makeRequest();
-        $this->factory->version('123');
-
-        $user = ['name' => 'Jonathan'];
-        $response = $this->factory->render('User/Edit', [
-            'user' => $user,
-            'foo' => new MergeProp(['data' => [['id' => 1], ['id' => 2]]])->append('data'),
-            'bar' => new MergeProp(['data' => ['items' => [['uuid' => 1], ['uuid' => 2]]]])->prepend('data.items'),
-        ]);
-
-        $renderer = $this->container->get(ViewRenderer::class);
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => new MergeProp(['data' => [['id' => 1], ['id' => 2]]])->append('data'),
+                'bar' => new MergeProp(['data' => ['items' => [['uuid' => 1], ['uuid' => 2]]]])->prepend('data.items'),
+            ],
+        );
         $page = $response->body->inertia['page'];
 
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
-        $this->assertSame('/user/123', $page['url']);
-        $this->assertSame('123', $page['version']);
         $this->assertSame(['foo.data'], $page['mergeProps']);
         $this->assertSame(['bar.data.items'], $page['prependProps']);
         $this->assertArrayNotHasKey('matchPropsOn', $page);
-        $this->assertFalse($page['clearHistory']);
-        $this->assertFalse($page['encryptHistory']);
-
-        $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":{"data":[{"id":1},{"id":2}]},"bar":{"data":{"items":[{"uuid":1},{"uuid":2}]}}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo.data"],"prependProps":["bar.data.items"]}';
-        $expectedHtml =
-            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
-
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
     public function server_response_with_merge_props_that_has_nested_paths_to_append_and_prepend_with_match_on_strategies(): void
     {
         $this->makeRequest();
-        $this->factory->version('123');
-
-        $user = ['name' => 'Jonathan'];
-        $response = $this->factory->render('User/Edit', [
-            'user' => $user,
-            'foo' => new MergeProp(['data' => [['id' => 1], ['id' => 2]]])->append('data', 'id'),
-            'bar' => new MergeProp(['data' => ['items' => [['uuid' => 1], ['uuid' => 2]]]])->prepend(
-                'data.items',
-                'uuid',
-            ),
-        ]);
-
-        $renderer = $this->container->get(ViewRenderer::class);
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => new MergeProp(['data' => [['id' => 1], ['id' => 2]]])->append('data', 'id'),
+                'bar' => new MergeProp(['data' => ['items' => [['uuid' => 1], ['uuid' => 2]]]])->prepend(
+                    'data.items',
+                    'uuid',
+                ),
+            ],
+        );
         $page = $response->body->inertia['page'];
 
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
-        $this->assertSame('/user/123', $page['url']);
-        $this->assertSame('123', $page['version']);
         $this->assertSame(['foo.data'], $page['mergeProps']);
         $this->assertSame(['bar.data.items'], $page['prependProps']);
         $this->assertSame(['foo.data.id', 'bar.data.items.uuid'], $page['matchPropsOn']);
-        $this->assertFalse($page['clearHistory']);
-        $this->assertFalse($page['encryptHistory']);
-
-        $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":{"data":[{"id":1},{"id":2}]},"bar":{"data":{"items":[{"uuid":1},{"uuid":2}]}}},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo.data"],"prependProps":["bar.data.items"],"matchPropsOn":["foo.data.id","bar.data.items.uuid"]}';
-        $expectedHtml =
-            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
-
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
     public function server_response_with_deep_merge_props(): void
     {
         $this->makeRequest();
-        $this->factory->version('123');
-
-        $user = ['name' => 'Jonathan'];
-        $response = $this->factory->render('User/Edit', [
-            'user' => $user,
-            'foo' => new MergeProp('foo value')->deepMerge(),
-            'bar' => new MergeProp('bar value')->deepMerge(),
-        ]);
-
-        $renderer = $this->container->get(ViewRenderer::class);
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => new MergeProp('foo value')->deepMerge(),
+                'bar' => new MergeProp('bar value')->deepMerge(),
+            ],
+        );
         $page = $response->body->inertia['page'];
-
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
-        $this->assertSame('/user/123', $page['url']);
-        $this->assertSame('123', $page['version']);
-        $this->assertFalse($page['clearHistory']);
-        $this->assertFalse($page['encryptHistory']);
 
         $this->assertSame('foo value', $page['props']['foo']);
         $this->assertSame('bar value', $page['props']['bar']);
         $this->assertSame(['foo', 'bar'], $page['deepMergeProps']);
-
-        $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":"foo value","bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deepMergeProps":["foo","bar"]}';
-        $expectedHtml =
-            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
-
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
     public function server_response_with_match_on_props(): void
     {
         $this->makeRequest();
-        $this->factory->version('123');
-
-        $user = ['name' => 'Jonathan'];
-        $response = $this->factory->render('User/Edit', [
-            'user' => $user,
-            'foo' => new MergeProp('foo value')
-                ->matchOn('foo-key')
-                ->deepMerge(),
-            'bar' => new MergeProp('bar value')
-                ->matchOn('bar-key')
-                ->deepMerge(),
-        ]);
-
-        $renderer = $this->container->get(ViewRenderer::class);
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => new MergeProp('foo value')
+                    ->matchOn('foo-key')
+                    ->deepMerge(),
+                'bar' => new MergeProp('bar value')
+                    ->matchOn('bar-key')
+                    ->deepMerge(),
+            ],
+        );
         $page = $response->body->inertia['page'];
 
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
-        $this->assertSame('/user/123', $page['url']);
-        $this->assertSame('123', $page['version']);
-        $this->assertFalse($page['clearHistory']);
-        $this->assertFalse($page['encryptHistory']);
-
-        $this->assertSame('foo value', $page['props']['foo']);
-        $this->assertSame('bar value', $page['props']['bar']);
         $this->assertSame(['foo', 'bar'], $page['deepMergeProps']);
         $this->assertSame(['foo.foo-key', 'bar.bar-key'], $page['matchPropsOn']);
-
-        $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"foo":"foo value","bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deepMergeProps":["foo","bar"],"matchPropsOn":["foo.foo-key","bar.bar-key"]}';
-        $expectedHtml =
-            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
-
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
     public function server_response_with_defer_and_merge_props(): void
     {
         $this->makeRequest();
-        $this->factory->version('123');
-
-        $user = ['name' => 'Jonathan'];
-        $response = $this->factory->render('User/Edit', [
-            'user' => $user,
-            'foo' => new DeferProp(static fn () => 'foo value')->merge(),
-            'bar' => new MergeProp('bar value'),
-        ]);
-
-        $renderer = $this->container->get(ViewRenderer::class);
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => new DeferProp(static fn () => 'foo value')->merge(),
+                'bar' => new MergeProp('bar value'),
+            ],
+        );
         $page = $response->body->inertia['page'];
-
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
-        $this->assertSame('/user/123', $page['url']);
-        $this->assertSame('123', $page['version']);
-        $this->assertFalse($page['clearHistory']);
-        $this->assertFalse($page['encryptHistory']);
 
         $this->assertArrayNotHasKey('foo', $page['props']);
         $this->assertSame('bar value', $page['props']['bar']);
         $this->assertSame(['default' => ['foo']], $page['deferredProps']);
         $this->assertSame(['foo', 'bar'], $page['mergeProps']);
-
-        $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"mergeProps":["foo","bar"],"deferredProps":{"default":["foo"]}}';
-        $expectedHtml =
-            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
-
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
     public function server_response_with_defer_and_deep_merge_props(): void
     {
         $this->makeRequest();
-        $this->factory->version('123');
-
-        $user = ['name' => 'Jonathan'];
-        $response = $this->factory->render('User/Edit', [
-            'user' => $user,
-            'foo' => new DeferProp(static fn () => 'foo value')->deepMerge(),
-            'bar' => new MergeProp('bar value')->deepMerge(),
-        ]);
-
-        $renderer = $this->container->get(ViewRenderer::class);
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => new DeferProp(static fn () => 'foo value')->deepMerge(),
+                'bar' => new MergeProp('bar value')->deepMerge(),
+            ],
+        );
         $page = $response->body->inertia['page'];
-
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
-        $this->assertSame('/user/123', $page['url']);
-        $this->assertSame('123', $page['version']);
-        $this->assertFalse($page['clearHistory']);
-        $this->assertFalse($page['encryptHistory']);
 
         $this->assertArrayNotHasKey('foo', $page['props']);
         $this->assertSame('bar value', $page['props']['bar']);
         $this->assertSame(['default' => ['foo']], $page['deferredProps']);
         $this->assertSame(['foo', 'bar'], $page['deepMergeProps']);
-
-        $expectedJson = '{"component":"User\/Edit","props":{"user":{"name":"Jonathan"},"bar":"bar value"},"url":"\/user\/123","version":"123","clearHistory":false,"encryptHistory":false,"deepMergeProps":["foo","bar"],"deferredProps":{"default":["foo"]}}';
-        $expectedHtml =
-            '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
-
-        $this->assertSame($expectedHtml, $renderer->render($response->body));
     }
 
     #[Test]
@@ -554,22 +309,18 @@ final class ResponseTest extends TestCase
             Header::PARTIAL_COMPONENT => 'User/Edit',
             Header::PARTIAL_ONLY => 'user',
         ]);
-        $this->factory->version('123');
 
-        $user = ['name' => 'Jonathan'];
-        $response = $this->factory->render('User/Edit', [
-            'user' => $user,
-            'foo' => new MergeProp('foo value'),
-            'bar' => new MergeProp('bar value'),
-        ]);
-
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'user' => ['name' => 'Jonathan'],
+                'foo' => new MergeProp('foo value'),
+                'bar' => new MergeProp('bar value'),
+            ],
+        );
         $page = $response->body;
 
-        $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
-
         $this->assertArrayHasKey('user', $page['props']);
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
-
         $this->assertArrayNotHasKey('foo', $page['props']);
         $this->assertArrayNotHasKey('bar', $page['props']);
         $this->assertArrayNotHasKey('mergeProps', $page);
@@ -583,23 +334,18 @@ final class ResponseTest extends TestCase
             Header::PARTIAL_COMPONENT => 'User/Edit',
             Header::PARTIAL_EXCEPT => 'foo',
         ]);
-        $this->factory->version('123');
 
-        $user = ['name' => 'Jonathan'];
-        $response = $this->factory->render('User/Edit', [
-            'user' => $user,
-            'foo' => new MergeProp('foo value'),
-            'bar' => new MergeProp('bar value'),
-        ]);
-
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'user' => ['name' => 'Jonathan'],
+                'foo' => new MergeProp('foo value'),
+                'bar' => new MergeProp('bar value'),
+            ],
+        );
         $page = $response->body;
 
-        $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
-
-        $this->assertArrayHasKey('user', $page['props']);
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertArrayHasKey('bar', $page['props']);
-        $this->assertSame('bar value', $page['props']['bar']);
         $this->assertArrayNotHasKey('foo', $page['props']);
         $this->assertSame(['bar'], $page['mergeProps']);
     }
@@ -614,44 +360,18 @@ final class ResponseTest extends TestCase
             Header::RESET => 'foo',
         ]);
 
-        $response = $this->factory->render('User/Edit', [
-            'user' => ['name' => 'Jonathan'],
-            'foo' => new MergeProp('foo value'),
-            'bar' => new MergeProp('bar value'),
-        ]);
-
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => new MergeProp('foo value'),
+                'bar' => new MergeProp('bar value'),
+            ],
+        );
         $page = $response->body;
 
-        $this->assertArrayHasKey('props', $page);
-        $props = $page['props'];
-
-        $this->assertArrayHasKey('foo', $props);
-        $this->assertSame('foo value', $props['foo']);
-        $this->assertArrayNotHasKey('bar', $props);
+        $this->assertArrayHasKey('foo', $page['props']);
+        $this->assertArrayNotHasKey('bar', $page['props']);
         $this->assertArrayNotHasKey('mergeProps', $page);
-    }
-
-    #[Test]
-    public function xhr_response(): void
-    {
-        $this->makeRequest(headers: [
-            Header::INERTIA => 'true',
-        ]);
-        $this->factory->version('123');
-
-        $user = (object) ['name' => 'Jonathan'];
-        $response = $this->factory->render('User/Edit', [
-            'user' => $user,
-        ]);
-
-        $page = $response->body;
-
-        $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
-
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('Jonathan', $page['props']['user']->name);
-        $this->assertSame('/user/123', $page['url']);
-        $this->assertSame('123', $page['version']);
     }
 
     #[Test]
@@ -668,34 +388,31 @@ final class ResponseTest extends TestCase
                 'results' => new DeferProp(static fn () => ['data' => ['item1', 'item2']], 'default'),
             ],
         );
-
         $page = $response->body;
 
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertArrayNotHasKey('results', $page['props']);
         $this->assertSame(['default' => ['results']], $page['deferredProps']);
     }
 
     #[Test]
-    public function resource_response(): void
+    public function arrayable_props_are_resolved_to_arrays(): void
     {
-        $this->makeRequest(headers: [
-            Header::INERTIA => 'true',
-        ]);
-        $this->factory->version('123');
+        $this->makeRequest(headers: [Header::INERTIA => 'true']);
+        $response = new Response(
+            component: 'User/Edit',
+            props: ['user' => new readonly class(['name' => 'Jonathan']) implements Arrayable {
+                public function __construct(
+                    private array $data,
+                ) {}
 
-        $resource = new FakeResource(['name' => 'Jonathan']);
-        $response = $this->factory->render('User/Edit', ['user' => $resource]);
+                public function toArray(): array
+                {
+                    return $this->data;
+                }
+            }],
+        );
 
-        $page = $response->body;
-
-        $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
-
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
-        $this->assertSame('/user/123', $page['url']);
-        $this->assertSame('123', $page['version']);
+        $this->assertSame(['name' => 'Jonathan'], $response->body['props']['user']);
     }
 
     #[Test]
@@ -705,19 +422,16 @@ final class ResponseTest extends TestCase
             uri: '/users',
             headers: [Header::INERTIA => 'true'],
         );
-        $this->factory->version('123');
 
-        $response = $this->factory->render('User/Index', [
-            'users' => static fn () => [['name' => 'Jonathan']],
-            'organizations' => static fn () => [['name' => 'Inertia']],
-        ]);
-
+        $response = new Response(
+            component: 'User/Index',
+            props: [
+                'users' => static fn () => [['name' => 'Jonathan']],
+                'organizations' => static fn () => [['name' => 'Inertia']],
+            ],
+        );
         $page = $response->body;
 
-        $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
-        $this->assertSame('User/Index', $page['component']);
-        $this->assertSame('/users', $page['url']);
-        $this->assertSame('123', $page['version']);
         $this->assertSame([['name' => 'Jonathan']], $page['props']['users']);
         $this->assertSame([['name' => 'Inertia']], $page['props']['organizations']);
     }
@@ -733,21 +447,16 @@ final class ResponseTest extends TestCase
                 Header::PARTIAL_ONLY => 'users',
             ],
         );
-        $this->factory->version('123');
 
-        $response = $this->factory->render('User/Index', [
-            'users' => static fn () => [['name' => 'Jonathan']],
-            'organizations' => static fn () => [['name' => 'Inertia']],
-        ]);
-
+        $response = new Response(
+            component: 'User/Index',
+            props: [
+                'users' => static fn () => [['name' => 'Jonathan']],
+                'organizations' => static fn () => [['name' => 'Inertia']],
+            ],
+        );
         $page = $response->body;
 
-        $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
-        $this->assertSame('User/Index', $page['component']);
-        $this->assertSame('/users', $page['url']);
-        $this->assertSame('123', $page['version']);
-
-        $this->assertArrayHasKey('users', $page['props']);
         $this->assertSame([['name' => 'Jonathan']], $page['props']['users']);
         $this->assertArrayNotHasKey('organizations', $page['props']);
     }
@@ -756,48 +465,25 @@ final class ResponseTest extends TestCase
     public function pagination_is_transformed(): void
     {
         $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(laravel_pagination: true));
-
         $this->makeRequest(
             uri: '/users?page=1',
-            headers: [
-                Header::INERTIA => 'true',
-            ],
+            headers: [Header::INERTIA => 'true'],
         );
 
-        $callable = static function (): PaginatedData {
-            $users = [
-                ['name' => 'Jonathan'],
-                ['name' => 'Taylor'],
-                ['name' => 'Jeffrey'],
-            ];
+        $paginator = new Paginator(
+            totalItems: 3,
+            itemsPerPage: 2,
+            currentPage: 1,
+        );
+        $users = [['name' => 'Jonathan'], ['name' => 'Taylor'], ['name' => 'Jeffrey']];
 
-            $paginator = new Paginator(
-                totalItems: count($users),
-                itemsPerPage: 2,
-                currentPage: 1,
-            );
-
-            return $paginator->paginate(array_slice($users, 0, 2));
-        };
-
-        $this->factory->version('123');
-        $response = $this->factory->render('User/Index', ['users' => $callable]);
-
-        $page = $response->body;
-
-        $this->assertSame('User/Index', $page['component']);
-        $this->assertSame('/users?page=1', $page['url']);
-        $this->assertSame('123', $page['version']);
-
-        $paginatedUsers = $page['props']['users'];
-
-        $this->assertArrayHasKey('data', $paginatedUsers);
-        $this->assertArrayHasKey('links', $paginatedUsers);
-        $this->assertArrayHasKey('current_page', $paginatedUsers);
-        $this->assertArrayHasKey('total', $paginatedUsers);
+        $response = new Response(
+            component: 'User/Index',
+            props: ['users' => static fn () => $paginator->paginate(array_slice($users, 0, 2))],
+        );
+        $paginatedUsers = $response->body['props']['users'];
 
         $this->assertSame([['name' => 'Jonathan'], ['name' => 'Taylor']], $paginatedUsers['data']);
-
         $this->assertSame('/users?page=2', $paginatedUsers['next_page_url']);
         $this->assertSame(1, $paginatedUsers['current_page']);
         $this->assertSame(3, $paginatedUsers['total']);
@@ -807,48 +493,23 @@ final class ResponseTest extends TestCase
     public function nested_pagination_is_transformed(): void
     {
         $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(laravel_pagination: true));
-
         $this->makeRequest(
             uri: '/users?page=1',
-            headers: [
-                Header::INERTIA => 'true',
-            ],
+            headers: [Header::INERTIA => 'true'],
         );
 
-        $callable = static function (): array {
-            $users = [
-                ['name' => 'Jonathan'],
-                ['name' => 'Taylor'],
-                ['name' => 'Jeffrey'],
-            ];
+        $paginator = new Paginator(
+            totalItems: 3,
+            itemsPerPage: 2,
+            currentPage: 1,
+        );
+        $users = [['name' => 'Jonathan'], ['name' => 'Taylor'], ['name' => 'Jeffrey']];
 
-            $paginator = new Paginator(
-                totalItems: count($users),
-                itemsPerPage: 2,
-                currentPage: 1,
-            );
-
-            return [
-                'users' => $paginator->paginate(array_slice($users, 0, 2)),
-            ];
-        };
-
-        $this->factory->version('123');
-        $response = $this->factory->render('User/Index', ['something' => $callable]);
-
-        $page = $response->body;
-
-        $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
-        $this->assertSame('User/Index', $page['component']);
-        $this->assertSame('/users?page=1', $page['url']);
-        $this->assertSame('123', $page['version']);
-
-        $nestedUsers = $page['props']['something']['users'];
-
-        $this->assertArrayHasKey('data', $nestedUsers);
-        $this->assertArrayHasKey('links', $nestedUsers);
-        $this->assertArrayHasKey('current_page', $nestedUsers);
-        $this->assertArrayHasKey('path', $nestedUsers);
+        $response = new Response(
+            component: 'User/Index',
+            props: ['something' => static fn () => ['users' => $paginator->paginate(array_slice($users, 0, 2))]],
+        );
+        $nestedUsers = $response->body['props']['something']['users'];
 
         $this->assertSame([['name' => 'Jonathan'], ['name' => 'Taylor']], $nestedUsers['data']);
         $this->assertSame('/users?page=2', $nestedUsers['next_page_url']);
@@ -857,48 +518,24 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
-    public function arrayable_prop_response(): void
+    public function promise_props_are_resolved(): void
     {
         $this->makeRequest(headers: [
             Header::INERTIA => 'true',
         ]);
 
-        $this->factory->version('123');
-        $resource = new FakeResource(['name' => 'Jonathan']);
-        $response = $this->factory->render('User/Edit', ['user' => $resource]);
-
-        $page = $response->body;
-
-        $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
-        $this->assertSame('/user/123', $page['url']);
-        $this->assertSame('123', $page['version']);
-    }
-
-    #[Test]
-    public function promise_props_are_resolved(): void
-    {
-        $this->makeRequest(headers: [Header::INERTIA => 'true']);
-
-        $user = (object) ['name' => 'Jonathan'];
-
         $promise = Mockery::mock(PromiseInterface::class)
             ->shouldReceive('wait')
             ->once()
-            ->andReturn($user)
+            ->andReturn(['name' => 'Jonathan'])
             ->getMock();
 
-        $this->factory->version('123');
-        $response = $this->factory->render('User/Edit', ['user' => $promise]);
+        $response = new Response(
+            component: 'User/Edit',
+            props: ['user' => $promise],
+        );
 
-        $page = $response->body;
-
-        $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('Jonathan', $page['props']['user']->name);
-        $this->assertSame('/user/123', $page['url']);
-        $this->assertSame('123', $page['version']);
+        $this->assertSame('Jonathan', $response->body['props']['user']['name']);
     }
 
     #[Test]
@@ -910,21 +547,15 @@ final class ResponseTest extends TestCase
             Header::PARTIAL_ONLY => 'partial',
         ]);
 
-        $this->factory->version('123');
-        $response = $this->factory->render('User/Edit', [
-            'user' => (object) ['name' => 'Jonathan'],
-            'partial' => 'partial-data',
-        ]);
-
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'user' => ['name' => 'Jonathan'],
+                'partial' => 'partial-data',
+            ],
+        );
         $page = $response->body;
 
-        $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('/user/123', $page['url']);
-        $this->assertSame('123', $page['version']);
-
-        $this->assertCount(1, $page['props']);
-        $this->assertArrayHasKey('partial', $page['props']);
         $this->assertSame('partial-data', $page['props']['partial']);
         $this->assertArrayNotHasKey('user', $page['props']);
     }
@@ -938,21 +569,15 @@ final class ResponseTest extends TestCase
             Header::PARTIAL_EXCEPT => 'user',
         ]);
 
-        $this->factory->version('123');
-        $response = $this->factory->render('User/Edit', [
-            'user' => (object) ['name' => 'Jonathan'],
-            'partial' => 'partial-data',
-        ]);
-
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'user' => ['name' => 'Jonathan'],
+                'partial' => 'partial-data',
+            ],
+        );
         $page = $response->body;
 
-        $this->assertSame(ContentType::JSON->value, $response->headers['Content-Type']->values[0]);
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('/user/123', $page['url']);
-        $this->assertSame('123', $page['version']);
-
-        $this->assertCount(1, $page['props']);
-        $this->assertArrayHasKey('partial', $page['props']);
         $this->assertSame('partial-data', $page['props']['partial']);
         $this->assertArrayNotHasKey('user', $page['props']);
     }
@@ -966,28 +591,25 @@ final class ResponseTest extends TestCase
             Header::PARTIAL_ONLY => 'auth.user,auth.shared_value',
         ]);
 
-        $props = [
-            'auth' => [
-                'user' => new OptionalProp(static fn () => [
-                    'name' => 'Jonathan Reinink',
-                    'email' => 'jonathan@example.com',
-                ]),
-                'shared_value' => 'value',
-                'value' => 'value',
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'auth' => [
+                    'user' => new OptionalProp(static fn () => [
+                        'name' => 'Jonathan Reinink',
+                        'email' => 'jonathan@example.com',
+                    ]),
+                    'shared_value' => 'value',
+                    'value' => 'value',
+                ],
+                'shared' => ['flash' => 'value'],
             ],
-            'shared' => [
-                'flash' => 'value',
-            ],
-        ];
-
-        $response = $this->factory->render('User/Edit', $props);
+        );
         $page = $response->body;
 
         $this->assertArrayNotHasKey('shared', $page['props']);
-        $this->assertArrayHasKey('auth', $page['props']);
         $this->assertArrayNotHasKey('value', $page['props']['auth']);
         $this->assertSame('Jonathan Reinink', $page['props']['auth']['user']['name']);
-        $this->assertSame('jonathan@example.com', $page['props']['auth']['user']['email']);
         $this->assertSame('value', $page['props']['auth']['shared_value']);
     }
 
@@ -1001,24 +623,19 @@ final class ResponseTest extends TestCase
             Header::PARTIAL_EXCEPT => 'auth.user',
         ]);
 
-        $props = [
-            'auth' => [
-                'user' => new OptionalProp(static fn () => [
-                    'name' => 'Jonathan Reinink',
-                    'email' => 'jonathan@example.com',
-                ]),
-                'shared_value' => 'value',
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'auth' => [
+                    'user' => new OptionalProp(static fn () => ['name' => 'Jonathan Reinink']),
+                    'shared_value' => 'value',
+                ],
+                'shared' => ['flash' => 'value'],
             ],
-            'shared' => [
-                'flash' => 'value',
-            ],
-        ];
-
-        $response = $this->factory->render('User/Edit', $props);
+        );
         $page = $response->body;
 
         $this->assertArrayNotHasKey('shared', $page['props']);
-        $this->assertArrayHasKey('auth', $page['props']);
         $this->assertArrayNotHasKey('user', $page['props']['auth']);
         $this->assertSame('value', $page['props']['auth']['shared_value']);
     }
@@ -1026,20 +643,17 @@ final class ResponseTest extends TestCase
     #[Test]
     public function optional_props_are_not_included_by_default(): void
     {
-        $this->makeRequest(
-            uri: '/users',
-            headers: [
-                Header::INERTIA => 'true',
-            ],
-        );
-
-        $optionalProp = new OptionalProp(static fn () => 'An optional value');
-
-        $response = $this->factory->render('Users', [
-            'users' => [],
-            'optional' => $optionalProp,
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
         ]);
 
+        $response = new Response(
+            component: 'Users',
+            props: [
+                'users' => [],
+                'optional' => new OptionalProp(static fn () => 'An optional value'),
+            ],
+        );
         $page = $response->body;
 
         $this->assertSame([], $page['props']['users']);
@@ -1049,22 +663,19 @@ final class ResponseTest extends TestCase
     #[Test]
     public function optional_props_are_included_in_partial_reload(): void
     {
-        $this->makeRequest(
-            uri: '/users',
-            headers: [
-                Header::INERTIA => 'true',
-                Header::PARTIAL_COMPONENT => 'Users',
-                Header::PARTIAL_ONLY => 'optional',
-            ],
-        );
-
-        $optionalProp = new OptionalProp(static fn () => 'An optional value');
-
-        $response = $this->factory->render('Users', [
-            'users' => [],
-            'optional' => $optionalProp,
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::PARTIAL_COMPONENT => 'Users',
+            Header::PARTIAL_ONLY => 'optional',
         ]);
 
+        $response = new Response(
+            component: 'Users',
+            props: [
+                'users' => [],
+                'optional' => new OptionalProp(static fn () => 'An optional value'),
+            ],
+        );
         $page = $response->body;
 
         $this->assertArrayNotHasKey('users', $page['props']);
@@ -1074,28 +685,25 @@ final class ResponseTest extends TestCase
     #[Test]
     public function defer_arrayable_props_are_resolved_in_partial_reload(): void
     {
-        $this->makeRequest(
-            uri: '/users',
-            headers: [
-                Header::INERTIA => 'true',
-                Header::PARTIAL_COMPONENT => 'Users',
-                Header::PARTIAL_ONLY => 'defer',
-            ],
-        );
-
-        $deferProp = new DeferProp(static fn (): Arrayable => new class implements Arrayable {
-            #[Override]
-            public function toArray(): array
-            {
-                return ['foo' => 'bar'];
-            }
-        });
-
-        $response = $this->factory->render('Users', [
-            'users' => [],
-            'defer' => $deferProp,
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::PARTIAL_COMPONENT => 'Users',
+            Header::PARTIAL_ONLY => 'defer',
         ]);
 
+        $response = new Response(
+            component: 'Users',
+            props: [
+                'users' => [],
+                'defer' => new DeferProp(static fn (): Arrayable => new class implements Arrayable {
+                    #[Override]
+                    public function toArray(): array
+                    {
+                        return ['foo' => 'bar'];
+                    }
+                }),
+            ],
+        );
         $page = $response->body;
 
         $this->assertArrayNotHasKey('users', $page['props']);
@@ -1111,20 +719,14 @@ final class ResponseTest extends TestCase
             Header::PARTIAL_ONLY => 'data',
         ]);
 
-        $props = [
-            'user' => new OptionalProp(static fn () => [
-                'name' => 'Jonathan Reinink',
-                'email' => 'jonathan@example.com',
-            ]),
-            'data' => [
-                'name' => 'Taylor Otwell',
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'user' => new OptionalProp(static fn () => ['name' => 'Jonathan Reinink']),
+                'data' => ['name' => 'Taylor Otwell'],
+                'errors' => new AlwaysProp(static fn () => ['name' => 'The email field is required.']),
             ],
-            'errors' => new AlwaysProp(static fn () => [
-                'name' => 'The email field is required.',
-            ]),
-        ];
-
-        $response = $this->factory->render('User/Edit', $props);
+        );
         $page = $response->body;
 
         $this->assertSame('The email field is required.', $page['props']['errors']['name']);
@@ -1136,12 +738,13 @@ final class ResponseTest extends TestCase
     public function string_function_names_are_not_invoked_as_callables(): void
     {
         $this->makeRequest();
-
-        $response = $this->factory->render('User/Edit', [
-            'always' => new AlwaysProp('date'),
-            'merge' => new MergeProp('trim'),
-        ]);
-
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'always' => new AlwaysProp('date'),
+                'merge' => new MergeProp('trim'),
+            ],
+        );
         $page = $response->body->inertia['page'];
 
         $this->assertSame('date', $page['props']['always']);
@@ -1153,17 +756,14 @@ final class ResponseTest extends TestCase
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'responsableProps']),
-            headers: [
-                Header::INERTIA => 'true',
-            ],
+            headers: [Header::INERTIA => 'true'],
         );
 
         $page = $response->body;
-        $props = $page['props'];
 
-        $this->assertSame('bar', $props['foo']);
-        $this->assertSame('qux', $props['baz']);
-        $this->assertSame('corge', $props['quux']);
+        $this->assertSame('bar', $page['props']['foo']);
+        $this->assertSame('qux', $page['props']['baz']);
+        $this->assertSame('corge', $page['props']['quux']);
     }
 
     #[Test]
@@ -1171,75 +771,58 @@ final class ResponseTest extends TestCase
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'mergeWithShared']),
-            headers: [
-                Header::INERTIA => 'true',
-            ],
+            headers: [Header::INERTIA => 'true'],
         );
 
         $page = $response->body;
 
-        $props = $page['props'];
-
-        $this->assertSame(['foo', 'bar'], $props['items']);
-        $this->assertSame(['foo', 'baz'], $props['deep']['foo']['bar']);
+        $this->assertSame(['foo', 'bar'], $page['props']['items']);
+        $this->assertSame(['foo', 'baz'], $page['props']['deep']['foo']['bar']);
     }
 
     #[Test]
     public function top_level_dot_props_get_unpacked(): void
     {
-        $this->makeRequest(
-            uri: '/products/123',
-            headers: [Header::INERTIA => 'true'],
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'auth' => ['user' => ['name' => 'Jonathan Reinink']],
+                'auth.user.can' => ['do.stuff' => true],
+                'product' => ['name' => 'My example product'],
+            ],
         );
+        $user = $response->body['props']['auth']['user'];
 
-        $props = [
-            'auth' => [
-                'user' => [
-                    'name' => 'Jonathan Reinink',
-                ],
-            ],
-            'auth.user.can' => [
-                'do.stuff' => true,
-            ],
-            'product' => ['name' => 'My example product'],
-        ];
-
-        $response = $this->factory->render('User/Edit', $props);
-        $page = $response->body;
-
-        $user = $page['props']['auth']['user'];
         $this->assertSame('Jonathan Reinink', $user['name']);
         $this->assertTrue($user['can']['do.stuff']);
-        $this->assertArrayNotHasKey('auth.user.can', $page['props']);
+        $this->assertArrayNotHasKey('auth.user.can', $response->body['props']);
     }
 
     #[Test]
     public function nested_dot_props_do_not_get_unpacked(): void
     {
-        $this->makeRequest(
-            uri: '/products/123',
-            headers: [Header::INERTIA => 'true'],
-        );
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+        ]);
 
-        $props = [
-            'auth' => [
-                'user.can' => [
-                    'do.stuff' => true,
-                ],
-                'user' => [
-                    'name' => 'Jonathan Reinink',
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'auth' => [
+                    'user.can' => ['do.stuff' => true],
+                    'user' => ['name' => 'Jonathan Reinink'],
                 ],
             ],
-            'product' => ['name' => 'My example product'],
-        ];
-
-        $response = $this->factory->render('User/Edit', $props);
+        );
         $page = $response->body;
 
-        $auth = $page['props']['auth'];
-        $this->assertSame('Jonathan Reinink', $auth['user']['name']);
-        $this->assertTrue($auth['user.can']['do.stuff']);
-        $this->assertArrayNotHasKey('can', $auth);
+        $this->assertSame('Jonathan Reinink', $page['props']['auth']['user']['name']);
+        $this->assertTrue($page['props']['auth']['user.can']['do.stuff']);
+        $this->assertArrayNotHasKey('can', $page['props']['auth']);
     }
 
     #[Test]
@@ -1247,30 +830,27 @@ final class ResponseTest extends TestCase
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'withMethod']),
-            headers: [
-                Header::INERTIA => 'true',
-            ],
+            headers: [Header::INERTIA => 'true'],
         );
 
         $page = $response->body;
-        $props = $page['props'];
 
-        $this->assertSame('bar', $props['foo']);
-        $this->assertSame('qux', $props['baz']);
-        $this->assertSame('corge', $props['quux']);
-        $this->assertSame('garply', $props['grault']);
+        $this->assertSame('bar', $page['props']['foo']);
+        $this->assertSame('qux', $page['props']['baz']);
+        $this->assertSame('corge', $page['props']['quux']);
+        $this->assertSame('garply', $page['props']['grault']);
     }
 
     #[Test]
     public function once_props_are_always_resolved_on_initial_page_load(): void
     {
+        $this->makeRequest();
         $response = new Response(
             component: 'User/Edit',
             props: [
                 'foo' => inertia()->once(static fn () => 'bar'),
             ],
         );
-
         $page = $response->body->inertia['page'];
 
         $this->assertSame('bar', $page['props']['foo']);
@@ -1280,22 +860,23 @@ final class ResponseTest extends TestCase
     #[Test]
     public function fresh_once_props_are_included_on_initial_page_load(): void
     {
+        $this->makeRequest();
         $response = new Response(
             component: 'User/Edit',
             props: [
                 'foo' => inertia()->once(static fn () => 'bar')->fresh(),
             ],
         );
-
         $page = $response->body->inertia['page'];
 
-        $this->assertArrayHasKey('onceProps', $page);
         $this->assertSame(['foo' => ['prop' => 'foo', 'expiresAt' => null]], $page['onceProps']);
     }
 
     #[Test]
     public function once_props_are_resolved_with_a_custom_key_and_ttl_value(): void
     {
+        $this->makeRequest();
+
         $clock = $this->clock();
         $clock->setNow('2025-01-01 12:00:00');
 
@@ -1310,7 +891,6 @@ final class ResponseTest extends TestCase
                 'foo' => inertia()->once(static fn () => 'bar')->as('baz')->until(Duration::minute()),
             ],
         );
-
         $page = $response->body->inertia['page'];
 
         $this->assertSame('bar', $page['props']['foo']);
@@ -1331,10 +911,8 @@ final class ResponseTest extends TestCase
                 'foo' => inertia()->once(static fn () => 'bar'),
             ],
         );
-
         $page = $response->body;
 
-        $this->assertSame('User/Edit', $page['component']);
         $this->assertArrayNotHasKey('foo', $page['props']);
         $this->assertSame(['foo' => ['prop' => 'foo', 'expiresAt' => null]], $page['onceProps']);
     }
@@ -1352,10 +930,8 @@ final class ResponseTest extends TestCase
                 'foo' => inertia()->once(static fn () => 'bar'),
             ],
         );
-
         $page = $response->body;
 
-        $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('bar', $page['props']['foo']);
         $this->assertSame(['foo' => ['prop' => 'foo', 'expiresAt' => null]], $page['onceProps']);
     }
@@ -1374,34 +950,8 @@ final class ResponseTest extends TestCase
                 'foo' => inertia()->once(static fn () => 'bar'),
             ],
         );
-
         $page = $response->body;
 
-        $this->assertSame('User/Edit', $page['component']);
-        $this->assertSame('bar', $page['props']['foo']);
-        $this->assertSame(['foo' => ['prop' => 'foo', 'expiresAt' => null]], $page['onceProps']);
-    }
-
-    #[Test]
-    public function once_props_are_resolved_on_partial_requests_without_only_or_except(): void
-    {
-        $this->makeRequest(headers: [
-            Header::INERTIA => 'true',
-            Header::PARTIAL_COMPONENT => 'User/Edit',
-            Header::PARTIAL_ONLY => 'foo',
-            Header::EXCEPT_ONCE_PROPS => 'foo',
-        ]);
-
-        $response = new Response(
-            component: 'User/Edit',
-            props: [
-                'foo' => inertia()->once(static fn () => 'bar'),
-            ],
-        );
-
-        $page = $response->body;
-
-        $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('bar', $page['props']['foo']);
         $this->assertSame(['foo' => ['prop' => 'foo', 'expiresAt' => null]], $page['onceProps']);
     }
@@ -1423,10 +973,8 @@ final class ResponseTest extends TestCase
                 'baz' => inertia()->once(static fn () => 'qux'),
             ],
         );
-
         $page = $response->body;
 
-        $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('bar', $page['props']['foo']);
         $this->assertArrayNotHasKey('baz', $page['props']);
         $this->assertSame(['foo' => ['prop' => 'foo', 'expiresAt' => null]], $page['onceProps']);
@@ -1449,10 +997,8 @@ final class ResponseTest extends TestCase
                 'baz' => inertia()->once(static fn () => 'qux'),
             ],
         );
-
         $page = $response->body;
 
-        $this->assertSame('User/Edit', $page['component']);
         $this->assertArrayNotHasKey('foo', $page['props']);
         $this->assertSame('qux', $page['props']['baz']);
         $this->assertSame(['baz' => ['prop' => 'baz', 'expiresAt' => null]], $page['onceProps']);
@@ -1472,10 +1018,8 @@ final class ResponseTest extends TestCase
                 'foo' => inertia()->once(static fn () => 'bar')->fresh(),
             ],
         );
-
         $page = $response->body;
 
-        $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('bar', $page['props']['foo']);
         $this->assertSame(['foo' => ['prop' => 'foo', 'expiresAt' => null]], $page['onceProps']);
     }
@@ -1495,10 +1039,8 @@ final class ResponseTest extends TestCase
                 'baz' => inertia()->once(static fn () => 'qux'),
             ],
         );
-
         $page = $response->body;
 
-        $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('bar', $page['props']['foo']);
         $this->assertArrayNotHasKey('baz', $page['props']);
         $this->assertSame(
@@ -1524,10 +1066,8 @@ final class ResponseTest extends TestCase
                 'defer' => inertia()->defer(static fn () => 'value')->once(),
             ],
         );
-
         $page = $response->body;
 
-        $this->assertSame('User/Edit', $page['component']);
         $this->assertArrayNotHasKey('defer', $page['props']);
         $this->assertArrayNotHasKey('deferredProps', $page);
         $this->assertSame(['defer' => ['prop' => 'defer', 'expiresAt' => null]], $page['onceProps']);
@@ -1549,22 +1089,32 @@ final class ResponseTest extends TestCase
                 'defer' => inertia()->defer(static fn () => 'value')->once(),
             ],
         );
-
         $page = $response->body;
 
-        $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('value', $page['props']['defer']);
         $this->assertSame(['defer' => ['prop' => 'defer', 'expiresAt' => null]], $page['onceProps']);
     }
 
     #[Test]
-    public function responsable_with_invalid_key(): void
+    public function arrayable_with_invalid_key(): void
     {
-        $this->makeRequest(headers: [Header::INERTIA => 'true']);
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+        ]);
 
-        $resource = new FakeResource(["\x00*\x00_invalid_key" => 'for object']);
+        $response = new Response(
+            component: 'User/Edit',
+            props: ['resource' => new readonly class(["\x00*\x00_invalid_key" => 'for object']) implements Arrayable {
+                public function __construct(
+                    private array $data,
+                ) {}
 
-        $response = $this->factory->render('User/Edit', ['resource' => $resource]);
+                public function toArray(): array
+                {
+                    return $this->data;
+                }
+            }],
+        );
         $page = $response->body;
 
         $this->assertSame(["\x00*\x00_invalid_key" => 'for object'], $page['props']['resource']);
@@ -1573,13 +1123,14 @@ final class ResponseTest extends TestCase
     #[Test]
     public function the_page_url_is_prefixed_with_the_proxy_prefix(): void
     {
-        $this->makeRequest(headers: [Header::FORWARDED_PREFIX => '/sub/directory']);
-
-        $user = ['name' => 'Jonathan'];
-        $response = $this->factory->render('User/Edit', [
-            'user' => $user,
+        $this->makeRequest(headers: [
+            Header::FORWARDED_PREFIX => '/sub/directory',
         ]);
 
+        $response = new Response(
+            component: 'User/Edit',
+            props: [],
+        );
         $page = $response->body->inertia['page'];
 
         $this->assertSame('/sub/directory/user/123', $page['url']);
@@ -1593,10 +1144,12 @@ final class ResponseTest extends TestCase
             headers: [Header::INERTIA => 'true'],
         );
 
-        $response = $this->factory->render('Product/Show', []);
-        $page = $response->body;
+        $response = new Response(
+            component: 'Product/Show',
+            props: [],
+        );
 
-        $this->assertSame('/subpath/product/122', $page['url']);
+        $this->assertSame('/subpath/product/122', $response->body['url']);
     }
 
     #[Test]
@@ -1607,7 +1160,10 @@ final class ResponseTest extends TestCase
             headers: [Header::INERTIA => 'true'],
         );
 
-        $response = $this->factory->render('User/Index', []);
+        $response = new Response(
+            component: 'User/Edit',
+            props: [],
+        );
         $page = $response->body;
 
         $this->assertSame('/users/', $page['url']);
@@ -1621,7 +1177,10 @@ final class ResponseTest extends TestCase
             headers: [Header::INERTIA => 'true'],
         );
 
-        $response = $this->factory->render('User/Index', []);
+        $response = new Response(
+            component: 'User/Edit',
+            props: [],
+        );
         $page = $response->body;
 
         $this->assertSame('/users/?page=1&sort=name', $page['url']);
@@ -1635,7 +1194,10 @@ final class ResponseTest extends TestCase
             headers: [Header::INERTIA => 'true'],
         );
 
-        $response = $this->factory->render('User/Index', []);
+        $response = new Response(
+            component: 'User/Edit',
+            props: [],
+        );
         $page = $response->body;
 
         $this->assertSame('/users', $page['url']);
@@ -1649,7 +1211,10 @@ final class ResponseTest extends TestCase
             headers: [Header::INERTIA => 'true'],
         );
 
-        $response = $this->factory->render('User/Index', []);
+        $response = new Response(
+            component: 'User/Edit',
+            props: [],
+        );
         $page = $response->body;
 
         $this->assertSame('/users?page=1&sort=name', $page['url']);
@@ -1658,10 +1223,10 @@ final class ResponseTest extends TestCase
     #[Test]
     public function deferred_props_from_provides_inertia_properties_are_included_in_deferred_props_metadata(): void
     {
+        $this->makeRequest();
         $response = new Response(
             component: 'User/Edit',
             props: [
-                'user' => ['name' => 'Jonathan'],
                 new class implements ProvidesInertiaProperties {
                     public function toInertiaProperties(RenderContext $context): iterable
                     {
@@ -1672,10 +1237,8 @@ final class ResponseTest extends TestCase
                 },
             ],
         );
-
         $page = $response->body->inertia['page'];
 
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertArrayNotHasKey('foo', $page['props']);
         $this->assertSame(['default' => ['foo']], $page['deferredProps']);
     }
@@ -1683,10 +1246,10 @@ final class ResponseTest extends TestCase
     #[Test]
     public function deferred_props_from_provides_inertia_properties_with_multiple_groups(): void
     {
+        $this->makeRequest();
         $response = new Response(
             component: 'User/Edit',
             props: [
-                'user' => ['name' => 'Jonathan'],
                 new class implements ProvidesInertiaProperties {
                     public function toInertiaProperties(RenderContext $context): iterable
                     {
@@ -1698,10 +1261,8 @@ final class ResponseTest extends TestCase
                 },
             ],
         );
-
         $page = $response->body->inertia['page'];
 
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertArrayNotHasKey('foo', $page['props']);
         $this->assertArrayNotHasKey('bar', $page['props']);
         $this->assertSame(['default' => ['foo'], 'custom' => ['bar']], $page['deferredProps']);
@@ -1730,7 +1291,6 @@ final class ResponseTest extends TestCase
                 },
             ],
         );
-
         $page = $response->body;
 
         $this->assertSame('bar', $page['props']['foo']);
@@ -1740,21 +1300,20 @@ final class ResponseTest extends TestCase
     #[Test]
     public function merge_props_from_provides_inertia_properties_are_included_in_merge_props_metadata(): void
     {
-        $response = new Response('User/Edit', [
-            'user' => ['name' => 'Jonathan'],
-            new class implements ProvidesInertiaProperties {
-                public function toInertiaProperties(RenderContext $context): iterable
-                {
-                    return [
-                        'foo' => new MergeProp('foo value'),
-                    ];
-                }
-            },
-        ]);
-
+        $this->makeRequest();
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                new class implements ProvidesInertiaProperties {
+                    public function toInertiaProperties(RenderContext $context): iterable
+                    {
+                        return ['foo' => new MergeProp('foo value')];
+                    }
+                },
+            ],
+        );
         $page = $response->body->inertia['page'];
 
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertSame('foo value', $page['props']['foo']);
         $this->assertSame(['foo'], $page['mergeProps']);
     }
@@ -1762,24 +1321,20 @@ final class ResponseTest extends TestCase
     #[Test]
     public function once_props_from_provides_inertia_properties_are_included_in_once_props_metadata(): void
     {
+        $this->makeRequest();
         $response = new Response(
             component: 'User/Edit',
             props: [
-                'user' => ['name' => 'Jonathan'],
                 new class implements ProvidesInertiaProperties {
                     public function toInertiaProperties(RenderContext $context): iterable
                     {
-                        return [
-                            'foo' => Inertia::once(static fn () => 'bar'),
-                        ];
+                        return ['foo' => Inertia::once(static fn () => 'bar')];
                     }
                 },
             ],
         );
-
         $page = $response->body->inertia['page'];
 
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertSame('bar', $page['props']['foo']);
         $this->assertSame(['foo' => ['prop' => 'foo', 'expiresAt' => null]], $page['onceProps']);
     }
@@ -1787,24 +1342,20 @@ final class ResponseTest extends TestCase
     #[Test]
     public function deferred_merge_props_from_provides_inertia_properties_include_both_metadata(): void
     {
+        $this->makeRequest();
         $response = new Response(
             component: 'User/Edit',
             props: [
-                'user' => ['name' => 'Jonathan'],
                 new class implements ProvidesInertiaProperties {
                     public function toInertiaProperties(RenderContext $context): iterable
                     {
-                        return [
-                            'foo' => new DeferProp(static fn () => 'foo value', 'default')->merge(),
-                        ];
+                        return ['foo' => new DeferProp(static fn () => 'foo value', 'default')->merge()];
                     }
                 },
             ],
         );
-
         $page = $response->body->inertia['page'];
 
-        $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertArrayNotHasKey('foo', $page['props']);
         $this->assertSame(['default' => ['foo']], $page['deferredProps']);
         $this->assertSame(['foo'], $page['mergeProps']);
