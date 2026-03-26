@@ -30,11 +30,8 @@ use Inertia\Traits\IsResponse;
 use Inertia\Views\InertiaView;
 use JsonSerializable;
 use Tempest\Http\ContentType;
-use Tempest\Http\Method;
 use Tempest\Http\Request;
 use Tempest\Http\Response as HttpResponse;
-use Tempest\Http\Status;
-use Tempest\Support\Arr;
 use Tempest\Support\Arr\ArrayInterface;
 use Tempest\Support\Paginator\PaginatedData;
 use Tempest\View\View;
@@ -90,7 +87,6 @@ final class Response implements HttpResponse
         private readonly ?Closure $urlResolver = null,
     ) {
         $this->props = $this->normalizeProps($this->props);
-        $this->checkVersionMismatch();
     }
 
     /**
@@ -165,7 +161,7 @@ final class Response implements HttpResponse
             $this->bodyResolved = true;
         }
 
-        return $this->bodyValue;
+        return $this->inertiaBody;
     }
 
     /**
@@ -583,10 +579,6 @@ final class Response implements HttpResponse
             );
         }
 
-        if ($this->status === Status::CONFLICT) {
-            return null;
-        }
-
         $this->addHeader(Header::INERTIA, 'true');
         $this->setContentType(ContentType::JSON);
 
@@ -603,29 +595,6 @@ final class Response implements HttpResponse
         $flash = inertia()->getFlashed();
 
         return $flash !== [] ? ['flash' => $flash] : [];
-    }
-
-    /**
-     * Check for asset version mismatch and set conflict status eagerly.
-     */
-    private function checkVersionMismatch(): void
-    {
-        if (! $this->request->headers->has(Header::INERTIA)) {
-            return;
-        }
-
-        $inertiaVersion = $this->request->headers->get(Header::VERSION);
-
-        if (
-            $this->request->method === Method::GET
-            && $inertiaVersion !== null
-            && $inertiaVersion !== ''
-            && $inertiaVersion !== '0'
-            && $inertiaVersion !== $this->version
-        ) {
-            $this->setStatus(Status::CONFLICT);
-            $this->addHeader(Header::LOCATION, $this->request->uri);
-        }
     }
 
     /**

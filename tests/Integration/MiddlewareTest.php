@@ -141,7 +141,7 @@ final class MiddlewareTest extends TestCase
         );
 
         $response->assertStatus(Status::CONFLICT);
-        $this->assertSame('/string-version-test', $response->headers[Header::LOCATION]->values[0]);
+        $response->assertHeaderContains(Header::LOCATION, '/string-version-test');
         $this->assertEmpty($response->body);
     }
 

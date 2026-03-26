@@ -130,10 +130,7 @@ class Middleware implements HttpMiddleware
 
         $this->inertia->setRootView($this->rootView());
 
-        $urlResolver = $this->urlResolver();
-        if ($urlResolver) {
-            $this->inertia->resolveUrlUsing($urlResolver);
-        }
+        $this->inertia->resolveUrlUsing($this->urlResolver());
 
         try {
             $response = $next($request);
@@ -154,15 +151,20 @@ class Middleware implements HttpMiddleware
             $this->reflash();
         }
 
-        if (! $request->headers->has(Header::INERTIA) || $response instanceof InertiaResponse) {
-            return $response;
-        }
+        $requestVersion = $request->headers->get(Header::VERSION) ?? '';
 
         if (
-            $request->method === Method::GET
-            && ($request->headers->get(Header::VERSION) ?? '') !== $this->inertia->getVersion()
+            $request->headers->has(Header::INERTIA)
+            && $request->method === Method::GET
+            && $requestVersion !== ''
+            && $requestVersion !== '0'
+            && $requestVersion !== $this->inertia->getVersion()
         ) {
-            $response = $this->onVersionChange($request);
+            return $this->onVersionChange($request);
+        }
+
+        if (! $request->headers->has(Header::INERTIA) || $response instanceof InertiaResponse) {
+            return $response;
         }
 
         if ($response->status === Status::OK && ($response->body === '' || $response->body === null)) {

@@ -13,42 +13,62 @@ use Tempest\Http\Header;
 use Tempest\Http\Session\Session;
 use Tempest\Http\Status;
 use Tempest\View\View;
+use UnitEnum;
 
-use function Tempest\get;
+use function Tempest\Container\get;
 
 /** @phpstan-require-implements \Tempest\Http\Response */
 trait IsResponse
 {
     private(set) Status $status = Status::OK;
 
-    private View|string|array|Generator|JsonSerializable|null $bodyValue = null;
+    private View|string|array|Generator|JsonSerializable|null $inertiaBody = null;
 
     private(set) View|string|array|Generator|JsonSerializable|null $body {
         get => $this->getBody();
-        set => $this->bodyValue = $value;
+        set => $this->inertiaBody = $value;
     }
 
     /** @var \Tempest\Http\Header[] */
     private(set) array $headers = [];
 
-    public Session $session {
-        get => get(Session::class);
-    }
-
     public CookieManager $cookieManager {
         get => get(CookieManager::class);
+    }
+
+    public Session $session {
+        get => get(Session::class);
     }
 
     private(set) ?View $view = null;
 
     public function getHeader(string $name): ?Header
     {
-        return $this->headers[$name] ?? null;
+        return array_find(
+            array: $this->headers,
+            callback: static fn (Header $header) => strcasecmp($header->name, $name) === 0,
+        );
+    }
+
+    public function addHeaders(array $headers): self
+    {
+        foreach ($headers as $key => $values) {
+            if (! is_array($values)) {
+                $values = [$values];
+            }
+
+            foreach ($values as $value) {
+                $this->addHeader($key, $value);
+            }
+        }
+
+        return $this;
     }
 
     public function addHeader(string $key, string $value): self
     {
         $this->headers[$key] ??= new Header($key);
+
         $this->headers[$key]->add($value);
 
         return $this;
@@ -57,27 +77,6 @@ trait IsResponse
     public function removeHeader(string $key): self
     {
         unset($this->headers[$key]);
-
-        return $this;
-    }
-
-    public function addSession(string $name, mixed $value): self
-    {
-        $this->session->set($name, $value);
-
-        return $this;
-    }
-
-    public function removeSession(string $name): self
-    {
-        $this->session->remove($name);
-
-        return $this;
-    }
-
-    public function destroySession(): self
-    {
-        $this->session->destroy();
 
         return $this;
     }
@@ -96,7 +95,21 @@ trait IsResponse
         return $this;
     }
 
-    public function flash(string $key, mixed $value): self
+    public function addSession(string $name, mixed $value): self
+    {
+        $this->session->set($name, $value);
+
+        return $this;
+    }
+
+    public function removeSession(string $name): self
+    {
+        $this->session->remove($name);
+
+        return $this;
+    }
+
+    public function flash(string|UnitEnum $key, mixed $value): self
     {
         $this->session->flash($key, $value);
 
@@ -119,7 +132,7 @@ trait IsResponse
 
     protected function getBody(): View|string|array|Generator|JsonSerializable|null
     {
-        return $this->body;
+        return $this->inertiaBody;
     }
 
     public function setBody(View|string|array|Generator|JsonSerializable|null $body): self
