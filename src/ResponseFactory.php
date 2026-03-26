@@ -26,7 +26,6 @@ use Tempest\Http\Responses\Back;
 use Tempest\Http\Responses\Redirect;
 use Tempest\Http\Session\Session;
 use Tempest\Http\Status;
-use Tempest\Support\Arr;
 use Tempest\Support\Arr\ArrayInterface;
 use UnitEnum;
 
@@ -75,6 +74,13 @@ final class ResponseFactory
      * @var array<string, bool>
      */
     private array $componentCache = [];
+
+    /**
+     * Holds flash data accumulated during the current request.
+     *
+     * @var array<string, mixed>
+     */
+    private array $pendingFlash = [];
 
     private Session $session {
         get => $this->session ??= get(Session::class);
@@ -341,8 +347,6 @@ final class ResponseFactory
      */
     public function flash(BackedEnum|UnitEnum|string|array $key, mixed $value = null): self
     {
-        $flash = $key;
-
         if (! is_array($key)) {
             $key = match (true) {
                 $key instanceof BackedEnum => $key->value,
@@ -350,15 +354,17 @@ final class ResponseFactory
                 default => $key,
             };
 
-            $flash = [$key => $value];
+            $key = [$key => $value];
         }
 
+        $this->pendingFlash = [
+            ...$this->pendingFlash,
+            ...$key,
+        ];
+
         $this->session->flash(
-            SessionKey::FlashData->value,
-            [
-                ...$this->getFlashed(),
-                ...$flash,
-            ],
+            key: SessionKey::FlashData->value,
+            value: $this->pendingFlash,
         );
 
         return $this;
