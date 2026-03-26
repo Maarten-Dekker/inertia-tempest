@@ -82,8 +82,9 @@ final readonly class StartSsr
                 continue;
             }
 
-            $this->console->error(trim($data));
-            $this->exceptionProcessor->process(new SsrException($data));
+            $trimmedData = trim($data);
+            $this->console->error($trimmedData);
+            $this->exceptionProcessor->process(new SsrException($trimmedData));
         }
 
         return ExitCode::SUCCESS;
