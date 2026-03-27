@@ -553,8 +553,14 @@ final class Response implements HttpResponse
                 'props' => $resolvedProps,
                 'url' => $this->resolveUrl(),
                 'version' => $this->version,
-                'clearHistory' => $this->session->consume(SessionKey::ClearHistory->value, $this->clearHistory),
-                'preserveFragment' => $this->session->consume(SessionKey::PreserveFragment->value, $this->clearHistory),
+                'clearHistory' => $this->session->consume(
+                    key: SessionKey::ClearHistory->value,
+                    default: $this->clearHistory,
+                ),
+                'preserveFragment' => $this->session->consume(
+                    key: SessionKey::PreserveFragment->value,
+                    default: $this->preserveFragment,
+                ),
                 'encryptHistory' => $this->encryptHistory,
             ],
             static fn ($value) => $value !== false,
