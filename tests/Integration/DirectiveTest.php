@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Inertia\Tests\Integration;
 
 use Inertia\Configs\InertiaConfig;
-use Inertia\Configs\PageConfig;
 use Inertia\Configs\SsrConfig;
 use Inertia\Ssr\Contracts\Gateway;
 use Inertia\Ssr\Response;
@@ -30,23 +29,6 @@ final class DirectiveTest extends TestCase
         $expectedJson = json_encode(self::EXAMPLE_PAGE_OBJECT);
         $expectedHtml =
             '<script data-page="app" type="application/json">' . $expectedJson . '</script><div id="app"></div>';
-
-        $this->assertSame($expectedHtml, (string) $view->inertia());
-    }
-
-    #[Test]
-    public function inertia_directive_renders_the_root_element_with_data_attribute(): void
-    {
-        $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(
-            ssr: new SsrConfig(enabled: false),
-            pages: new PageConfig(use_data_attribute_for_initial_page: true),
-        ));
-
-        $response = $this->factory->render('Foo/Bar', self::EXAMPLE_PAGE_OBJECT['props']);
-        $view = $response->body;
-
-        $pageJson = json_encode($view->inertia['page'], JSON_THROW_ON_ERROR);
-        $expectedHtml = '<div id="app" data-page="' . htmlspecialchars($pageJson, ENT_QUOTES) . '"></div>';
 
         $this->assertSame($expectedHtml, (string) $view->inertia());
     }
@@ -90,23 +72,6 @@ final class DirectiveTest extends TestCase
         $expectedJson = '{"component":"Foo\/Bar","props":{"foo":"bar"},"url":"\/","version":"","clearHistory":false,"encryptHistory":false}';
         $expectedHtml =
             '<script data-page="foo" type="application/json">' . $expectedJson . '</script><div id="foo"></div>';
-
-        $this->assertSame($expectedHtml, (string) $view->inertia('foo'));
-    }
-
-    #[Test]
-    public function inertia_directive_can_use_a_different_root_element_id_when_using_data_attribute(): void
-    {
-        $this->container->singleton(InertiaConfig::class, static fn () => new InertiaConfig(
-            ssr: new SsrConfig(enabled: false),
-            pages: new PageConfig(use_data_attribute_for_initial_page: true),
-        ));
-
-        $response = $this->factory->render('Foo/Bar', self::EXAMPLE_PAGE_OBJECT['props']);
-        $view = $response->body;
-
-        $pageJson = json_encode($view->inertia['page'], JSON_THROW_ON_ERROR);
-        $expectedHtml = '<div id="foo" data-page="' . htmlspecialchars($pageJson, ENT_QUOTES) . '"></div>';
 
         $this->assertSame($expectedHtml, (string) $view->inertia('foo'));
     }

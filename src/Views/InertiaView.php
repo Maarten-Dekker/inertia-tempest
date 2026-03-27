@@ -41,8 +41,6 @@ final class InertiaView implements View
 
         if ($this->ssrBody) {
             $body = $this->ssrBody;
-        } elseif ($this->config->pages->use_data_attribute_for_initial_page) {
-            $body = "<div id=\"{$id}\" data-page=\"{$escaped}\"></div>";
         } else {
             $body =
                 "<script data-page=\"{$id}\" type=\"application/json\">{$json}</script>" . "<div id=\"{$id}\"></div>";

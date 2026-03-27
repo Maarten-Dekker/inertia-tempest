@@ -18,10 +18,6 @@ use function Tempest\root_path;
  *
  * The `paths` and `extensions ` options define where to look
  * for page components and which file extensions to consider.
- *
- * By default, the initial page data is passed via a script element.
- * Set `use_data_attribute_for_initial_page` to true to use a data
- * attribute on the root element instead.
  */
 final class PageConfig
 {
@@ -31,14 +27,8 @@ final class PageConfig
 
     public array $extensions;
 
-    public bool $use_data_attribute_for_initial_page;
-
-    public function __construct(
-        ?bool $ensure_pages_exist = null,
-        ?array $paths = null,
-        ?array $extensions = null,
-        ?bool $use_data_attribute_for_initial_page = null,
-    ) {
+    public function __construct(?bool $ensure_pages_exist = null, ?array $paths = null, ?array $extensions = null)
+    {
         $this->ensure_pages_exist = $ensure_pages_exist ?? false;
         $this->paths = $paths ?? [root_path('app/')];
         $this->extensions = $extensions ?? [
@@ -49,6 +39,5 @@ final class PageConfig
             'tsx',
             'vue',
         ];
-        $this->use_data_attribute_for_initial_page = $use_data_attribute_for_initial_page ?? false;
     }
 }
