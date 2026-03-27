@@ -302,6 +302,19 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
+    public function test_inertia_response_header_is_present_without_accessing_body(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+        ]);
+
+        $response = inertia()->render('SomeComponent');
+
+        $this->assertSame('true', $response->getHeader(Header::INERTIA)?->first());
+        $this->assertSame('application/json', $response->getHeader('Content-Type')?->first());
+    }
+
+    #[Test]
     public function exclude_merge_props_from_partial_only_response(): void
     {
         $this->makeRequest(headers: [
