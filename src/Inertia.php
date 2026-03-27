@@ -69,6 +69,11 @@ class Inertia extends Facade
         static::instance()->encryptHistory($encrypt);
     }
 
+    public static function preserveFragment(): void
+    {
+        static::instance()->preserveFragment();
+    }
+
     public static function flushShared(): void
     {
         static::instance()->flushShared();

@@ -83,6 +83,7 @@ final class Response implements HttpResponse
         private string $rootView = 'inertia.view.php',
         private readonly string $version = '',
         private readonly bool $clearHistory = false,
+        private readonly bool $preserveFragment = false,
         private readonly bool $encryptHistory = false,
         private readonly ?Closure $urlResolver = null,
     ) {
@@ -546,15 +547,27 @@ final class Response implements HttpResponse
         $this->props = $this->resolveInertiaPropsProviders($this->props);
         $resolvedProps = $this->resolveProperties($this->props);
 
-        $page = array_merge(
+        $page = array_filter(
             [
                 'component' => $this->component,
                 'props' => $resolvedProps,
                 'url' => $this->resolveUrl(),
                 'version' => $this->version,
-                'clearHistory' => $this->session->consume(SessionKey::ClearHistory->value, $this->clearHistory),
+                'clearHistory' => $this->session->consume(
+                    key: SessionKey::ClearHistory->value,
+                    default: $this->clearHistory,
+                ),
+                'preserveFragment' => $this->session->consume(
+                    key: SessionKey::PreserveFragment->value,
+                    default: $this->preserveFragment,
+                ),
                 'encryptHistory' => $this->encryptHistory,
             ],
+            static fn ($value) => $value !== false,
+        );
+
+        $page = array_merge(
+            $page,
             $this->resolveMergeProps(),
             $this->resolveDeferredProps(),
             $this->resolveScrollProps(),

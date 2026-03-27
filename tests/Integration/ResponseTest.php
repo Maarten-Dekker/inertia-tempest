@@ -50,8 +50,6 @@ final class ResponseTest extends TestCase
         $this->assertSame('Jonathan', $page['props']['user']['name']);
         $this->assertSame('/user/123', $page['url']);
         $this->assertSame('123', $page['version']);
-        $this->assertFalse($page['clearHistory']);
-        $this->assertFalse($page['encryptHistory']);
     }
 
     #[Test]
@@ -302,7 +300,7 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
-    public function test_inertia_response_header_is_present_without_accessing_body(): void
+    public function inertia_response_header_is_present_without_accessing_body(): void
     {
         $this->makeRequest(headers: [
             Header::INERTIA => 'true',

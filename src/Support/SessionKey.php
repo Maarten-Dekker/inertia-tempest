@@ -15,4 +15,9 @@ enum SessionKey: string
      * Session key for flash data.
      */
     case FlashData = 'inertia.flash_data';
+
+    /**
+     * Session key for preserving the URL fragment.
+     */
+    case PreserveFragment = 'inertia.preserve_fragment';
 }

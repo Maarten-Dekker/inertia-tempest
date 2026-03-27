@@ -69,7 +69,7 @@ final class DirectiveTest extends TestCase
         $response = $this->factory->render('Foo/Bar', self::EXAMPLE_PAGE_OBJECT['props']);
         $view = $response->body;
 
-        $expectedJson = '{"component":"Foo\/Bar","props":{"foo":"bar"},"url":"\/","version":"","clearHistory":false,"encryptHistory":false}';
+        $expectedJson = '{"component":"Foo\/Bar","props":{"foo":"bar"},"url":"\/","version":""}';
         $expectedHtml =
             '<script data-page="foo" type="application/json">' . $expectedJson . '</script><div id="foo"></div>';
 
