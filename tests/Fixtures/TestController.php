@@ -11,6 +11,7 @@ use Tempest\Http\Request;
 use Tempest\Http\Responses\Back;
 use Tempest\Http\Responses\Redirect;
 use Tempest\Router\Get;
+use Tempest\Router\Post;
 use Tempest\Router\Put;
 use Tempest\Support\Arr\ImmutableArray;
 
@@ -293,6 +294,24 @@ final class TestController
         inertia()->flash('bar', 'value2');
 
         return inertia()->render('User/Show');
+    }
+
+    #[Get('/redirect-with-fragment', middleware: [Middleware::class])]
+    public function redirectWithFragment(): Redirect
+    {
+        return new Redirect('/article#section');
+    }
+
+    #[Get('/redirect-without-fragment', middleware: [Middleware::class])]
+    public function redirectWithoutFragment(): Redirect
+    {
+        return new Redirect('/article');
+    }
+
+    #[Post('/post-redirect-with-fragment', middleware: [Middleware::class])]
+    public function postRedirectWithFragment(): Redirect
+    {
+        return new Redirect('/article#section');
     }
 
     #[Get('/action')]

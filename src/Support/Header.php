@@ -22,6 +22,11 @@ final readonly class Header
     public const string LOCATION = 'x-inertia-location';
 
     /**
+     * Header for external redirects.
+     */
+    public const string REDIRECT = 'x-inertia-location';
+
+    /**
      * Header for the current asset version.
      */
     public const string VERSION = 'x-inertia-version';
