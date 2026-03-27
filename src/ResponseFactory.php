@@ -197,6 +197,14 @@ final class ResponseFactory
     }
 
     /**
+     * Preserve the URL fragment across the next redirect.
+     */
+    public function preserveFragment(): void
+    {
+        $this->session->set(SessionKey::PreserveFragment->value, true);
+    }
+
+    /**
      * Create an optional property.
      */
     public function optional(callable $callback): OptionalProp

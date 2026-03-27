@@ -16,7 +16,7 @@ use function Tempest\Router\uri;
 final class HistoryTest extends TestCase
 {
     #[Test]
-    public function the_history_is_not_encrypted_or_cleared_by_default(): void
+    public function optional_navigation_flags_are_absent_by_default(): void
     {
         $response = $this->http->get(
             uri: uri([TestController::class, 'basicRenderWithMiddleware']),
@@ -28,8 +28,9 @@ final class HistoryTest extends TestCase
         $page = $response->body;
 
         $this->assertSame('User/Edit', $page['component']);
-        $this->assertFalse($page['encryptHistory']);
-        $this->assertFalse($page['clearHistory']);
+        $this->assertArrayNotHasKey('encryptHistory', $page);
+        $this->assertArrayNotHasKey('clearHistory', $page);
+        $this->assertArrayNotHasKey('preserveFragment', $page);
     }
 
     #[Test]
@@ -103,7 +104,7 @@ final class HistoryTest extends TestCase
         $page = $response->body;
 
         $this->assertSame('User/Edit', $page['component']);
-        $this->assertFalse($page['encryptHistory']);
+        $this->assertArrayNotHasKey('encryptHistory', $page);
     }
 
     #[Test]
@@ -143,5 +144,23 @@ final class HistoryTest extends TestCase
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertTrue($page['clearHistory']);
+    }
+
+    #[Test]
+    public function the_url_fragment_can_be_preserved(): void
+    {
+        $this->http->get(uri: uri([TestController::class, 'preserveUrlFragmentAfterRedirect']));
+
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'basicRender']),
+            headers: [
+                Header::INERTIA => 'true',
+            ],
+        );
+
+        $page = $response->body;
+
+        $this->assertSame('User/Edit', $page['component']);
+        $this->assertArrayHasKey('preserveFragment', $page);
     }
 }

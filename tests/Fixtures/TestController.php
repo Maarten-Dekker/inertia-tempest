@@ -186,10 +186,12 @@ final class TestController
         return new Redirect('/users-after-redirect');
     }
 
-    #[Get('/users-after-redirect')]
-    public function usersAfterRedirect(): Response
+    #[Get('/preserve-url-fragment')]
+    public function preserveUrlFragmentAfterRedirect(): Redirect
     {
-        return inertia()->render('User/Edit');
+        inertia()->preserveFragment();
+
+        return new Redirect('/url-after-redirect');
     }
 
     #[Get('/prop-provider-render')]
