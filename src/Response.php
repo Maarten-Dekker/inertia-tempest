@@ -87,6 +87,11 @@ final class Response implements HttpResponse
         private readonly ?Closure $urlResolver = null,
     ) {
         $this->props = $this->normalizeProps($this->props);
+
+        if ($this->request->headers->has(Header::INERTIA)) {
+            $this->addHeader(Header::INERTIA, 'true');
+            $this->setContentType(ContentType::JSON);
+        }
     }
 
     /**
@@ -578,9 +583,6 @@ final class Response implements HttpResponse
                 ssrBody: $ssr?->body,
             );
         }
-
-        $this->addHeader(Header::INERTIA, 'true');
-        $this->setContentType(ContentType::JSON);
 
         return $page;
     }
