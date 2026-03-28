@@ -36,7 +36,7 @@ Create a root view template `inertia.view.php` in your `app` directory. The adap
     <x-vite-tags/>
 </head>
 <body>
-    <x-inertia-body />
+    <x-inertia-app />
 </body>
 </html>
 ```

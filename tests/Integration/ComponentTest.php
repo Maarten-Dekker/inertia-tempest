@@ -36,18 +36,18 @@ final class ComponentTest extends TestCase
     }
 
     #[Test]
-    public function body_renders_client_div_when_ssr_disabled(): void
+    public function app_renders_client_div_when_ssr_disabled(): void
     {
-        $rendered = $this->renderBody();
+        $rendered = $this->renderApp();
 
         $this->assertStringContainsString('<div id="app">', $rendered);
         $this->assertStringContainsString('application/json', $rendered);
     }
 
     #[Test]
-    public function body_renders_ssr_content_when_ssr_enabled(): void
+    public function app_renders_ssr_content_when_ssr_enabled(): void
     {
-        $rendered = $this->renderBody(ssrBody: '<p>SSR Content</p>');
+        $rendered = $this->renderApp(ssrBody: '<p>SSR Content</p>');
 
         $this->assertStringContainsString('<p>SSR Content</p>', $rendered);
         $this->assertStringNotContainsString('<div id="app">', $rendered);
@@ -62,10 +62,10 @@ final class ComponentTest extends TestCase
         ));
     }
 
-    private function renderBody(?string $ssrBody = null): string
+    private function renderApp(?string $ssrBody = null): string
     {
         return $this->container->get(ViewRenderer::class)->render(new InertiaView(
-            path: '<x-inertia-body />',
+            path: '<x-inertia-app />',
             inertia: ['page' => self::EXAMPLE_PAGE_OBJECT],
             ssrBody: $ssrBody,
         ));
