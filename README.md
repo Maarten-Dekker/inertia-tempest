@@ -28,18 +28,21 @@ Create a root view template `inertia.view.php` in your `app` directory. The adap
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title inertia>Inertia Tempest</title>
+
+    <x-inertia-head>
+        <title>Inertia Tempest</title>
+    </x-inertia-head>
 
     <x-vite-tags/>
 </head>
 <body>
-    <?= $this->inertia() ?>
+    <x-inertia-app />
 </body>
 </html>
 ```
 
-That's it, you're all ready to start creating Inertia pages. You can use either the globally available `inertia()`
-helper function or the static `Inertia` facade:
+The `<x-inertia-head>` slot provides a fallback title that appears only when SSR is disabled; once SSR is enabled, it’s automatically replaced by the server‑rendered head output.
+With that in place, you’re ready to start building your Inertia pages using either the global `inertia()` helper or the `Inertia` facade.
 
 ```php
 use Inertia\Response;
