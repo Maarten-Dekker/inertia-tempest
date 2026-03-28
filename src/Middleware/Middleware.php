@@ -13,6 +13,7 @@ use Inertia\Support\ResolveErrorProps;
 use Override;
 use Tempest\Auth\Authentication\Authenticator;
 use Tempest\Core\Priority;
+use Tempest\Http\GenericResponse;
 use Tempest\Http\Method;
 use Tempest\Http\Request;
 use Tempest\Http\Response;
@@ -178,7 +179,19 @@ class Middleware implements HttpMiddleware
             return $response->setStatus(Status::SEE_OTHER);
         }
 
+        if ($response->status->isRedirect() && $this->redirectHasFragment($response) && ! $this->isPrefetch($request)) {
+            return $this->onRedirectWithFragment($response);
+        }
+
         return $response;
+    }
+
+    /**
+     * Determine if the redirect response contains a URL fragment.
+     */
+    protected function redirectHasFragment(Response $response): bool
+    {
+        return str_contains($response->getHeader('Location')?->first() ?? '', '#');
     }
 
     /**
@@ -195,6 +208,30 @@ class Middleware implements HttpMiddleware
     protected function onEmptyResponse(): Response
     {
         return new Back();
+    }
+
+    /**
+     * Determine if the request is a prefetch request.
+     */
+    protected function isPrefetch(Request $request): bool
+    {
+        return (
+            str_contains($request->headers->get('Purpose') ?? '', 'prefetch')
+            || str_contains($request->headers->get('Sec-Purpose') ?? '', 'prefetch')
+        );
+    }
+
+    /**
+     * Handle redirects with URL fragments.
+     */
+    public function onRedirectWithFragment(Response $response): Response
+    {
+        return new GenericResponse(
+            status: Status::CONFLICT,
+            headers: [
+                Header::REDIRECT => $response->getHeader('Location')?->first() ?? '',
+            ],
+        );
     }
 
     /**

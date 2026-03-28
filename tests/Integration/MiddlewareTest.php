@@ -418,4 +418,61 @@ final class MiddlewareTest extends TestCase
 
         $this->assertSame('Success!', $page['flash']['message']);
     }
+
+    #[Test]
+    public function redirect_with_fragment_returns_409_for_inertia_requests(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'redirectWithFragment']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $this->assertSame(Status::CONFLICT, $response->throwable->cause->status);
+        $this->assertSame('/article#section', $response->throwable->cause->getHeader(Header::REDIRECT)?->first());
+    }
+
+    #[Test]
+    public function redirect_without_fragment_is_not_intercepted(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'redirectWithoutFragment']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $response->assertRedirect();
+    }
+
+    #[Test]
+    public function redirect_with_fragment_is_not_intercepted_for_non_inertia_requests(): void
+    {
+        $response = $this->http->get(uri: uri([TestController::class, 'redirectWithFragment']));
+
+        $response->assertRedirect();
+    }
+
+    #[Test]
+    public function post_redirect_with_fragment_returns_409_for_inertia_requests(): void
+    {
+        $response = $this->http->post(
+            uri: uri([TestController::class, 'postRedirectWithFragment']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $this->assertSame(Status::CONFLICT, $response->throwable->cause->status);
+        $this->assertSame('/article#section', $response->throwable->cause->getHeader(Header::REDIRECT)?->first());
+    }
+
+    #[Test]
+    public function redirect_with_fragment_is_not_intercepted_for_prefetch_requests(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'redirectWithFragment']),
+            headers: [
+                Header::INERTIA => 'true',
+                'Purpose' => 'prefetch',
+            ],
+        );
+
+        $response->assertRedirect();
+    }
 }
