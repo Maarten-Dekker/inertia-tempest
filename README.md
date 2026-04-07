@@ -238,7 +238,7 @@ public function index(Request $request): Response
 
 To enable SSR, you'll need to configure your front-end build process to generate a server-side bundle.
 
-### 1. Update Vite Configuration
+### Update Vite Configuration
 
 Modify your `vite.config.js` to handle both client and server builds. The `ssrBuild` flag provided by Vite allows you to
 conditionally change the configuration.
@@ -275,7 +275,7 @@ conditionally change the configuration.
   });
 ```
 
-### 2. Create an SSR Entry Point
+### Create an SSR Entry Point
 
 Create a new file, `app/inertia.ssr.js`, that will serve as the entry point for your Node.js server. This
 file is responsible for creating the SSR server. Unlike client-side entrypoints, this file should not include
@@ -349,7 +349,7 @@ createInertiaApp({
 
 </details>
 
-### 3. Update Build Script
+### Update Build Script
 
 Add a build script to your `package.json` that builds both the client and server assets.
 
@@ -360,29 +360,7 @@ Add a build script to your `package.json` that builds both the client and server
 },
 ```
 
-### 4. Update Root View
-
-Modify your `inertia.view.php` template to include the `inertiaHead()` helper. This will inject any SSR-generated
-content.
-
-```diff
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title inertia>Inertia Tempest</title>
-    
-    <x-vite-tags />
-+   <?= $this->inertiaHead() ?>
-</head>
-<body>
-    <?= $this->inertia() ?>
-</body>
-</html>
-```
-
-### 5. Enable SSR
+### Enable SSR
 
 Finally, enable SSR in your `inertia.config.php` file. The package will automatically discover the `ssr/inertia.ssr.mjs`
 or `ssr/inertia.ssr.js` bundle. If your bundle is located elsewhere, you must specify the path.
@@ -401,7 +379,7 @@ return new InertiaConfig(
 );
 ```
 
-### 6. Run the Server
+### Run the Server
 
 With everything configured, you can now start the SSR server:
 
