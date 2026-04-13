@@ -322,6 +322,20 @@ final class TestController
         return new Redirect('/dashboard');
     }
 
+    #[Get('/action-double-redirect')]
+    public function actionWithDoubleRedirect(): Redirect
+    {
+        inertia()->flash('message', 'Success!');
+
+        return new Redirect('/intermediate');
+    }
+
+    #[Get('/intermediate')]
+    public function intermediate(): Redirect
+    {
+        return new Redirect('/dashboard');
+    }
+
     #[Get('/dashboard', middleware: [Middleware::class])]
     public function dashboard(): Response
     {
