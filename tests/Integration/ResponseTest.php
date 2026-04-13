@@ -763,6 +763,23 @@ final class ResponseTest extends TestCase
     }
 
     #[Test]
+    public function array_callable_syntax_props_are_not_invoked(): void
+    {
+        $this->makeRequest();
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'always' => new AlwaysProp([DateTime::class, 'now']),
+                'merge' => new MergeProp([DateTime::class, 'now']),
+            ],
+        );
+        $page = $response->body->inertia['page'];
+
+        $this->assertSame([DateTime::class, 'now'], $page['props']['always']);
+        $this->assertSame([DateTime::class, 'now'], $page['props']['merge']);
+    }
+
+    #[Test]
     public function inertia_responsable_objects(): void
     {
         $response = $this->http->get(
