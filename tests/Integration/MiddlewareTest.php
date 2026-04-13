@@ -420,6 +420,25 @@ final class MiddlewareTest extends TestCase
     }
 
     #[Test]
+    public function flash_data_is_preserved_after_double_redirect(): void
+    {
+        $firstResponse = $this->http->get(uri: uri([TestController::class, 'actionWithDoubleRedirect']));
+        $firstResponse->assertRedirect('/intermediate');
+
+        $secondResponse = $this->http->get(uri: uri([TestController::class, 'intermediate']));
+        $secondResponse->assertRedirect('/dashboard');
+
+        $thirdResponse = $this->http->get(
+            uri: uri([TestController::class, 'dashboard']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $page = $thirdResponse->body;
+
+        $this->assertSame('Success!', $page['flash']['message']);
+    }
+
+    #[Test]
     public function redirect_with_fragment_returns_409_for_inertia_requests(): void
     {
         $response = $this->http->get(
