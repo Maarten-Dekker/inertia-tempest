@@ -15,7 +15,7 @@ trait ResolvesCallables
      */
     protected function resolveCallable(mixed $value): mixed
     {
-        if (! is_callable($value) || is_string($value)) {
+        if (! is_object($value) || ! is_callable($value)) {
             return $value;
         }
 
