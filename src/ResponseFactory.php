@@ -71,6 +71,13 @@ final class ResponseFactory
     private ?Closure $urlResolver = null;
 
     /**
+     * The component transformer callback.
+     *
+     * @var (Closure(string): string)|null
+     */
+    private ?Closure $componentTransformer = null;
+
+    /**
      * @var array<string, bool>
      */
     private array $componentCache = [];
@@ -178,6 +185,14 @@ final class ResponseFactory
     public function resolveUrlUsing(?Closure $urlResolver = null): void
     {
         $this->urlResolver = $urlResolver;
+    }
+
+    /**
+     * Set the component transformer.
+     */
+    public function transformComponentUsing(?Closure $componentTransformer = null): void
+    {
+        $this->componentTransformer = $componentTransformer;
     }
 
     /**
@@ -304,6 +319,8 @@ final class ResponseFactory
             throw new InvalidArgumentException('Component argument must be of type string or a string BackedEnum');
         }
 
+        $component = $this->transformComponent($component);
+
         if ($this->config->pages->ensure_pages_exist) {
             $this->findComponentOrFail($component);
         }
@@ -428,5 +445,17 @@ final class ResponseFactory
 
         $this->componentCache[$component] = false;
         throw new ComponentNotFoundException($component, $paths);
+    }
+
+    /**
+     * Transform the component name.
+     */
+    private function transformComponent(string $component): string
+    {
+        if (! $this->componentTransformer) {
+            return $component;
+        }
+
+        return ($this->componentTransformer)($component) ?? $component;
     }
 }

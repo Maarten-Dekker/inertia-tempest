@@ -410,6 +410,34 @@ final class ResponseFactoryTest extends TestCase
     }
 
     #[Test]
+    public function can_resolve_component_name_before_rendering(): void
+    {
+        $response = $this->http->get(
+            uri: uri([TestController::class, 'transformComponent']),
+            headers: [Header::INERTIA => 'true'],
+        );
+
+        $page = $response->body;
+
+        $this->assertSame('User/Edit/Page', $page['component']);
+    }
+
+    #[Test]
+    public function resolved_component_name_is_used_for_page_existence_checks(): void
+    {
+        $this->container->singleton(
+            InertiaConfig::class,
+            static fn () => new InertiaConfig(pages: new PageConfig(ensure_pages_exist: true)),
+        );
+
+        $this->expectException(ComponentNotFoundException::class);
+        $this->expectExceptionMessage('Inertia page component [User/Edit/Page] not found.');
+
+        $this->factory->transformComponentUsing(static fn (string $name): string => "{$name}/Page");
+        $this->factory->render('User/Edit');
+    }
+
+    #[Test]
     public function flash_data_is_flashed_to_session_on_redirect(): void
     {
         $response = $this->http->get(

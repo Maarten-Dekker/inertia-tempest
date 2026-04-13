@@ -69,6 +69,11 @@ class Inertia extends Facade
         static::instance()->encryptHistory($encrypt);
     }
 
+    public static function transformComponentUsing(?Closure $componentTransformer = null): void
+    {
+        static::instance()->transformComponentUsing($componentTransformer);
+    }
+
     public static function preserveFragment(): void
     {
         static::instance()->preserveFragment();
