@@ -341,4 +341,12 @@ final class TestController
     {
         return inertia()->render('Dashboard');
     }
+
+    #[Get('/transform-component')]
+    public function transformComponent(): Response
+    {
+        inertia()->transformComponentUsing(static fn (string $name): string => "{$name}/Page");
+
+        return inertia()->render('User/Edit');
+    }
 }
