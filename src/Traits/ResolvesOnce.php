@@ -22,9 +22,9 @@ trait ResolvesOnce
     protected bool $refresh = false;
 
     /**
-     * The expiration time in seconds.
+     * The expiration timestamp in milliseconds.
      */
-    protected ?int $ttl = null;
+    protected ?int $expiresAt = null;
 
     /**
      * The custom key for resolving the once prop.
@@ -36,17 +36,19 @@ trait ResolvesOnce
      */
     public function once(bool $value = true, ?string $as = null, Duration|int|null $until = null): static
     {
-        $this->once = $value;
+        $clone = clone($this, [
+            'once' => $value,
+        ]);
 
         if ($as !== null) {
-            $this->as($as);
+            $clone = $clone->as($as);
         }
 
         if ($until !== null) {
-            $this->until($until);
+            return $clone->until($until);
         }
 
-        return $this;
+        return $clone;
     }
 
     /**
@@ -78,13 +80,13 @@ trait ResolvesOnce
      */
     public function as(BackedEnum|UnitEnum|string $key): static
     {
-        $this->key = match (true) {
-            $key instanceof BackedEnum => $key->value,
-            $key instanceof UnitEnum => $key->name,
-            default => $key,
-        };
-
-        return $this;
+        return clone($this, [
+            'key' => match (true) {
+                $key instanceof BackedEnum => (string) $key->value,
+                $key instanceof UnitEnum => $key->name,
+                default => $key,
+            },
+        ]);
     }
 
     /**
@@ -92,9 +94,9 @@ trait ResolvesOnce
      */
     public function fresh(bool $value = true): static
     {
-        $this->refresh = $value;
-
-        return $this;
+        return clone($this, [
+            'refresh' => $value,
+        ]);
     }
 
     /**
@@ -102,9 +104,14 @@ trait ResolvesOnce
      */
     public function until(Duration|int $delay): static
     {
-        $this->ttl = $delay instanceof Duration ? (int) $delay->getTotalSeconds() : $delay;
+        $seconds = $delay instanceof Duration ? (int) $delay->getTotalSeconds() : $delay;
 
-        return $this;
+        return clone($this, [
+            'expiresAt' => DateTime::now()
+                ->plusSeconds($seconds)
+                ->getTimestamp()
+                ->getMilliseconds(),
+        ]);
     }
 
     /**
@@ -112,24 +119,6 @@ trait ResolvesOnce
      */
     public function expiresAt(): ?int
     {
-        if ($this->ttl === null) {
-            return null;
-        }
-
-        return DateTime::now()
-            ->plusSeconds((int) $this->ttl)
-            ->getTimestamp()
-            ->getMilliseconds();
-    }
-
-    /**
-     * Get the UNIX timestamp.
-     */
-    private function availableAt(Duration|int $delay): int
-    {
-        return DateTime::now()
-            ->plusSeconds((int) $delay)
-            ->getTimestamp()
-            ->getSeconds();
+        return $this->expiresAt;
     }
 }

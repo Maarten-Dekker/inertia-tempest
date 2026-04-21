@@ -17,15 +17,9 @@ final class OncePropTest extends TestCase
     {
         $onceProp = new OnceProp(static fn () => 'value');
 
-        $result = $onceProp->as('custom-key');
-        $this->assertSame($onceProp, $result);
-        $this->assertSame('custom-key', $onceProp->getKey());
-
-        $onceProp->as(BackedEnum::Foo);
-        $this->assertSame('foo-value', $onceProp->getKey());
-
-        $onceProp->as(UnitEnum::Baz);
-        $this->assertSame('Baz', $onceProp->getKey());
+        $this->assertSame('custom-key', $onceProp->as('custom-key')->getKey());
+        $this->assertSame('foo-value', $onceProp->as(BackedEnum::Foo)->getKey());
+        $this->assertSame('Baz', $onceProp->as(UnitEnum::Baz)->getKey());
     }
 
     #[Test]
@@ -40,18 +34,15 @@ final class OncePropTest extends TestCase
     public function can_forcefully_refresh(): void
     {
         $onceProp = new OnceProp(static fn () => 'value');
-        $onceProp->fresh();
 
-        $this->assertTrue($onceProp->shouldBeRefreshed());
+        $this->assertTrue($onceProp->fresh()->shouldBeRefreshed());
     }
 
     #[Test]
     public function can_disable_forceful_refresh(): void
     {
         $onceProp = new OnceProp(static fn () => 'value');
-        $onceProp->fresh();
-        $onceProp->fresh(false);
 
-        $this->assertFalse($onceProp->shouldBeRefreshed());
+        $this->assertFalse($onceProp->fresh()->fresh(false)->shouldBeRefreshed());
     }
 }
