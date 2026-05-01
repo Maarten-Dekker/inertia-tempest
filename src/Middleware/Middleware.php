@@ -12,7 +12,6 @@ use Inertia\Support\Header;
 use Inertia\Support\ResolveErrorProps;
 use Override;
 use Tempest\Auth\Authentication\Authenticator;
-use Tempest\Core\Priority;
 use Tempest\Http\GenericResponse;
 use Tempest\Http\Method;
 use Tempest\Http\Request;
@@ -23,6 +22,7 @@ use Tempest\Http\Status;
 use Tempest\Router\Exceptions\ControllerActionHadNoReturn;
 use Tempest\Router\HttpMiddleware;
 use Tempest\Router\HttpMiddlewareCallable;
+use Tempest\Support\Priority;
 use Tempest\Vite\ViteConfig;
 
 use function Tempest\root_path;
