@@ -15,6 +15,7 @@ use Tempest\Http\Request;
 
 abstract class TestCase extends IntegrationTest
 {
+    #[Override]
     protected string $root = __DIR__ . '/../';
 
     protected ResponseFactory $factory;
@@ -40,11 +41,9 @@ abstract class TestCase extends IntegrationTest
         $this->factory = $this->container->get(ResponseFactory::class);
     }
 
-    #[Override]
     protected function tearDown(): void
     {
         Mockery::close();
-
         parent::tearDown();
     }
 
