@@ -32,7 +32,7 @@
   "require": {
     "php": "^8.5",
     "ext-json": "*",
-    "tempest/framework": "^3.0"
+    "tempest/framework": "^3.10"
   },
   "conflict": {
     "guzzlehttp/psr7": "<2.0",
@@ -43,7 +43,7 @@
     "carthage-software/mago": "1.8.0",
     "mockery/mockery": "^1.6.12",
     "phpunit/phpunit": "^12.5.11",
-    "rector/rector": "2.3.6",
+    "rector/rector": "2.3.8",
     "illuminate/pagination": "^13.0"
   },
   "suggest": {

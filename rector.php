@@ -26,7 +26,7 @@ return RectorConfig::configure()
     ->withPhpSets(php85: true)
     ->withSets([
         PHPUnitSetList::PHPUNIT_120,
-        TempestSetList::TEMPEST_30,
+        TempestSetList::TEMPEST_310,
     ])
     ->withRules([
         DeclareStrictTypesRector::class,

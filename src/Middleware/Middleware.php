@@ -13,7 +13,7 @@ use Inertia\Support\Header;
 use Inertia\Support\ResolveErrorProps;
 use Override;
 use Tempest\Auth\Authentication\Authenticator;
-use Tempest\Core\Priority;
+use Tempest\Support\Priority;
 use Tempest\Http\Method;
 use Tempest\Http\Request;
 use Tempest\Http\Response;
