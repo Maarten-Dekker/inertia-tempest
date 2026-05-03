@@ -40,9 +40,9 @@
   },
   "require-dev": {
     "ext-pdo_sqlite": "*",
-    "carthage-software/mago": "1.8.0",
+    "carthage-software/mago": "1.25.2",
     "mockery/mockery": "^1.6.12",
-    "phpunit/phpunit": "^12.5.11",
+    "phpunit/phpunit": "^13.1.8",
     "rector/rector": "2.3.8",
     "illuminate/pagination": "^13.0"
   },
