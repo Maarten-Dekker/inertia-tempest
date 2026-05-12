@@ -17,7 +17,10 @@ final class OncePropTest extends TestCase
     {
         $onceProp = new OnceProp(static fn () => 'value');
 
-        $this->assertSame('custom-key', $onceProp->as('custom-key')->getKey());
+        $customKeyProp = $onceProp->as('custom-key');
+        $this->assertSame('custom-key', $customKeyProp->getKey());
+        $this->assertNull($onceProp->getKey());
+
         $this->assertSame('foo-value', $onceProp->as(BackedEnum::Foo)->getKey());
         $this->assertSame('Baz', $onceProp->as(UnitEnum::Baz)->getKey());
     }
@@ -35,7 +38,9 @@ final class OncePropTest extends TestCase
     {
         $onceProp = new OnceProp(static fn () => 'value');
 
-        $this->assertTrue($onceProp->fresh()->shouldBeRefreshed());
+        $refreshed = $onceProp->fresh();
+        $this->assertTrue($refreshed->shouldBeRefreshed());
+        $this->assertFalse($onceProp->shouldBeRefreshed());
     }
 
     #[Test]
