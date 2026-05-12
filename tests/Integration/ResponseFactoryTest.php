@@ -372,7 +372,7 @@ final class ResponseFactoryTest extends TestCase
 
             $this->assertInstanceOf(Response::class, $response);
         } finally {
-            if (! $originalEnv) {
+            if ($originalEnv === false) {
                 putenv('INERTIA_ENSURE_PAGES_EXIST');
             } else {
                 putenv("INERTIA_ENSURE_PAGES_EXIST={$originalEnv}");
