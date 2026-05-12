@@ -34,8 +34,11 @@ trait ResolvesOnce
     /**
      * Mark the prop to be resolved only once.
      */
-    public function once(bool $value = true, ?string $as = null, Duration|int|null $until = null): static
-    {
+    public function once(
+        bool $value = true,
+        BackedEnum|UnitEnum|null|string $as = null,
+        Duration|int|null $until = null,
+    ): static {
         $clone = clone($this, [
             'once' => $value,
         ]);
