@@ -107,10 +107,7 @@ trait ResolvesOnce
         $seconds = $delay instanceof Duration ? (int) $delay->getTotalSeconds() : $delay;
 
         return clone($this, [
-            'expiresAt' => DateTime::now()
-                ->plusSeconds($seconds)
-                ->getTimestamp()
-                ->getMilliseconds(),
+            'expiresAt' => DateTime::now()->plusSeconds($seconds)->getTimestamp()->getMilliseconds(),
         ]);
     }
 

@@ -65,9 +65,7 @@ final readonly class HttpGateway implements Gateway, HasHealthCheck
     public function isHealthy(): bool
     {
         try {
-            return $this
-                ->client->get($this->getUrl('/health'))
-                ->status->isSuccessful();
+            return $this->client->get($this->getUrl('/health'))->status->isSuccessful();
         } catch (Throwable $throwable) {
             if ($throwable instanceof MatchedRouteCouldNotBeResolved) {
                 throw $throwable;

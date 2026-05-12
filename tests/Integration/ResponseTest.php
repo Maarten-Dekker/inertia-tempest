@@ -908,15 +908,15 @@ final class ResponseTest extends TestCase
         $clock = $this->clock();
         $clock->setNow('2025-01-01 12:00:00');
 
-        $expiresAt = DateTime::now()
-            ->plus(Duration::minute())
-            ->getTimestamp()
-            ->getMilliseconds();
+        $expiresAt = DateTime::now()->plus(Duration::minute())->getTimestamp()->getMilliseconds();
 
         $response = new Response(
             component: 'User/Edit',
             props: [
-                'foo' => inertia()->once(static fn () => 'bar')->as('baz')->until(Duration::minute()),
+                'foo' => inertia()
+                    ->once(static fn () => 'bar')
+                    ->as('baz')
+                    ->until(Duration::minute()),
             ],
         );
         $page = $response->body->inertia['page'];
