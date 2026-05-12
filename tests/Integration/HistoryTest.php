@@ -161,6 +161,6 @@ final class HistoryTest extends TestCase
         $page = $response->body;
 
         $this->assertSame('User/Edit', $page['component']);
-        $this->assertArrayHasKey('preserveFragment', $page);
+        $this->assertTrue($page['preserveFragment']);
     }
 }
