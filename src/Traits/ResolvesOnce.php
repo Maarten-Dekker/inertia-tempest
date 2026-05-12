@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Inertia\Traits;
 
 use BackedEnum;
+use DateInterval;
+use DateTimeImmutable;
+use DateTimeInterface;
 use Tempest\DateTime\DateTime;
 use Tempest\DateTime\Duration;
 use UnitEnum;
@@ -105,13 +108,16 @@ trait ResolvesOnce
     /**
      * Set the expiration for the once prop.
      */
-    public function until(Duration|int $delay): static
+    public function until(DateTimeInterface|DateInterval|Duration|int $delay): static
     {
-        $seconds = $delay instanceof Duration ? (int) $delay->getTotalSeconds() : $delay;
+        $milliseconds = match (true) {
+            $delay instanceof DateTimeInterface => (int) DateTimeImmutable::createFromInterface($delay)->format('Uv'),
+            $delay instanceof DateInterval => (int) new DateTimeImmutable()->add($delay)->format('Uv'),
+            $delay instanceof Duration => DateTime::now()->plus($delay)->getTimestamp()->getMilliseconds(),
+            default => DateTime::now()->plusSeconds($delay)->getTimestamp()->getMilliseconds(),
+        };
 
-        return clone($this, [
-            'expiresAt' => DateTime::now()->plusSeconds($seconds)->getTimestamp()->getMilliseconds(),
-        ]);
+        return clone($this, ['expiresAt' => $milliseconds]);
     }
 
     /**

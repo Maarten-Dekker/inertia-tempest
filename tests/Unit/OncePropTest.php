@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Inertia\Tests\Unit;
 
+use DateInterval;
+use DateTimeImmutable;
 use Inertia\Props\OnceProp;
 use Inertia\Tests\Fixtures\BackedEnum;
 use Inertia\Tests\Fixtures\UnitEnum;
@@ -49,5 +51,22 @@ final class OncePropTest extends TestCase
         $onceProp = new OnceProp(static fn () => 'value');
 
         $this->assertFalse($onceProp->fresh()->fresh(false)->shouldBeRefreshed());
+    }
+
+    #[Test]
+    public function can_expire_with_date_time_interface(): void
+    {
+        $onceProp = new OnceProp(static fn () => 'value');
+        $expiry = new DateTimeImmutable('+1 hour');
+
+        $this->assertSame((int) $expiry->format('Uv'), $onceProp->until($expiry)->expiresAt());
+    }
+
+    #[Test]
+    public function can_expire_with_date_interval(): void
+    {
+        $onceProp = new OnceProp(static fn () => 'value');
+
+        $this->assertNotNull($onceProp->until(new DateInterval('PT1H'))->expiresAt());
     }
 }
