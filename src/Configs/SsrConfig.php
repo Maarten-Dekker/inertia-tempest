@@ -25,22 +25,12 @@ use function Tempest\root_path;
  */
 final class SsrConfig
 {
-    public bool $enabled;
-
-    public string $url;
-
-    public bool $ensure_bundle_exists;
-
     public function __construct(
-        ?bool $enabled = null,
-        ?string $url = null,
-        ?bool $ensure_bundle_exists = null,
+        public bool $enabled = false,
+        public string $url = 'http://127.0.0.1:13714',
+        public bool $ensure_bundle_exists = true,
         public ?string $bundle = null,
     ) {
-        $this->enabled = $enabled ?? false;
-        $this->url = $url ?? 'http://127.0.0.1:13714';
-        $this->ensure_bundle_exists = $ensure_bundle_exists ?? true;
-
         // $this->bundle = root_path('app/ssr/ssr.mjs');
     }
 }

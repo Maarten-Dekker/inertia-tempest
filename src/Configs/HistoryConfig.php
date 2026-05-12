@@ -19,10 +19,7 @@ namespace Inertia\Configs;
  */
 final class HistoryConfig
 {
-    public bool $encrypt;
-
-    public function __construct(?bool $encrypt = null)
-    {
-        $this->encrypt = $encrypt ?? false;
-    }
+    public function __construct(
+        public bool $encrypt = false,
+    ) {}
 }

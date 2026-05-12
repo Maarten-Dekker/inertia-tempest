@@ -15,13 +15,8 @@ namespace Inertia\Configs;
  */
 final class ValidationConfig
 {
-    public bool $multiple_errors;
-
-    public bool $localize_fields;
-
-    public function __construct(?bool $multiple_errors = null, ?bool $localize_fields = null)
-    {
-        $this->multiple_errors = $multiple_errors ?? false;
-        $this->localize_fields = $localize_fields ?? false;
-    }
+    public function __construct(
+        public bool $multiple_errors = false,
+        public bool $localize_fields = false,
+    ) {}
 }

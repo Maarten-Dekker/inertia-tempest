@@ -21,23 +21,18 @@ use function Tempest\root_path;
  */
 final class PageConfig
 {
-    public bool $ensure_pages_exist;
-
-    public array $paths;
-
-    public array $extensions;
-
-    public function __construct(?bool $ensure_pages_exist = null, ?array $paths = null, ?array $extensions = null)
-    {
-        $this->ensure_pages_exist = $ensure_pages_exist ?? false;
-        $this->paths = $paths ?? [root_path('app/')];
-        $this->extensions = $extensions ?? [
+    public function __construct(
+        public bool $ensure_pages_exist = false,
+        public ?array $paths = null,
+        public array $extensions = [
             'js',
             'jsx',
             'svelte',
             'ts',
             'tsx',
             'vue',
-        ];
+        ],
+    ) {
+        $this->paths ??= [root_path('app/')];
     }
 }
