@@ -117,7 +117,7 @@ trait ResolvesOnce
             $delay instanceof Duration => (int) (
                 DateTime::now()->getTimestamp()->getMilliseconds() + $delay->getTotalMilliseconds()
             ),
-            default => DateTime::now()->getTimestamp()->getMilliseconds() + ($delay * 1000),
+            default => DateTime::now()->plusSeconds($delay)->getTimestamp()->getMilliseconds(),
         };
 
         return clone($this, ['expiresAt' => $milliseconds]);
