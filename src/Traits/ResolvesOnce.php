@@ -114,9 +114,7 @@ trait ResolvesOnce
             $delay instanceof \Tempest\DateTime\DateTimeInterface => $delay->getTimestamp()->getMilliseconds(),
             $delay instanceof DateTimeInterface => (int) DateTimeImmutable::createFromInterface($delay)->format('Uv'),
             $delay instanceof DateInterval => (int) new DateTimeImmutable()->add($delay)->format('Uv'),
-            $delay instanceof Duration => (int) (
-                DateTime::now()->getTimestamp()->getMilliseconds() + $delay->getTotalMilliseconds()
-            ),
+            $delay instanceof Duration => DateTime::now()->plus($delay)->getTimestamp()->getMilliseconds(),
             default => DateTime::now()->plusSeconds($delay)->getTimestamp()->getMilliseconds(),
         };
 
