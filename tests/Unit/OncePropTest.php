@@ -11,6 +11,8 @@ use Inertia\Tests\Fixtures\BackedEnum;
 use Inertia\Tests\Fixtures\UnitEnum;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Tempest\DateTime\DateTime;
+use Tempest\DateTime\Duration;
 
 final class OncePropTest extends TestCase
 {
@@ -63,10 +65,35 @@ final class OncePropTest extends TestCase
     }
 
     #[Test]
+    public function can_expire_with_tempest_date_time_interface(): void
+    {
+        $onceProp = new OnceProp(static fn () => 'value');
+        $expiry = DateTime::now()->plusHours(1);
+
+        $this->assertSame($expiry->getTimestamp()->getMilliseconds(), $onceProp->until($expiry)->expiresAt());
+    }
+
+    #[Test]
     public function can_expire_with_date_interval(): void
     {
         $onceProp = new OnceProp(static fn () => 'value');
 
-        $this->assertNotNull($onceProp->until(new DateInterval('PT1H'))->expiresAt());
+        $this->assertGreaterThan(time() * 1000, $onceProp->until(new DateInterval('PT1H'))->expiresAt());
+    }
+
+    #[Test]
+    public function can_expire_with_duration(): void
+    {
+        $onceProp = new OnceProp(static fn () => 'value');
+
+        $this->assertGreaterThan(time() * 1000, $onceProp->until(Duration::hours(1))->expiresAt());
+    }
+
+    #[Test]
+    public function can_expire_with_seconds(): void
+    {
+        $onceProp = new OnceProp(static fn () => 'value');
+
+        $this->assertGreaterThan(time() * 1000, $onceProp->until(3600)->expiresAt());
     }
 }

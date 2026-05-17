@@ -40,7 +40,7 @@ trait ResolvesOnce
     public function once(
         bool $value = true,
         BackedEnum|UnitEnum|null|string $as = null,
-        Duration|int|null $until = null,
+        DateTimeInterface|\Tempest\DateTime\DateTimeInterface|DateInterval|Duration|int|null $until = null,
     ): static {
         $clone = clone($this, [
             'once' => $value,
@@ -108,9 +108,10 @@ trait ResolvesOnce
     /**
      * Set the expiration for the once prop.
      */
-    public function until(DateTimeInterface|DateInterval|Duration|int $delay): static
+    public function until(DateTimeInterface|\Tempest\DateTime\DateTimeInterface|DateInterval|Duration|int $delay): static
     {
         $milliseconds = match (true) {
+            $delay instanceof \Tempest\DateTime\DateTimeInterface => $delay->getTimestamp()->getMilliseconds(),
             $delay instanceof DateTimeInterface => (int) DateTimeImmutable::createFromInterface($delay)->format('Uv'),
             $delay instanceof DateInterval => (int) new DateTimeImmutable()->add($delay)->format('Uv'),
             $delay instanceof Duration => DateTime::now()->plus($delay)->getTimestamp()->getMilliseconds(),
