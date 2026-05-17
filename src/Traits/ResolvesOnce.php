@@ -40,7 +40,7 @@ trait ResolvesOnce
     public function once(
         bool $value = true,
         BackedEnum|UnitEnum|null|string $as = null,
-        Duration|int|null $until = null,
+        DateTimeInterface|\Tempest\DateTime\DateTimeInterface|DateInterval|Duration|int|null $until = null,
     ): static {
         $clone = clone($this, [
             'once' => $value,
