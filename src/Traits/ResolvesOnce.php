@@ -108,13 +108,16 @@ trait ResolvesOnce
     /**
      * Set the expiration for the once prop.
      */
-    public function until(DateTimeInterface|DateInterval|Duration|int $delay): static
+    public function until(DateTimeInterface|\Tempest\DateTime\DateTimeInterface|DateInterval|Duration|int $delay): static
     {
         $milliseconds = match (true) {
+            $delay instanceof \Tempest\DateTime\DateTimeInterface => $delay->getTimestamp()->getMilliseconds(),
             $delay instanceof DateTimeInterface => (int) DateTimeImmutable::createFromInterface($delay)->format('Uv'),
             $delay instanceof DateInterval => (int) new DateTimeImmutable()->add($delay)->format('Uv'),
-            $delay instanceof Duration => DateTime::now()->plus($delay)->getTimestamp()->getMilliseconds(),
-            default => DateTime::now()->plusSeconds($delay)->getTimestamp()->getMilliseconds(),
+            $delay instanceof Duration => (int) (
+                DateTime::now()->getTimestamp()->getMilliseconds() + $delay->getTotalMilliseconds()
+            ),
+            default => DateTime::now()->getTimestamp()->getMilliseconds() + ($delay * 1000),
         };
 
         return clone($this, ['expiresAt' => $milliseconds]);
