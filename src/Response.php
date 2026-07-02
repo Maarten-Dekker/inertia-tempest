@@ -584,7 +584,7 @@ final class Response implements HttpResponse
      * @param array<string, mixed> $page The complete Inertia page object
      * @return array<string, mixed>|null|InertiaView
      */
-    private function resolveHttpBody(array $page): array|null|InertiaView
+    private function resolveHttpBody(array $page): array|InertiaView|null
     {
         if (! $this->request->headers->has(Header::INERTIA)) {
             $ssr = $this->ssr($page);

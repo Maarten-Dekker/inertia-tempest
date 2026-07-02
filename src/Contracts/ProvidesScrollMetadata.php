@@ -8,9 +8,9 @@ interface ProvidesScrollMetadata
 {
     public string $pageName { get; }
 
-    public int|null|string $previousPage { get; }
+    public int|string|null $previousPage { get; }
 
-    public int|null|string $nextPage { get; }
+    public int|string|null $nextPage { get; }
 
-    public int|null|string $currentPage { get; }
+    public int|string|null $currentPage { get; }
 }

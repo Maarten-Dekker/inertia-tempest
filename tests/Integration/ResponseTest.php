@@ -118,9 +118,9 @@ final class ResponseTest extends TestCase
             metadata: new readonly class('page', null, 2, 1) implements ProvidesScrollMetadata {
                 public function __construct(
                     public string $pageName,
-                    public int|null|string $previousPage,
-                    public int|null|string $nextPage,
-                    public int|null|string $currentPage,
+                    public int|string|null $previousPage,
+                    public int|string|null $nextPage,
+                    public int|string|null $currentPage,
                 ) {}
             },
         );

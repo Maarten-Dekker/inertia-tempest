@@ -11,7 +11,7 @@ use function Tempest\Database\query;
 
 final readonly class UserSeeder implements DatabaseSeeder
 {
-    public function run(null|string|UnitEnum $database): void
+    public function run(string|UnitEnum|null $database): void
     {
         for ($i = 0; $i < 40; $i++) {
             query('users')->insert(name: "User {$i}")->execute();
