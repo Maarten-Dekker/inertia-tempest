@@ -27,7 +27,7 @@ use Tempest\Vite\ViteConfig;
 
 use function Tempest\root_path;
 
-#[Priority(Priority::FRAMEWORK - 20)]
+#[Priority(Priority::FRAMEWORK - 35)]
 class Middleware implements HttpMiddleware
 {
     public function __construct(
