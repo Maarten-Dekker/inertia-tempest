@@ -41,13 +41,12 @@
   },
   "require-dev": {
     "ext-pdo_sqlite": "*",
-    "brianium/paratest": "^7.19.1",
-    "carthage-software/mago": "1.25.2",
+    "brianium/paratest": "^7.23.0",
+    "carthage-software/mago": "1.42.0",
     "illuminate/pagination": "^13.0",
     "mockery/mockery": "^1.6.12",
-    "phpunit/phpunit": "^13.1.8",
-    "rector/rector": "2.3.8",
-    "tempest/upgrade": "3.10"
+    "phpunit/phpunit": "^13.2.2",
+    "rector/rector": "2.3.8"
   },
   "suggest": {
     "illuminate/pagination": "Required to transform paginated data into a Laravel paginator instance.",
