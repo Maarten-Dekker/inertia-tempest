@@ -241,6 +241,9 @@ class Middleware implements HttpMiddleware
     {
         $this->session->reflash();
 
-        return $this->inertia->location($request->uri);
+        $response = $this->inertia->location($request->uri);
+        $response->addHeader(Header::VERSION, $this->inertia->getVersion());
+
+        return $response;
     }
 }
