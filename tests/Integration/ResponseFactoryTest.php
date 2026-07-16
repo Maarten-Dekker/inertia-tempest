@@ -466,6 +466,7 @@ final class ResponseFactoryTest extends TestCase
         $page = $response->body;
         $session = $this->container->get(Session::class);
         $session->cleanup();
+        $session->cleanup();
 
         $this->assertSame('User/Edit', $page['component']);
         $this->assertSame('Jonathan', $page['props']['user']);
