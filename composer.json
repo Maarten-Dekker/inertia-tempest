@@ -3,31 +3,20 @@
   "description": "The Tempest adapter for Inertia.js.",
   "type": "library",
   "license": "MIT",
-  "autoload": {
-    "psr-4": {
-      "Inertia\\": "src/"
-    },
-    "files": [
-      "src/helpers.php"
-    ]
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "Inertia\\Tests\\": "tests/"
-    }
-  },
   "scripts": {
+    "style": "composer fmt && composer lint:fix",
+    "fmt": "vendor/bin/mago fmt",
+    "lint": "vendor/bin/mago lint --potentially-unsafe --minimum-fail-level=note",
+    "lint:fix": "vendor/bin/mago lint --fix --format-after-fix",
     "test": "vendor/bin/paratest",
-    "test:full": "vendor/bin/phpunit",
-    "mago:lint": "vendor/bin/mago lint",
-    "mago:fix": "vendor/bin/mago lint --fix",
-    "mago:fmt": "vendor/bin/mago fmt",
+    "test:full": "vendor/bin/phpunit -d memory_limit=2G --display-warnings --display-skipped --display-deprecations --display-errors --display-notices",
     "rector": "vendor/bin/rector process --no-ansi",
     "qa": [
-      "@mago:fmt",
-      "@rector",
-      "@mago:lint",
-      "@test"
+      "composer rector",
+      "composer fmt",
+      "composer lint:fix",
+      "composer lint",
+      "composer test"
     ]
   },
   "require": {
@@ -42,11 +31,11 @@
   "require-dev": {
     "ext-pdo_sqlite": "*",
     "brianium/paratest": "^7.23.0",
-    "carthage-software/mago": "1.42.0",
+    "carthage-software/mago": "1.45.0",
     "illuminate/pagination": "^13.0",
     "mockery/mockery": "^1.6.12",
     "phpunit/phpunit": "^13.2.2",
-    "rector/rector": "2.3.8"
+    "rector/rector": "2.5.8"
   },
   "suggest": {
     "illuminate/pagination": "Required to transform paginated data into a Laravel paginator instance.",
@@ -54,6 +43,19 @@
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
+  "autoload": {
+    "psr-4": {
+      "Inertia\\": "src/"
+    },
+    "files": [
+      "src/helpers.php"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Inertia\\Tests\\": "tests/"
+    }
+  },
   "config": {
     "allow-plugins": {
       "carthage-software/mago": true

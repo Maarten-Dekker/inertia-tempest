@@ -3,11 +3,9 @@
 declare(strict_types=1);
 
 use Rector\Caching\ValueObject\Storage\FileCacheStorage;
-use Rector\CodeQuality\Rector\If_\ExplicitBoolCompareRector;
 use Rector\CodingStyle\Rector\Encapsed\EncapsedStringsToSprintfRector;
 use Rector\CodingStyle\Rector\If_\NullableCompareToNullRector;
 use Rector\Config\RectorConfig;
-use Rector\Php70\Rector\StaticCall\StaticCallOnNonStaticToInstanceCallRector;
 use Rector\Php74\Rector\Closure\ClosureToArrowFunctionRector;
 use Rector\Php74\Rector\Property\RestoreDefaultNullToNullableTypePropertyRector;
 use Rector\Php81\Rector\Array_\ArrayToFirstClassCallableRector;
@@ -45,8 +43,6 @@ return RectorConfig::configure()
         ClosureToArrowFunctionRector::class,
         EncapsedStringsToSprintfRector::class,
         RestoreDefaultNullToNullableTypePropertyRector::class,
-        StaticCallOnNonStaticToInstanceCallRector::class,
         NullableCompareToNullRector::class,
-        ExplicitBoolCompareRector::class,
         ArrayToFirstClassCallableRector::class,
     ]);
