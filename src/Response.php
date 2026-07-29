@@ -225,7 +225,8 @@ final class Response implements HttpResponse
             return array_filter(
                 $props,
                 static fn ($prop) => (
-                    ! $prop instanceof IgnoreFirstLoad && ! ($prop instanceof Deferrable && $prop->shouldDefer())
+                    ! $prop instanceof IgnoreFirstLoad
+                    && (! $prop instanceof Deferrable || ! $prop->shouldDefer())
                 ),
             );
         }
