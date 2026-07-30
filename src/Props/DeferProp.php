@@ -9,13 +9,14 @@ use Inertia\Contracts\IgnoreFirstLoad;
 use Inertia\Contracts\InvokableProp;
 use Inertia\Contracts\Mergeable;
 use Inertia\Contracts\Onceable;
+use Inertia\Contracts\Rescuable;
 use Inertia\Traits\DefersProps;
 use Inertia\Traits\MergesProps;
 use Inertia\Traits\ResolvesCallables;
 use Inertia\Traits\ResolvesOnce;
 use Override;
 
-final class DeferProp implements Deferrable, IgnoreFirstLoad, Mergeable, Onceable, InvokableProp
+final class DeferProp implements Deferrable, IgnoreFirstLoad, Mergeable, Onceable, Rescuable, InvokableProp
 {
     use DefersProps;
     use MergesProps;
@@ -32,8 +33,11 @@ final class DeferProp implements Deferrable, IgnoreFirstLoad, Mergeable, Onceabl
      * from the initial page load and only evaluated when requested by the
      * frontend, improving initial page performance.
      */
-    public function __construct(callable $callback, string $group = 'default')
-    {
+    public function __construct(
+        callable $callback,
+        string $group = 'default',
+        private bool $rescue = false,
+    ) {
         $this->callback = $callback;
         $this->defer($group);
     }
@@ -45,5 +49,14 @@ final class DeferProp implements Deferrable, IgnoreFirstLoad, Mergeable, Onceabl
     public function __invoke(): mixed
     {
         return $this->resolveCallable($this->callback);
+    }
+
+    /**
+     * Determine if resolution errors should be rescued.
+     */
+    #[Override]
+    public function shouldRescue(): bool
+    {
+        return $this->rescue;
     }
 }

@@ -17,4 +17,12 @@ final class DeferPropTest extends TestCase
 
         $this->assertSame('date', $deferProp());
     }
+
+    #[Test]
+    public function can_be_marked_as_rescuable(): void
+    {
+        $deferProp = new DeferProp(static fn () => 'value', rescue: true);
+
+        $this->assertTrue($deferProp->shouldRescue());
+    }
 }

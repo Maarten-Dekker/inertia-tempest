@@ -230,9 +230,13 @@ final class ResponseFactory
     /**
      * Create a deferred property.
      */
-    public function defer(callable $callback, string $group = 'default'): DeferProp
+    public function defer(callable $callback, string $group = 'default', bool $rescue = false): DeferProp
     {
-        return new DeferProp($callback, $group);
+        return new DeferProp(
+            callback: $callback,
+            group: $group,
+            rescue: $rescue,
+        );
     }
 
     /**
