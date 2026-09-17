@@ -33,7 +33,7 @@ final class InertiaView implements View
     {
         $id = trim($id) === '' ? 'app' : $id;
 
-        $json = json_encode($this->inertia['page'], JSON_HEX_TAG);
+        $json = json_encode($this->inertia['page'], JSON_HEX_TAG | JSON_THROW_ON_ERROR);
 
         if ($this->ssrBody) {
             $body = $this->ssrBody;
