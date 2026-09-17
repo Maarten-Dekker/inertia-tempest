@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Inertia\Views;
 
 use Inertia\Configs\InertiaConfig;
-use JsonException;
 use Tempest\Support\Html\HtmlString;
 use Tempest\View\IsView;
 use Tempest\View\View;
@@ -29,15 +28,12 @@ final class InertiaView implements View
 
     /**
      * Renders the Inertia root element.
-     *
-     * @throws JsonException if the page data cannot be encoded to JSON.
      */
     public function inertia(string $id = 'app'): HtmlString
     {
         $id = trim($id) === '' ? 'app' : $id;
 
-        $json = json_encode($this->inertia['page'], JSON_THROW_ON_ERROR);
-        $escaped = htmlspecialchars($json, ENT_QUOTES, 'UTF-8');
+        $json = json_encode($this->inertia['page'], JSON_HEX_TAG);
 
         if ($this->ssrBody) {
             $body = $this->ssrBody;

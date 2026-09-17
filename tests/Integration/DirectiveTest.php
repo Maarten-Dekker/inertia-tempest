@@ -77,6 +77,25 @@ final class DirectiveTest extends TestCase
     }
 
     #[Test]
+    public function inertia_directive_escapes_html_tags_in_the_page_data(): void
+    {
+        $this->container->singleton(
+            InertiaConfig::class,
+            static fn () => new InertiaConfig(ssr: new SsrConfig(enabled: false)),
+        );
+
+        $response = $this->factory->render('Foo/Bar', [
+            'foo' => '</script><!--<script>',
+        ]);
+
+        $html = (string) $response->body->inertia();
+
+        $this->assertStringContainsString('\u003C\/script\u003E\u003C!--\u003Cscript\u003E', $html);
+        $this->assertStringNotContainsString('<!--', $html);
+        $this->assertSame(1, substr_count($html, '</script>'));
+    }
+
+    #[Test]
     public function inertia_head_renders_nothing_when_ssr_is_disabled(): void
     {
         $view = new InertiaView(
