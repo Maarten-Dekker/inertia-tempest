@@ -4,19 +4,19 @@
   "type": "library",
   "license": "MIT",
   "scripts": {
-    "style": "composer fmt && composer lint:fix",
-    "fmt": "vendor/bin/mago fmt",
+    "style": "@format && @lint:fix",
+    "format": "vendor/bin/mago format",
     "lint": "vendor/bin/mago lint --potentially-unsafe --minimum-fail-level=note",
     "lint:fix": "vendor/bin/mago lint --fix --format-after-fix",
     "test": "vendor/bin/paratest",
     "test:full": "vendor/bin/phpunit -d memory_limit=2G --display-warnings --display-skipped --display-deprecations --display-errors --display-notices",
     "rector": "vendor/bin/rector process --no-ansi",
     "qa": [
-      "composer rector",
-      "composer fmt",
-      "composer lint:fix",
-      "composer lint",
-      "composer test"
+      "@rector",
+      "@format",
+      "@lint:fix",
+      "@lint",
+      "@test"
     ]
   },
   "require": {
@@ -31,7 +31,7 @@
   "require-dev": {
     "ext-pdo_sqlite": "*",
     "brianium/paratest": "^7.23.0",
-    "carthage-software/mago": "1.45.0",
+    "carthage-software/mago": "1.49.0",
     "illuminate/pagination": "^13.0",
     "mockery/mockery": "^1.6.12",
     "phpunit/phpunit": "^13.2.2",
