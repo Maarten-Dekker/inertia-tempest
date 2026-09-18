@@ -52,7 +52,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ matrix.stability }}-${{ hashFiles('**/composer.lock') }}
+          key: ${{ runner.os }}-composer-${{ matrix.stability }}-${{ hashFiles('**/composer.json') }}
           restore-keys: |
             ${{ runner.os }}-composer-${{ matrix.stability }}-
 
@@ -60,7 +60,7 @@ jobs:
         run: composer update --${{ matrix.stability }} --prefer-dist --no-progress --no-interaction
 
       - name: Run test suite
-        run: vendor/bin/phpunit
+        run: composer test
 
   quality:
     name: Code Quality
@@ -91,7 +91,7 @@ jobs:
         run: composer install --prefer-dist --no-progress --no-interaction
 
       - name: Run Mago Formatter Check
-        run: vendor/bin/mago fmt --dry-run
+        run: vendor/bin/mago format --check
 
       - name: Run Rector Dry Run
         run: vendor/bin/rector process --dry-run
