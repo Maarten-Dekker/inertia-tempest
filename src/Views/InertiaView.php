@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Inertia\Views;
 
 use Inertia\Configs\InertiaConfig;
+use JsonException;
 use Tempest\Support\Html\HtmlString;
 use Tempest\View\IsView;
 use Tempest\View\View;
@@ -28,6 +29,8 @@ final class InertiaView implements View
 
     /**
      * Renders the Inertia root element.
+     *
+     * @throws JsonException if the page data cannot be encoded to JSON.
      */
     public function inertia(string $id = 'app'): HtmlString
     {
