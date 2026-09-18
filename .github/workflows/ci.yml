@@ -60,7 +60,7 @@ jobs:
         run: composer update --${{ matrix.stability }} --prefer-dist --no-progress --no-interaction
 
       - name: Run test suite
-        run: composer test
+        run: vendor/bin/phpunit
 
   quality:
     name: Code Quality
