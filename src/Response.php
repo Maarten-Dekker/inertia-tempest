@@ -17,6 +17,7 @@ use Inertia\Contracts\Mergeable;
 use Inertia\Contracts\Onceable;
 use Inertia\Contracts\ProvidesInertiaProperties;
 use Inertia\Contracts\ProvidesInertiaProperty;
+use Inertia\Contracts\Rescuable;
 use Inertia\Props\AlwaysProp;
 use Inertia\Props\ScrollProp;
 use Inertia\Ssr\Contracts\Gateway;
@@ -35,6 +36,7 @@ use Tempest\Http\Response as HttpResponse;
 use Tempest\Support\Arr\ArrayInterface;
 use Tempest\Support\Paginator\PaginatedData;
 use Tempest\View\View;
+use Throwable;
 use UnitEnum;
 
 use function Inertia\Support\Arr\forget_keys;
@@ -59,6 +61,13 @@ final class Response implements HttpResponse
      * @var array<string, mixed>
      */
     private array $viewData = [];
+
+    /**
+     * The rescued properties that were omitted during resolution due to errors.
+     *
+     * @var array<int, string>
+     */
+    private array $rescuedProps = [];
 
     private Request $request {
         get => $this->request ??= get(Request::class);
@@ -312,51 +321,61 @@ final class Response implements HttpResponse
         $result = [];
 
         foreach ($props as $key => $value) {
-            if ($value instanceof ScrollProp) {
-                $value->configureMergeIntent();
-            }
-
-            $value = match (true) {
-                $value instanceof Closure => invoke($value),
-                $value instanceof InvokableProp => $value(),
-                default => $value,
-            };
-
-            if ($this->config->laravel_pagination && $value instanceof PaginatedData) {
-                $value = new PaginatorAdapter(
-                    paginator: $value,
-                    request: $this->request,
-                );
-            }
-
             $currentKey = $parentKey ? $parentKey . '.' . $key : $key;
 
-            if ($value instanceof ProvidesInertiaProperty) {
-                $value = $value->toInertiaProperty(new PropertyContext(
-                    key: $currentKey,
-                    props: $props,
-                ));
-            }
+            $shouldRescue = $value instanceof Rescuable && $value->shouldRescue();
 
-            $value = match (true) {
-                $value instanceof Arrayable, $value instanceof ArrayInterface => $value->toArray(),
-                $value instanceof PromiseInterface => $value->wait(),
-                $value instanceof HttpResponse => $value->body,
-                default => $value,
-            };
+            try {
+                if ($value instanceof ScrollProp) {
+                    $value->configureMergeIntent();
+                }
 
-            if (is_array($value)) {
-                $value = $this->resolvePropertyInstances(
-                    props: $value,
-                    unpackDotProps: false,
-                    parentKey: $currentKey,
-                );
-            }
+                $value = match (true) {
+                    $value instanceof Closure => invoke($value),
+                    $value instanceof InvokableProp => $value(),
+                    default => $value,
+                };
 
-            if ($unpackDotProps && is_string($key) && str_contains($key, '.')) {
-                $result = set_by_key($result, $key, $value);
-            } else {
-                $result[$key] = $value;
+                if ($this->config->laravel_pagination && $value instanceof PaginatedData) {
+                    $value = new PaginatorAdapter(
+                        paginator: $value,
+                        request: $this->request,
+                    );
+                }
+
+                if ($value instanceof ProvidesInertiaProperty) {
+                    $value = $value->toInertiaProperty(new PropertyContext(
+                        key: $currentKey,
+                        props: $props,
+                    ));
+                }
+
+                $value = match (true) {
+                    $value instanceof Arrayable, $value instanceof ArrayInterface => $value->toArray(),
+                    $value instanceof PromiseInterface => $value->wait(),
+                    $value instanceof HttpResponse => $value->body,
+                    default => $value,
+                };
+
+                if (is_array($value)) {
+                    $value = $this->resolvePropertyInstances(
+                        props: $value,
+                        unpackDotProps: false,
+                        parentKey: $currentKey,
+                    );
+                }
+
+                if ($unpackDotProps && is_string($key) && str_contains($key, '.')) {
+                    $result = set_by_key($result, $key, $value);
+                } else {
+                    $result[$key] = $value;
+                }
+            } catch (Throwable $e) {
+                if (! $shouldRescue) {
+                    throw $e;
+                }
+
+                $this->rescuedProps[] = $currentKey;
             }
         }
 
@@ -574,6 +593,7 @@ final class Response implements HttpResponse
             $this->resolveScrollProps(),
             $this->resolveOncePropsMetadata(),
             $this->resolveFlashData(),
+            $this->resolveRescuedProps(),
         );
 
         $this->setBody($this->resolveHttpBody($page));
@@ -611,6 +631,16 @@ final class Response implements HttpResponse
         $flash = inertia()->getFlashed();
 
         return $flash !== [] ? ['flash' => $flash] : [];
+    }
+
+    /**
+     * Resolve rescued props.
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function resolveRescuedProps(): array
+    {
+        return $this->rescuedProps !== [] ? ['rescuedProps' => $this->rescuedProps] : [];
     }
 
     /**

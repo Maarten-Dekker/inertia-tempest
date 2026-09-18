@@ -119,12 +119,13 @@ class Inertia extends Facade
         return static::instance()->optional($callback);
     }
 
-    public static function defer(callable $callback, string $group = 'default'): DeferProp
+    public static function defer(callable $callback, string $group = 'default', bool $rescue = false): DeferProp
     {
         return static::instance()
             ->defer(
                 callback: $callback,
                 group: $group,
+                rescue: $rescue,
             );
     }
 

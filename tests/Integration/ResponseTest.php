@@ -8,6 +8,7 @@ use GuzzleHttp\Promise\PromiseInterface;
 use Inertia\Configs\InertiaConfig;
 use Inertia\Contracts\Arrayable;
 use Inertia\Contracts\ProvidesInertiaProperties;
+use Inertia\Contracts\ProvidesInertiaProperty;
 use Inertia\Contracts\ProvidesScrollMetadata;
 use Inertia\Inertia;
 use Inertia\Props\AlwaysProp;
@@ -17,6 +18,7 @@ use Inertia\Props\OptionalProp;
 use Inertia\Props\ScrollProp;
 use Inertia\Response;
 use Inertia\Support\Header;
+use Inertia\Support\PropertyContext;
 use Inertia\Support\RenderContext;
 use Inertia\Tests\Fixtures\TestController;
 use Inertia\Tests\TestCase;
@@ -25,6 +27,7 @@ use Mockery;
 use Override;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use RuntimeException;
 use Tempest\DateTime\DateTime;
 use Tempest\DateTime\Duration;
 use Tempest\Support\Paginator\Paginator;
@@ -67,6 +70,111 @@ final class ResponseTest extends TestCase
 
         $this->assertArrayNotHasKey('foo', $page['props']);
         $this->assertSame(['default' => ['foo']], $page['deferredProps']);
+    }
+
+    #[Test]
+    public function server_response_with_rescued_deferred_prop_on_partial_request(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::PARTIAL_COMPONENT => 'User/Edit',
+            Header::PARTIAL_ONLY => 'foo',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => new DeferProp(
+                    static fn () => throw new RuntimeException('Rescue this deferred prop'),
+                    rescue: true,
+                ),
+            ],
+        );
+
+        $page = $response->body;
+
+        $this->assertArrayNotHasKey('foo', $page['props']);
+        $this->assertSame(['foo'], $page['rescuedProps']);
+    }
+
+    #[Test]
+    public function server_response_with_rescued_deferred_prop_nested(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::PARTIAL_COMPONENT => 'User/Edit',
+            Header::PARTIAL_ONLY => 'auth.notifications',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'auth' => [
+                    'notifications' => new DeferProp(
+                        static fn () => throw new RuntimeException('Rescue nested prop'),
+                        rescue: true,
+                    ),
+                ],
+            ],
+        );
+
+        $page = $response->body;
+
+        $this->assertArrayNotHasKey('notifications', $page['props']['auth']);
+        $this->assertSame(['auth.notifications'], $page['rescuedProps']);
+    }
+
+    #[Test]
+    public function server_response_with_rescued_deferred_prop_when_provides_inertia_property_throws(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::PARTIAL_COMPONENT => 'User/Edit',
+            Header::PARTIAL_ONLY => 'stats',
+        ]);
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'stats' => new DeferProp(static fn () => new class implements ProvidesInertiaProperty {
+                    #[Override]
+                    public function toInertiaProperty(PropertyContext $prop): mixed
+                    {
+                        throw new RuntimeException('Failed to resolve stats');
+                    }
+                }, rescue: true),
+            ],
+        );
+
+        $page = $response->body;
+
+        $this->assertArrayNotHasKey('stats', $page['props']);
+        $this->assertSame(['stats'], $page['rescuedProps']);
+    }
+
+    #[Test]
+    public function server_response_throws_exception_when_deferred_prop_fails_without_rescue(): void
+    {
+        $this->makeRequest(headers: [
+            Header::INERTIA => 'true',
+            Header::PARTIAL_COMPONENT => 'User/Edit',
+            Header::PARTIAL_ONLY => 'foo',
+        ]);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Fail this deferred prop');
+
+        $response = new Response(
+            component: 'User/Edit',
+            props: [
+                'foo' => new DeferProp(
+                    static fn () => throw new RuntimeException('Fail this deferred prop'),
+                    rescue: false,
+                ),
+            ],
+        );
+
+        $response->body;
     }
 
     #[Test]
